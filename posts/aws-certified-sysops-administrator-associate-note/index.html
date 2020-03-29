@@ -1,0 +1,3748 @@
+<!DOCTYPE html>
+<html lang='en'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Các câu hỏi và câu trả lời được note lại trong quá trình học &mdash;P1&mdash;  Q. Cty của bạn có 1 VPC với vài ec2. App trên ec2 làm việc với IPv6. Cần ensure là ec2 này có thể init traffic ra Internet, nhưng ko cho connect từ internet vào instance. Làm nào?
+ Dùng egress-only Internet gateway.
+ko dùng NAT GW hay NAT instance vì cái đó dùng cho IP v4, IGW thì hiển nhiên ko dùng rồi.'>
+<meta name='theme-color' content='#ffcd00'>
+
+<meta property='og:title' content='Aws Certified Sysops Administrator Associate Note • hoangmnsd'>
+<meta property='og:description' content='Các câu hỏi và câu trả lời được note lại trong quá trình học &mdash;P1&mdash;  Q. Cty của bạn có 1 VPC với vài ec2. App trên ec2 làm việc với IPv6. Cần ensure là ec2 này có thể init traffic ra Internet, nhưng ko cho connect từ internet vào instance. Làm nào?
+ Dùng egress-only Internet gateway.
+ko dùng NAT GW hay NAT instance vì cái đó dùng cho IP v4, IGW thì hiển nhiên ko dùng rồi.'>
+<meta property='og:url' content='https://hoangmnsd.github.io/posts/aws-certified-sysops-administrator-associate-note/'>
+<meta property='og:site_name' content='Hoang'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/7a4fb984a45dfe1129362728655c0b75?s=256'><meta property='article:author' content='https://facebook.com/lehoangofficial'><meta property='article:section' content='posts'><meta property='article:tag' content='notes'><meta property='article:tag' content='AWS'><meta property='article:published_time' content='2019-09-07T23:01:48&#43;09:00'/><meta property='article:modified_time' content='2019-09-07T23:01:48&#43;09:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.55.6" />
+
+  <title>Aws Certified Sysops Administrator Associate Note • hoangmnsd</title>
+  <link rel='canonical' href='https://hoangmnsd.github.io/posts/aws-certified-sysops-administrator-associate-note/'>
+  
+  
+  <link rel='icon' href='/favicon.ico'>
+<link rel='stylesheet' href='/assets/css/main.6a060eb7.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#ffcd00;}
+</style>
+
+  
+
+</head>
+<body class='page type-posts has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/logo.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Hoang
+      </a>
+    </h2>
+    <div class='desc'>
+    Working at Tokyo as a Developer
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-sidebar_menu sep-after'><nav id='sidebar-menu' class='menu sidebar-menu' aria-label='Sidebar Menu'>
+    <div class='container'>
+      <ul><li class='item'>
+  <a href='/'>Home</a></li><li class='item'>
+  <a href='/posts/'>Posts</a></li></ul>
+    </div>
+  </nav>
+
+</section><section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/ansible/' style='font-size:1.2222222222222223em'>Ansible</a>
+      </li><li>
+        <a href='/tags/apigateway/' style='font-size:1em'>APIGateway</a>
+      </li><li>
+        <a href='/tags/aws/' style='font-size:1.8888888888888888em'>AWS</a>
+      </li><li>
+        <a href='/tags/blog/' style='font-size:1.1111111111111112em'>blog</a>
+      </li><li>
+        <a href='/tags/cert-manager/' style='font-size:1em'>cert-manager</a>
+      </li><li>
+        <a href='/tags/circleci/' style='font-size:1em'>CircleCI</a>
+      </li><li>
+        <a href='/tags/config/' style='font-size:1.4444444444444444em'>Configuration</a>
+      </li><li>
+        <a href='/tags/discord/' style='font-size:1em'>discord</a>
+      </li><li>
+        <a href='/tags/docker/' style='font-size:1em'>docker</a>
+      </li><li>
+        <a href='/tags/docker-compose/' style='font-size:1em'>docker-compose</a>
+      </li><li>
+        <a href='/tags/efk/' style='font-size:1.1111111111111112em'>EFK</a>
+      </li><li>
+        <a href='/tags/eks/' style='font-size:1em'>EKS</a>
+      </li><li>
+        <a href='/tags/eksctl/' style='font-size:1.1111111111111112em'>eksctl</a>
+      </li><li>
+        <a href='/tags/elasticsearch/' style='font-size:1.1111111111111112em'>ElasticSearch</a>
+      </li><li>
+        <a href='/tags/externaldns/' style='font-size:1em'>externalDNS</a>
+      </li><li>
+        <a href='/tags/fluentd/' style='font-size:1.1111111111111112em'>Fluentd</a>
+      </li><li>
+        <a href='/tags/gcp/' style='font-size:1.1111111111111112em'>GCP</a>
+      </li><li>
+        <a href='/tags/github/' style='font-size:1em'>Github</a>
+      </li><li>
+        <a href='/tags/gitlab/' style='font-size:1em'>gitlab</a>
+      </li><li>
+        <a href='/tags/gke/' style='font-size:1.1111111111111112em'>gke</a>
+      </li><li>
+        <a href='/tags/helm/' style='font-size:1em'>helm</a>
+      </li><li>
+        <a href='/tags/hugo/' style='font-size:1em'>Hugo</a>
+      </li><li>
+        <a href='/tags/japanese/' style='font-size:1em'>japanese</a>
+      </li><li>
+        <a href='/tags/kibana/' style='font-size:1.1111111111111112em'>Kibana</a>
+      </li><li>
+        <a href='/tags/kubectl/' style='font-size:1em'>kubectl</a>
+      </li><li>
+        <a href='/tags/kubernetes/' style='font-size:2em'>kubernetes</a>
+      </li><li>
+        <a href='/tags/lambda/' style='font-size:1.1111111111111112em'>lambda</a>
+      </li><li>
+        <a href='/tags/micro-services/' style='font-size:1.2222222222222223em'>micro-services</a>
+      </li><li>
+        <a href='/tags/nginx-ingress/' style='font-size:1em'>nginx-ingress</a>
+      </li><li>
+        <a href='/tags/notes/' style='font-size:1.2222222222222223em'>notes</a>
+      </li><li>
+        <a href='/tags/packer/' style='font-size:1em'>packer</a>
+      </li><li>
+        <a href='/tags/postgres/' style='font-size:1em'>postgres</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <line x1="3" y1="12" x2="21" y2="12" />
+  <line x1="3" y1="6" x2="21" y2="6" />
+  <line x1="3" y1="18" x2="21" y2="18" />
+  
+</svg>
+</span>
+  <span class='close'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <line x1="18" y1="6" x2="6" y2="18" />
+  <line x1="6" y1="6" x2="18" y2="18" />
+  
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='/posts/'>Posts</a>
+      </li><li class='item'>
+        <a href='/about/'>About</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/posts/'>Posts</a></li><li><span>Aws Certified Sysops Administrator Associate Note</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Hoang</p><p class='desc site-desc'>Working at Tokyo as a Developer</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>Aws Certified Sysops Administrator Associate Note</h1>
+      
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+  <line x1="16" y1="2" x2="16" y2="6"/>
+  <line x1="8" y1="2" x2="8" y2="6"/>
+  <line x1="3" y1="10" x2="21" y2="10"/>
+  
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2019-09-07T23:01:48&#43;09:00'>2019, Sep 07</time>
+</span>
+
+  <span class='byline'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M21,21V20c0-2.76-4-5-9-5s-9,2.24-9,5v1"/>
+  <path d="M16,6.37A4,4,0,1,1,12.63,3,4,4,0,0,1,16,6.37Z"/>
+  
+</svg>
+<span class='screen-reader-text'> by </span><a href='/authors/hoangmnsd'>hoangmnsd</a></span>
+  
+<span class='reading-time'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <circle cx="12" cy="12" r="10"/>
+  <polyline points="12 6 12 12 15 15"/>
+  
+</svg>
+100 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+<details class='container entry-toc'>
+  <summary class='title'>
+    <span>Table of Contents</span>
+  </summary>
+  <nav id="TableOfContents">
+<ul>
+<li><a href="#các-câu-hỏi-và-câu-trả-lời-được-note-lại-trong-quá-trình-học">Các câu hỏi và câu trả lời được note lại trong quá trình học</a>
+<ul>
+<li><a href="#p1"><strong>&mdash;P1&mdash;</strong></a></li>
+<li><a href="#p2"><strong>&mdash;P2&mdash;</strong></a></li>
+<li><a href="#p3"><strong>&mdash;P3&mdash;</strong></a></li>
+<li><a href="#p4"><strong>&mdash;P4&mdash;</strong></a></li>
+<li><a href="#p5"><strong>&mdash;P5&mdash;</strong></a></li>
+<li><a href="#p-monitoring-reporting"><strong>&mdash;P:monitoring-reporting&mdash;</strong></a></li>
+<li><a href="#p-storage-management"><strong>&mdash;P:storage-management&mdash;</strong></a></li>
+<li><a href="#p1-udemy"><strong>&mdash;P1-udemy&mdash;</strong></a></li>
+<li><a href="#p2-udemy"><strong>&mdash;P2-udemy&mdash;</strong></a></li>
+<li><a href="#p3-udemy"><strong>&mdash;P3-udemy&mdash;</strong></a></li>
+<li><a href="#p4-udemy"><strong>&mdash;P4-udemy&mdash;</strong></a></li>
+<li><a href="#p5-udemy"><strong>&mdash;P5-udemy&mdash;</strong></a></li>
+</ul></li>
+<li><a href="#các-câu-hỏi-được-note-lại-trong-quá-trình-thi">Các câu hỏi được note lại trong quá trình thi</a></li>
+</ul>
+</nav>
+</details>
+
+
+  <div class='container entry-content'>
+  
+
+<h1 id="các-câu-hỏi-và-câu-trả-lời-được-note-lại-trong-quá-trình-học">Các câu hỏi và câu trả lời được note lại trong quá trình học</h1>
+
+<h2 id="p1"><strong>&mdash;P1&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Cty của bạn có 1 VPC với vài ec2. App trên ec2 làm việc với IPv6. Cần ensure là ec2 này có thể init traffic ra Internet, nhưng ko cho connect từ internet vào instance. Làm nào?</p>
+</blockquote>
+
+<p>Dùng egress-only Internet gateway.</p>
+
+<p>ko dùng NAT GW hay NAT instance vì cái đó dùng cho IP v4, IGW thì hiển nhiên ko dùng rồi.</p>
+
+<p>egress-only IGW là stateful, nó forward traffic từ instance ra Internet, và gửi respone lại cho instance</p>
+
+<blockquote>
+<p>Q. Cty bạn có VPC với vài Ec2. 1 instance mới launch sẽ host app làm việc với IPv6. VPC của bạn cần cái gì để ensure các Ec2 mới launch sẽ có thể communicate qua IPv6?</p>
+</blockquote>
+
+<p>Cần ensure là VPC được enable Dual Stack mode.</p>
+
+<p>việc attach 1 egress-only IGW cũng đúng nhưng là chưa đủ.</p>
+
+<p>Các step để enable VPC sử dụng dc IPv6:</p>
+
+<p>1-VPC và subnet cần dc associate IPv6 CIDR block</p>
+
+<p>2-Update route table:</p>
+
+<p>_Public subnet thì cần tạo route để route traffic IPv6 từ subnet đến IGW</p>
+
+<p>_Private subnet thì cần tạo route để route traffic Ipv6 từ subnet đến egress-only IGW</p>
+
+<p>3-Update SG (và ACL nếu có), để include IPv6 address vào SG</p>
+
+<p>4-Xác định xem instance type có support IPv6 ko, nếu ko thì phải đổi  (m3.large ko support phải tăng lên <code>m4.large</code>)</p>
+
+<p>5-Assign Ipv6 cho instance</p>
+
+<p>6-Nếu instance chưa dc configure DHCPv6 thì cũng phải configure.</p>
+
+<blockquote>
+<p>Q. Cty bạn cần setup 1 hybric connection giữa on-premise và aws vpc. Họ sẽ transfer lượng lớn data từ on premise lên aws. Cần dùng gì? VPN hay Direct Connect?</p>
+</blockquote>
+
+<p>AWS Direct Connect.</p>
+
+<p>Vì VPN ko thể đảm bảo high banwidth connection cho lượng lớn data dc.</p>
+
+<blockquote>
+<p>Q. Bạn setup VPC và 1 subnet. Tạo 1 IGW attach vào VPC. Vpc dã cho phép DNS resolution và hostname. Bạn launch 1 ec2 có public ip và đã setting SG và NACL rồi, nhưng vẫn ko access dc EC2 vì sao?
+Có phải vì chưa attach IGW vào public subnet? hay vì chưa setup Route table?</p>
+</blockquote>
+
+<p>Vì chưa setup Route table</p>
+
+<p>IGW chỉ cần attach vào VPC là đủ rồi, ko cần subnet</p>
+
+<blockquote>
+<p>Q. Bạn muốn cho phép 1 admin vào setup EC2, EC2 đó cần quyền access vào DynamoDB. Những policy permission gì cần để đảm bảo security?</p>
+</blockquote>
+
+<p>Cần trust policy cho phép EC2 instance assume role<br />
+Cần permission policy cho phép User Pass role to EC2</p>
+
+<p>Theo AWS Documents cần 3 yếu tố:<br />
+First, <strong>IAM permission policy attach vào role</strong>, define những action và resource mà role có thể làm.<br />
+ví dụ define action read-only DynamoDB table.</p>
+
+<p>Second, 1 <strong>trust policy cho role</strong>, cho phép service assume role.<br />
+ví dụ sau là trust policy cho phép EC2 service sử dụng role và các permission dc attach vào role.</p>
+
+<pre><code>{
+    &quot;Version&quot;: &quot;2012-10-17&quot;,
+    &quot;Statement&quot;: {
+        &quot;Sid&quot;: &quot;TrustPolicyStatementThatAllowsEC2ServiceToAssumeTheAttachedRole&quot;,
+        &quot;Effect&quot;: &quot;Allow&quot;,
+        &quot;Principal&quot;: { &quot;Service&quot;: &quot;ec2.amazonaws.com&quot; },
+       &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+    }
+}
+</code></pre>
+
+<p>Third, 1 <strong>IAM permission policy attach vào IAM User</strong>, cho phép user pass những role đã dc aproved.<br />
+ví dụ sau là User chỉ được pass cái role tên là <code>EC2-role-for-XYZ-*</code></p>
+
+<pre><code>{
+    &quot;Version&quot;: &quot;2012-10-17&quot;,
+    &quot;Statement&quot;: [{
+        &quot;Effect&quot;: &quot;Allow&quot;,
+        &quot;Action&quot;: [
+            &quot;iam:GetRole&quot;,
+            &quot;iam:PassRole&quot;
+        ],
+        &quot;Resource&quot;: &quot;arn:aws:iam::&lt;account-id&gt;:role/EC2-roles-for-XYZ-*&quot;
+    }]
+}
+</code></pre>
+
+<p>Giờ, User có thể start EC2, app run trên EC2 có thể access temporary credential thông qua instance profile meta data. Instance có thể làm những action đã dc determine trong permission policies.</p>
+
+<p>1 Ví dụ khác dễ hiểu hơn:</p>
+
+<p><strong>IAM permission policy attach vào IAM User A</strong> như sau:</p>
+
+<pre><code>{
+   &quot;Version&quot;: &quot;2012-10-17&quot;,
+   &quot;Statement&quot;: [{
+      &quot;Effect&quot;:&quot;Allow&quot;,
+      &quot;Action&quot;:[&quot;ec2:*&quot;],
+      &quot;Resource&quot;:&quot;*&quot;
+    },
+    {
+      &quot;Effect&quot;:&quot;Allow&quot;,
+      &quot;Action&quot;:&quot;iam:PassRole&quot;,
+      &quot;Resource&quot;:&quot;arn:aws:iam::123456789012:role/S3Access&quot;
+    }]
+}
+</code></pre>
+
+<p>User A sẽ có full quyền về EC2, và khi User A launch 1 EC2, Anh ta chỉ có quyền Pass (associate/gán) cái role tên là <code>S3Access</code> vào Instance thôi.</p>
+
+<p>Tất nhiên trước đó, Bạn cũng cần tạo cái role tên là <code>S3Access</code> với <strong>trust policy attach vào role</strong> là:</p>
+
+<pre><code>{
+    &quot;Version&quot;: &quot;2012-10-17&quot;,
+    &quot;Statement&quot;: {
+        &quot;Sid&quot;: &quot;TrustPolicyStatementThatAllowsEC2ServiceToAssumeTheAttachedRole&quot;,
+        &quot;Effect&quot;: &quot;Allow&quot;,
+        &quot;Principal&quot;: { &quot;Service&quot;: &quot;ec2.amazonaws.com&quot; },
+       &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+    }
+}
+</code></pre>
+
+<p>Và Role <code>S3Access</code> cũng cần có <strong>permission policy attach vào role</strong> tương tự như sau:</p>
+
+<pre><code>{
+    &quot;Version&quot;: &quot;2012-10-17&quot;,
+    &quot;Statement&quot;: [
+        {
+            &quot;Sid&quot;: &quot;VisualEditor0&quot;,
+            &quot;Effect&quot;: &quot;Allow&quot;,
+            &quot;Action&quot;: [
+                &quot;s3:GetObject&quot;,
+                &quot;s3:ListAllMyBuckets&quot;,
+                &quot;s3:ListBucket&quot;
+            ],
+            &quot;Resource&quot;: &quot;*&quot;
+        }
+    ]
+}
+</code></pre>
+
+<blockquote>
+<p>Q. Những service sau cái nào by default ko cung cấp khả năng HA? EC2-RDS-DynamoDB-ELB?</p>
+</blockquote>
+
+<p>EC2 ko HA by default, muốn HA thì phải tự làm bằng scripts.</p>
+
+<p>RDS có feature Multi-AZ, DynamoDB thì full mamanged by AWS, ELB thì vốn đã HA</p>
+
+<blockquote>
+<p>Q. Bạn muốn có 1 list các user trong AWS account của bạn, check xem các user đó có dùng MFA ko? làm nào?</p>
+</blockquote>
+
+<p>Vào IAM, download credential report, những thông tin rất nhiều liên quan đến ví dụ như password, access key, MFA</p>
+
+<blockquote>
+<p>Q. 1 bucket có thể set policy để deny hoặc allow 1 IP range nào đó bằng cách:</p>
+</blockquote>
+
+<pre><code>{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Id&quot;: &quot;S3PolicyId1&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;IPAllow&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Principal&quot;: &quot;*&quot;,
+      &quot;Action&quot;: &quot;s3:*&quot;,
+      &quot;Resource&quot;: &quot;arn:aws:s3:::examplebucket/*&quot;,
+      &quot;Condition&quot;: {
+         &quot;IpAddress&quot;: {&quot;aws:SourceIp&quot;: &quot;54.240.143.0/24&quot;},
+         &quot;NotIpAddress&quot;: {&quot;aws:SourceIp&quot;: &quot;54.240.143.188/32&quot;} 
+      } 
+    } 
+  ]
+}
+</code></pre>
+
+<blockquote>
+<p>Q. Bạn là sysops admin của 1 cty IT. Sau khi đã setup SSM trên EC2 ở các region, bạn cần setup SSM cho 50 db server ở data centre của công ty bạn. Những action gì là bắt buộc?</p>
+</blockquote>
+
+<p>Tạo 1 IAM role để communicate SSM service.</p>
+
+<p>Install TLS certificate trên server của Data centre.</p>
+
+<p><strong>Tạo 1 managed-instance activation cho môi trường Hybrid. Cái này để tạo ra 1 cặp Code-ID dùng cho việc install SSM agent sau này.</strong></p>
+
+<p>Download và Install SSM agent trên các server của Data centre.</p>
+
+<blockquote>
+<p>Q. Tuần trước có 1 vài sự cố cho môi trường Production khi 1 số phần mềm unauthorised của third-party dc install trên servers. Giờ bạn cần duy trì 1 trạng thái đã dc defined trước (predefined state) cho all Ec2 thì cần làm gì trên SSM?</p>
+</blockquote>
+
+<p>Dùng State manager với Command Document hay Policy Document, hay Automation Document, hay Package Document, hay Session Document?</p>
+
+<p><strong>Command Document</strong>: <code>Runcommand</code> dùng loại này để run command. Còn <code>State Manager</code> dùng loại này để apply configuration. <code>Maintenance Windows</code> thì dùng loại này để apply configuraition theo schedule.</p>
+
+<p><strong>Policy Document</strong>: <code>State Manager</code> dùng loại này để apply policy trên EC2</p>
+
+<p><strong>Automation Document</strong>: Dùng để thực hiện những task automation</p>
+
+<p><strong>Package Document</strong>: Dùng để tạo zip folder để install trên target instance</p>
+
+<p><strong>Session Document</strong>: <code>Session Manager</code> dùng loại này để start 1 session kiểu như SSH tunnel hay port forwarding</p>
+
+<blockquote>
+<p>Q. 1 cty muốn transfer 1 lượng lớn data lên s3. Số lượng data ban đầu khoảng <strong>100TB</strong>. Dùng service gì? Direct Connect hay Snowball?</p>
+</blockquote>
+
+<p>Snowball.</p>
+
+<p>ko thấy đề cập về việc transfer data on-going, thế nên setup Direct connect chỉ để cho 1 lần transfer như này thì ko hợp lý.</p>
+
+<blockquote>
+<p>Q. Bạn đang dùng CodeDeploy để update app với 1 password mới cho production. Ngta lo ngại rằng việc store new password trong khi update app trên 1 lượng lớn instance sẽ làm service bị outage. Làm nào?</p>
+</blockquote>
+
+<p>Dùng System manager Parameter Store để store pw. Nó store và save config data theo encrypted format. <code>Parameter Store</code> tăng cường secure vì nó store password tách riêng khỏi configuration file</p>
+
+<blockquote>
+<p>Q. VPC của bạn có cả Public subnet và private subnet. Application dc deploy trong 1 Ec2 ở Private subnet. EC2 đó cần tương tác với S3. Nhưng lại ko tương tác S3 đc, mặc dù IAM role đã đúng rồi, Làm nào?</p>
+</blockquote>
+
+<p>VPC của bạn cần dc attach 1 VPC gateway enpoint.</p>
+
+<p>Hoặc bạn cần đặt Ec2 đó ở Public subnet thay vì private subnet như hiện tại.</p>
+
+<p>Túm lại, nếu EC2 để trong private subnet muốn connect S3 thì cần có VPC gateway enpoint</p>
+
+<blockquote>
+<p>Q. Bạn là IT admin, Công ty có 1 set EC2 trên AWS, và 1 set server onpremise. Họ muốn monitor system level log của both side server theo metric thì làm nào?</p>
+</blockquote>
+
+<p>Install cloudwatch agent trên both set of servers</p>
+
+<p>setup metrics dashboard trên Cloudwatch</p>
+
+<blockquote>
+<p>Q. Công ty muốn dùng aws và sử dụng gói support plan của aws. Nhu cầu là: Có operational reviews và có respone time &lt; 30 minutes
+ cho những critical issues. Nên chọn cái nào? Developer, Basic, Business, Enterprise?</p>
+</blockquote>
+
+<p>Dùng Enterprise</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/aws-support-plan-1.jpg" alt="" />
+ <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/aws-support-plan-2.jpg" alt="" /></p>
+
+<p><strong>ko có Basic plan</strong></p>
+
+<p><code>giống nhau</code> giữa Business và Enterprise:<br />
+system hư hỏng (support &lt; 12h)<br />
+system Production bị hư hỏng (support &lt; 4h)<br />
+system Production bị down (support &lt; 1h)</p>
+
+<p><code>khác nhau</code> giữa Business và Enterprise:<br />
+system critical-quan trọng bị down (Business ko support, Enterprise support &lt; 15 phút)</p>
+
+<p>Enterprise có review operation, review well architect, coordinate với expert của AWS, có thể access self-paced lab, có team đến tận nơi support, giá &gt; 15000 USD/tháng</p>
+
+<p>Trong khi Bussiness chỉ khoảng &gt; 100 USD/tháng</p>
+
+<blockquote>
+<p>Q. Cty bạn có khoảng 500 instances, cần ensure là SSH luôn dc disable. Làm nào?</p>
+</blockquote>
+
+<p>Dùng AWS Config Rules để check Security Groups</p>
+
+<p>Thực chất AWS Config rule là những hàm lambda check liên tục những điều kiện như: EC2 luôn dc associate với ít nhất 1 SG, port 22 ko đc mở trong production SG, các resource cần có required tags, EIP cần dc attach vào instances, các volume đang dc encrypt</p>
+
+<blockquote>
+<p>Q. 1 Dev muốn dc notify bất cứ khi nào có API activity dc call trên S3 bucket của anh ta. Làm nào?</p>
+</blockquote>
+
+<p>Config a cloud trail và SNS</p>
+
+<blockquote>
+<p>Q. Bạn start các EC2 instance, nhưng chúng chuyển sang bị terminate ngay sau trạng thái pending, vì sao?</p>
+</blockquote>
+
+<p>đây là lỗi <code>Instance Terminates Immediately</code>, lý do:</p>
+
+<p>_EBS volume bị limit</p>
+
+<p>_EBS snapshot bị hỏng (corrupt)</p>
+
+<p>_EBS root volume bị encrypt và bạn ko có quyền access vào KMS để decrypt key</p>
+
+<p>_AMI mà bạn dùng để launch instance bị thiếu file nào đó.</p>
+
+<p>-&gt; Túm lại chủ yếu là lỗi về EBS và AMI, ko thể là lỗi về limit instances được</p>
+
+<blockquote>
+<p>Q. Team bạn dùng EC2 để setup database, sẽ rất nặng về workload, nên dùng loại EBS nào?</p>
+</blockquote>
+
+<p>Provisioned IOPS</p>
+
+<p>ko dùng General purpose SSD vì AWS Document ghi rõ io1 dùng để host DB workload lớn</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/ec2-ebs-volume-type.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. 1 cty đang dùng EC2 để host Memcached dùng là Cache cho các app. Thì nên chọn loại instance nào?
+Memory Optimized? hay Compute Optimized? hay Storage Optimized? hay General Purpose?</p>
+</blockquote>
+
+<p>Dùng Memory Optimized Instances</p>
+
+<p>Trong AWS Documents có viết:</p>
+
+<p><strong>Compute Optimized Instances</strong>: (c4, c5)<br />
+Batch processing<br />
+Media transcoding<br />
+High-performance web servers<br />
+Scientific modeling<br />
+Dedicated gaming servers and ad serving engines<br />
+Machine learning</p>
+
+<p><strong>General Purpose Instances</strong>: (a1, m5, t2, t3)<br />
+Web/Game servers<br />
+microservices<br />
+Caching fleets<br />
+Small and medium databases<br />
+Code repositories<br />
+Development, build, test, and staging environments</p>
+
+<p><strong>Memory Optimized Instances</strong>: (r4, r5)<br />
+High-performance Database Relational/NoSQL<br />
+In-memory caching (Memcached and Redis).<br />
+In-memory databases and analytics (for example, SAP HANA).<br />
+Real-time processing (Hadoop/Spark clusters).</p>
+
+<p><strong>Storage Optimized Instances</strong>: (d2, h1, i3)<br />
+data warehouse<br />
+MapReduce and Hadoop distributed computing<br />
+Log or data processing applications<br />
+High frequency online transaction processing (OLTP) systems</p>
+
+<blockquote>
+<p>Q. Cty bạn có 1 set EC2, các EC2 này run <sup>24</sup>&frasl;<sub>7</sub> trong suốt cả năm. Và bạn cần upgrade instance type để đáp ứng đc workload trong 1 năm đó thì nên chọn loại nào?
+Convertible Reserved hay Standard Reserved Instance?</p>
+</blockquote>
+
+<p>Convertible Reserved Instances</p>
+
+<p>2 loại Convertible và Standard khác nhau ở chỗ loại Standard ko thể change dc instance type during the term.<br />
+Loại Standard thì có thể change <strong>instance size</strong>, tuy nhiên ko thể exchange<br />
+Loại Convertible thì có thể change dc <strong>instance family, type, size, platform, scope, tenacy.</strong></p>
+
+<blockquote>
+<p>Q. Bạn có 3 VPC A, B, C, cần phải communicate với nhau, làm sao để ensure là all instance sẽ communicate dc với nhau?</p>
+</blockquote>
+
+<p>A peer với B, B peer C, A peer C<br />
+Mỗi Route table trong 1 vpc cần phải add CIDR block của 2 cái còn lại vào Destination</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/3-vpc-peering-route-table.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Bạn có 1 VPC, và 1 custom domain, bạn muốn ensure là custom domain chỉ dc access bởi các instance trong VPC thôi, ko phải public internet, làm nào?</p>
+</blockquote>
+
+<p>Dùng private hosted zone ở Route53</p>
+
+<blockquote>
+<p>Q. NAT Gateway setup ở trong public subnet hay private subnet?
+bandwidth restrictions là gì?</p>
+</blockquote>
+
+<p>Trong public subnet<br />
+<code>bandwidth restrictions</code> là hạn chế về băng thông</p>
+
+<blockquote>
+<p>Q. Bạn đang cần connect on-premise lên AWS vpc. Bạn nhận nhiệm vụ setup vpn connection để setup hybrid architecture thì cần làm những step gì?</p>
+</blockquote>
+
+<p>Tạo customer gateway</p>
+
+<p>Tạo virtual private gateway attach vào vpc</p>
+
+<p>Update route table, sửa cái route propagation: add cái virtual private gateway vừa tạo vào</p>
+
+<p>Update SG: phần inbound cần enable SSH, RDP, ICMP access</p>
+
+<p>Tạo VPN connection</p>
+
+<blockquote>
+<p>Q. Bạn đang tạo 1 Organization cho công ty bạn, những gì là đúng với Master account của Organization?</p>
+</blockquote>
+
+<p>tạo Organization và OU,<br />
+invite external account để join vào org,<br />
+thanh toán tất cả charge của all account trong org (ko chỉ OU),<br />
+master account ko bị ảnh hưởng bởi service control policies</p>
+
+<blockquote>
+<p>Q. 1 App đc deploy trên ec2, có dùng ELB. Bạn cần list các Ip address truy cập vào ELB, làm nào?</p>
+</blockquote>
+
+<p>enable access logging cho ELB,</p>
+
+<p>cấp quyền để access logging truy cập dc vào s3 bucket</p>
+
+<p>AWS Document giải thích: ELB access logging lưu trữ client ip, timestamp, latencies, request path, server respone. Tuy nhiên default nó disable, Nếu muốn thì phải enable lên. Sau khi enable thì ELB sẽ capture log và lưu vào S3 bucket mà bạn chỉ định</p>
+
+<p>Cần phải sửa Bucket policy để ELB có quyền ghi log vào bucket đó</p>
+
+<blockquote>
+<p>Q. Web app server đc deploy trên ec2, Cần 1 phương pháp phòng chống security, bạn cần tạo 1 process để đánh giá security sau khi deploy. Cách hiệu quả để mỗi khi có thay đổi về Security Group dẫn đến sự tiếp xúc với Internet (assess network exposure) bạn sẽ dc biết là gì?</p>
+</blockquote>
+
+<p>Sử dụng Amazon Inspector, nó sẽ có cái <code>Network Reachability package</code> để evaluate Network config có đang risk ko. Cái package này ko yêu cầu install agent Inspector trên ec2.</p>
+
+<p>Bạn có thể tạo 1 Cloudwatch event để monitor sự thay đổi của SG or VPC config, khi đó nó sẽ trigger cái Network Assessment</p>
+
+<p><code>Network Reachability package</code> sẽ tự động monitor AWS network của bạn, xem có cái nào misconfig ko. Nó ko yêu cầu install agent Inspector, tuy nhiên nếu install sẽ dc cung cấp chính xác các process đang listen on ports.</p>
+
+<p>package này ko support Clasic EC2</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/inspector-network-assess-cloudwatch-event.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. 1 cty setup 1 website host trên s3, muốn user có seamless user experience (trải nghiệm liền mạch) thì cần gì?</p>
+</blockquote>
+
+<p>Dùng cloudfront</p>
+
+<blockquote>
+<p>Q. Phân biệt 3 cách Server side encrpytion s3: (SSE-S3, SSE-KMS, SSE-C)</p>
+</blockquote>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/server-side-encryption-3-ways.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. 1 Cty cần store historical data. Có thể sẽ dùng Business Intelligence solution để query đống data đó. Thì nên dùng loại DB nào? EMR, DynamoDB, Redshift?</p>
+</blockquote>
+
+<p>Dùng Redshift.</p>
+
+<p>DynamoDB thì ko thể lưu trữ historical data</p>
+
+<p>EMR dùng để làm data transformation, và load data đã processed đến Redshift thôi</p>
+
+<p>Còn Redshift thì full managed, petabyte scale data warehouse service, là giải pháp về historical data storage, có thể query như SQL</p>
+
+<blockquote>
+<p>Q. Bạn đang có AWS RDS MySQL database, đang gặp vấn đề về performance, vì là sysadmin bạn cần xem có cách nào cải thiện performance ko. Dùng cái gì?
+(AWS Trust Advisor, AWS Inspector, AWS Performance Insights, AWS Config?)</p>
+</blockquote>
+
+<p>Dùng AWS Performance Insights</p>
+
+<p>Nó là 1 chức năng có trong RDS/Aurora, support cho các loại DB nhất định, giúp monitor, phân tích issue, trouble shooting performance problem và visualize data load.</p>
+
+<p>Inspector dùng để phân tích EC2 vulnerability</p>
+
+<p>AWS Config để manage configuration</p>
+
+<p>Trust Advisor chỉ đưa ra các best practice chứ ko phân tích sâu các issue trong DB của bạn</p>
+
+<blockquote>
+<p>Q. Bạn có 1 set các EC2, cần 1 dashboard metric của CPU utilization trong interval 1 phút. Cần làm nào?</p>
+</blockquote>
+
+<p>Enable detailed monitoring for EC2 (Console-&gt;Action-&gt;Cloudwatch monitoring-&gt;Enable <code>Detailed monitoring</code>)</p>
+
+<p>Tạo 1 dashboard trong Cloudwatch</p>
+
+<p>Bởi vì nếu để chế độ <code>Basic monitoring</code> của EC2 thì interval send metric to Cloudwatch là 5 phút</p>
+
+<blockquote>
+<p>Q. Công ty bạn đang setup database trên EC2, Cần phải config fault tolenrance vì đây sẽ host những data quan trọng. Dự định implement RAID configuration. Thì nên chọn loại nào? RAID 0, RAID 1, RAID 5, RAID 6?</p>
+</blockquote>
+
+<p>Dùng RAID 1</p>
+
+<p>RAID 0 dùng chủ yếu cho mục đích <code>I/O performance</code>. Bạn add thêm volume thì bạn sẽ có thêm throughput. Nó kết hợp các volume lại thành 1 stripe. Tuy nhiên performance của stripe bị giới hạn ở cái performance của cái volume kém nhất. Và nếu mất 1 volume cũng sẽ mất toàn bộ data</p>
+
+<p>RAID 1 dùng chủ yếu cho mục đích <code>fault tolerance</code> (các ứng dụng critical). Data sẽ ổn định hơn. Nhưng vì data dc ghi vào nhiều volume cùng 1 lúc, nên cần băng thông lớn. Và nó ko cải thiện performance WRITE dc.</p>
+
+<p>RAID 5,6 ko dc recommend cho Amazon EBS, vì nó làm giảm IOPS của EBS xuống 20-30% so với RAID 0, trong khi giá tăng gấp 2. Ví dụ: 1 array gồm 2 volume RAID 0 sẽ performance tốt hơn 1 array 4 volume RAID 6 mà có giá gấp đôi.</p>
+
+<p>Nói chung cứ nhớ, <strong>RAID 0 stripe</strong>, vì nó stripe nhiều volume lại để tăng performance. Từ đó suy ra RAID 1 sẽ fault tolerance.</p>
+
+<blockquote>
+<p>Q. Bạn cần sử dụng AWS QuickSight và có gì cần chú ý giữa 2 phiên bản Enterpise và Standard?</p>
+</blockquote>
+
+<p>Enterprise hơn Standard ở chỗ cho phép encrpyt data rest và tương thích với Microsoft Active Directory (AD)</p>
+
+<p>Bản Standard thì bạn có thể invite IAM user vào hoặc tạo cho họ 1 user QuickSight only</p>
+
+<p>Bản Enterprise thì dùng MS AD để user access QuickSight</p>
+
+<blockquote>
+<p>Q. 1 Cty muốn các EC2 được patch với latest security patches?</p>
+</blockquote>
+
+<p>AWS System Management</p>
+
+<blockquote>
+<p>Q. Bạn có 1 VPC và các subnets. Sau khi launch EC2 thì nó ko có public DNS name, cần làm gì?</p>
+</blockquote>
+
+<p>Check 2 attribute của VPC: <code>enableDnsHostnames, enableDnsSupport</code></p>
+
+<p>Nếu cả 2 đang dc set = true thì EC2 mới có public DNS hostname</p>
+
+<blockquote>
+<p>Q. Bạn đang setup AWS Direct Connect giữa AWS VPC và on-premise data center. Thì Network cần phải như nào?</p>
+</blockquote>
+
+<p>Network của bạn phải đang đặt cùng chỗ với AWS Direct Connect location (Cần tìm hiểu về location hiện có của Direct Connect)</p>
+
+<p>Network của bạn phải làm việc với AWS Direct Connect Partner-đối tác sẽ hỗ trợ khách hàng (là bạn) connect vào Direct Connect</p>
+
+<p>Về kỹ thuật:<br />
+Network của bạn phải dùng single-mode fiber<br />
+Auto negotiation for port phải disabled<br />
+802.1Q VLAN phải dc support<br />
+Device phải support BGP (Border Gateway Protocol) và BGP MD5</p>
+
+<blockquote>
+<p>Q. Bạn đang quản lý việc migrate 1 app on-premise lên AWS. Dev đang launch EC2 để test app. Bạn concern về số lượng ec2, service nào dùng để xác định số lượng ec2 có đang trong limit hay ko?
+AWS Config, AWS Trust Advisor, SSM, Cloudwatch?</p>
+</blockquote>
+
+<p>AWS Trust Advisor</p>
+
+<p>AWS Trust Advisor dashboard có 1 feature tên là <code>Service limit</code>, dùng để liên tục monitor usaged resource để bạn có thể request tăng limit hoặc shut down bớt resource trước khi limit bị reached</p>
+
+<blockquote>
+<p>Q. Bạn tạo EC2 nhưng nó ko auto có public Ip address, làm nào?</p>
+</blockquote>
+
+<p>Sửa Subnet, modify auto-asign public IP = true</p>
+
+<p>Nhớ là Sửa subnet chứ ko phải VPC</p>
+
+<blockquote>
+<p>Q. Bạn đang setup Test env. Bạn bật VPC flow log để capture IP traffic cho sau này còn audit. VPC flow log publish nhiều log file vào 1 single s3 bucket. Vài flow log đầu thì dc publish vào encrypted bucket thành công, nhưng sau đó thì bị lỗi <code>LogDestinationPermissionIssueException</code>. Vì sao?</p>
+</blockquote>
+
+<p>Vì S3 bucket policy giới hạn 20KB thôi, Mỗi lần tạo 1 flow log mới, aws sẽ add thêm ARN của folder mới vào <code>Resource</code> element của bucket policy. Càng nhiều thì sẽ càng có nguy cơ vượt quá limit 20KB</p>
+
+<p>Giải pháp: xóa hết các entries cũ ko dùng trong policy. Hoặc phân quyền cho toàn bộ bucket policy là <code>arn:aws:s3:::bucket_name/*</code></p>
+
+<p>Còn nếu gặp lỗi <code>LogDestinationNotFoundException</code>: thì có thể ARN của s3 bucket đang chỉ định sai, hoặc bucket đó ko còn tồn tại</p>
+
+<p>CÒn nếu gặp lỗi tạo Flow log rồi nhưng ko nhìn thấy log ở trong s3 bucket hay Cloudwatch, thì là do chưa có traffic sinh ra, hoặc phải chờ 10 phút</p>
+
+<h2 id="p2"><strong>&mdash;P2&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Bạn có 1 VPC, đã setup SG, network ACL, nhưng traffic ko reach đến instance, làm sao để diagnose issue? dùng Cloudtrail hay VPC Flow logs ?</p>
+</blockquote>
+
+<p>Dùng VPC Flow logs, nó giúp monitor traffic reach instances</p>
+
+<p>chứ Cloudtrail để monitoring API thôi</p>
+
+<blockquote>
+<p>Q. 2 VPC A(10.0.0.0/16) và VPC B(20.0.0.0/16), đã tạo 1 VPC peering có id là: pcx-1a2b1a2b. Thì route table của 2 VPC cần config Destination và Target là gì?</p>
+</blockquote>
+
+<p>Destination là CIDR block của VPC kia, còn Target là id của VPC peering</p>
+
+<blockquote>
+<p>Q. Bạn đã tạo 1 RDS Instance. Công ty muốn ko có downtime khi 1 snapshot dc tạo ra. Làm nào?</p>
+</blockquote>
+
+<p>enable multi-AZ</p>
+
+<p>vì single-AZ gây downtime, nên nếu multi-AZ thì việc tạo snapshot sẽ chỉ diễn ra trên con RDS standby</p>
+
+<blockquote>
+<p>Q. 1 Consultant muốn view contents của 1 S3 bucket trong AWS Account. Content đó sẽ available trong 1 khoảng time. Thì nên dùng cách gì?</p>
+</blockquote>
+
+<p>Tạo 1 IAM Role với session duration parameter</p>
+
+<p>Ko thể specify time limit trong bucket ACL được</p>
+
+<p>Cũng ko thể tạo IAM User với session duration parameter được</p>
+
+<p>bắt buộc dùng ROLE</p>
+
+<blockquote>
+<p>Q. Cty bạn host web trên S3. User sẽ truy cập vào web bằng uRL: <code>http://companya.com</code>, vậy khi đặt tên cho s3 bucket cần đặt tên gì?</p>
+</blockquote>
+
+<p>companya.com</p>
+
+<p>kết hợp với Route53 để setting cái domain của riêng công ty bạn</p>
+
+<blockquote>
+<p>Q. 1 flow log record có format như sau:<br />
+<code>10 123456789010 eni-abc123de 172.31.41.189 172.8.51.117 39751 3389 6 20 3279 1218430010 1218430070 REJECT OK</code><br />
+nghĩa là gì?</p>
+</blockquote>
+
+<p>ip <code>172.31.41.189</code> từ port 39751 đang cố connect đến ip <code>172.8.51.117</code> ở port RDP 3389, giao thức TCP, và bị REJECT, đã lưu vào log</p>
+
+<p>số packages gửi đến là 20, nặng 3279 byte, timestamp lúc start là 1218430010 và end là 1218430070</p>
+
+<p><code>&lt;version 10&gt; &lt;account-id&gt; &lt;interface-id&gt; &lt;source address&gt; &lt;dest address&gt; &lt;srcport&gt; &lt;dstport&gt; &lt;protocol&gt; &lt;packets&gt; &lt;bytes&gt; &lt;start&gt; &lt;end&gt; &lt;action&gt; &lt;log-status&gt;</code></p>
+
+<blockquote>
+<p>Q. 1 Cty host 1 web app và có DynamoDB làm backend. Vấn đề là khi peak loads có thể các request đến DB sẽ bị throttle. Làm nào để đáp ứng dc lượng lớn các request đó?</p>
+</blockquote>
+
+<p>Enable auto scaling cho DynamoDB, nó sẽ tăng read/write capacity để DB ko bị throttle</p>
+
+<p>Các DB như RDS, Aurora, DynamoDB đều có thể enable auto scaling</p>
+
+<p>Trước đây SAA Notes có 1 câu: DB bị tăng số lượng write, ko thể handle đc load. Làm nào để write ko bị mất cái nào? - Dùng SQS FIFO để lưu các write request pending</p>
+
+<p>-&gt; thì đó là do câu hỏi chỉ muốn để write request ko bị mất cái nào thôi, chứ SQS ko đáp ứng dc việc high throughput của DynamoDB</p>
+
+<blockquote>
+<p>Q. Bạn restore 1 volume từ 1 snapshot để attach vào EC2. Bạn nhận ra có độ trễ về I/O trên cái New volume đó khi app đc launch lần đầu. Làm sao để các volume sau này dc restore từ snapshot ko bị issue đó nữa?</p>
+</blockquote>
+
+<p>Ensure là all block trên cái volume mới đó phải dc access ít nhất 1 lần</p>
+
+<p>1 New EBS volume thì sẽ luôn maximum performance ngay từ đầu mà ko cần initialization (hay còn gọi là pre-warming)</p>
+
+<p>Nhưng các storage blocks của volume dc restore từ snapshot thì phải dc initialization, nếu ko sẽ có issue về performance trong lần đầu access</p>
+
+<blockquote>
+<p>Q. 1 Cty có set các EC2 trong VPC. Cần scan xem có risk về security ko, check cần phải làm với “Center for Internet Security (CIS) Benchmarks”. Nên dùng service nào?
+Trusted Advisor, Inspector, Config, GuardDuty?</p>
+</blockquote>
+
+<p>Inspector</p>
+
+<p>Hiện giờ Inspector đang support những rule sau:<br />
+· Common Vulnerabilities and Exposures<br />
+· Center for Internet Security (CIS) Benchmarks<br />
+· Security Best Practices<br />
+· Runtime Behavior Analysis</p>
+
+<p>Trusted Advisor để đưa ra recommendations,<br />
+Config để config,<br />
+GuardDuty để quản lý threat detections</p>
+
+<blockquote>
+<p>Q. Bạn có 1 set các EC2, để giảm cost, thì muốn shutdown các EC2 ko đc sử dụng, làm nào?</p>
+</blockquote>
+
+<p>tạo Cloudwatch alarm, base on các metric cụ thể để shutdown instance</p>
+
+<blockquote>
+<p>Q. Cty bạn tạo AWS Organization để quản lý nhiều account. Với những service mà liên quan đến critical về security thì họ muốn chúng dc nottify cho Security Team từ những account trong org đó. Làm nào?</p>
+</blockquote>
+
+<p>Dùng AWS Personal Health Dashboard và
+trong mỗi account sẽ tạo 1 CF template để run Cloudwatch rule của Org, Rule đó sẽ notify Security Team mỗi khi có critical alarm được generate ra.</p>
+
+<blockquote>
+<p>Q. Bạn có 1 set các app trên EC2 trong private subnet. Các app này cần dùng Kinesis stream. Làm nào để ensure là các app có thể sử dụng Kinesis stream?</p>
+</blockquote>
+
+<p>Dùng 1 VPC Endpoint interface</p>
+
+<p>VPC Endpoint interface dc cung cấp bởi Private link, đảm bảo các traffic ko đi ra khỏi Amazon network</p>
+
+<blockquote>
+<p>Q. Công ty bạn đang chọn gói support của AWS, cần:<br />
+■ 24x7 access vào customer service<br />
+■ trong giờ hành chính access vào Cloud Support Associate</p>
+</blockquote>
+
+<p>Chọn Developer là đủ
+ <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/aws-support-plan-1.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Bạn dùng public key hay private key để access vào EC2? key để trong EC2 là public hay private?</p>
+</blockquote>
+
+<p>Dùng private key để access vào EC2,<br />
+Key trong EC2 là public key</p>
+
+<blockquote>
+<p>Q. Bạn đang dùng Storage Gateway để extend data storage của bạn, yêu cầu là all data cần encrypt at rest thì dùng gì?</p>
+</blockquote>
+
+<p>KMS, hoặc S3 SSE</p>
+
+<blockquote>
+<p>Q. Bạn đang dùng Redshift để manage data warehouse. Yêu cầu là all data cần transfer đến Redshift qua 1 VPC. Làm nào?</p>
+</blockquote>
+
+<p>Enable Amazon Redshift Enhanced VPC Routing</p>
+
+<p>khi làm vậy, Redshift sẽ force all COPY và UNLOAD traffic thông qua VPC.</p>
+
+<blockquote>
+<p>Q. Cty bạn muốn dùng S3 dể lưu file, và làm chúng available như NFS file share đến On-premise server. Làm nào?</p>
+</blockquote>
+
+<p>Dùng File gateway</p>
+
+<p>AWS Storage Gateway cung cấp, File-based, Volume-based, Tape-based, thì cái File Gateway chính là File-based.</p>
+
+<p>Nó cung cấp access vào s3 object như là files/share mount point
+Bạn có thể lưu và retrieve S3 object sử dụng NFS hoặc SMB (server message block)</p>
+
+<blockquote>
+<p>Q. Cty bạn dùng ElastiCache, bạn đã setup Memcahed cho họ, Sau khi dùng thì họ alert rằng sẽ có thể bị high CPU utilization cho cluster. Làm sao để resolve issue đó?</p>
+</blockquote>
+
+<p>scale up cluster bằng cách dùng 1 larger node type,</p>
+
+<p>hoặc scale out cluster bằng cách add thêm nodes</p>
+
+<p>AWS Document viết:</p>
+
+<p>Có nhiều loại Cloudwatch metric monitor performance của ElastiCache: CPUUtilization, SwapUsage, Evictions, CurrConnections.</p>
+
+<p>■ CPUUtilization &gt; 90% thì nên làm như trên</p>
+
+<p>■ SwapUsage &gt; 50MB thì nên tăng value của parameter <code>ConnectionOverhead</code></p>
+
+<p>■ Evictions là loại engine metric. Nếu gặp thì nên scale up cluster bằng cách dùng 1 larger node type, hoặc scale out cluster bằng cách add thêm nodes</p>
+
+<p>■ CurrConnections, nếu gặp thì nên xem lại app của bạn</p>
+
+<blockquote>
+<p>Q. Công ty bạn có 1 set các EC2 và cả các server trên on-premise env. Bạn cần collect thông tin rằng các server này đã install software gì? thì làm nào?
+Dùng System Manager để get software inventory, hay dùng AWS Config?</p>
+</blockquote>
+
+<p>Bạn có thể dùng SSM để query metadata để biết những software nào đã dc install, cái server nào cần update, ..</p>
+
+<p>Dùng AWS Config chỉ có thể check sự thay đổi về configuration của server, chứ ko thể biết server đã install gì.</p>
+
+<blockquote>
+<p>Q. 1 Cty muốn dùng Active Directory có sẵn để grant quyền cho user access vào AWS Console thì chuỗi action sẽ là gì? (nghĩa là dùng IAM Federated sign-in using AD)</p>
+</blockquote>
+
+<p>1- User access vào portal sign-in page được cung cấp bởi AD FS (Active Directory Federation Service), rồi login</p>
+
+<p>2- AD FS sẽ authenticate user đối với AD</p>
+
+<p>3- AD trả về User info, trong đó bao gồm AD group membership</p>
+
+<p>4- AD FS dùng group membership info để create SAML redirect link đến AWS STS</p>
+
+<p>5- AWS STS dùng AssumeRoleWithSAML để grant temporary credential cho user (session từ 15m đến max 12h, default 1h) và trả về</p>
+
+<p>6- User được authenticated và access vào AWS console</p>
+
+<p>Không dùng <code>AssumeRoleWithWebIdentity</code> vì mình dùng AD nên phải đi với SAML</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/adfs-authentication-flow.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. 1 Cty có DynamoDB. Họ muốn ensure là có thể recover dc trong TH accidental write or delete operation. Làm nào?
+có dùng Multi-AZ ko?</p>
+</blockquote>
+
+<p>Dùng Point-in-time recovery feature, bạn có thể recover về any point trong khoảng 35 ngày (backup retention period (thời gian lưu backup) max 35 days)</p>
+
+<p>Multi-AZ là feature của RDS thôi, ko phải của DynamoDB, DynamoDB có cái gọi là global table</p>
+
+<blockquote>
+<p>Q. So sánh giữa Multi-AZ và Read Replicas của RDS:</p>
+</blockquote>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/compare-multi-az-and-read-replica.jpg" alt="" /></p>
+
+<p>Multi-AZ là Synchronous (ReadRep là async)</p>
+
+<p>Multi-AZ chỉ primary instance là active (ReadRep thì mấy cái replica có thể read)</p>
+
+<p>Multi-AZ thì auto backup trên con standby (ReadRep thì default ko config)</p>
+
+<p>Multi-AZ thì luôn span 2 AZ trong region (ReadRep thì có thể 1 AZ, hoặc Cross-AZ, Cross-Region)</p>
+
+<p>Multi-AZ thì DB engine upgrade trên con primary (ReadRep thì ko phụ thuộc)</p>
+
+<p>Multi-AZ thì auto failover khi có vấn đề (ReadRep thì manual promote từ replica thành 1 con db instance standalone)</p>
+
+<blockquote>
+<p>Q. Bạn có 1 set các DynamoDB table. Cần phải monitoring report về Read/Write Capacity của DynamoDB để utilized. Làm nào?</p>
+</blockquote>
+
+<p>Dùng Cloudwatch metrics để xem Read/Write capacity dc utilized</p>
+
+<p>Cloudwatch cung cấp các metric để monitor DynamoDB:</p>
+
+<p>Nếu muốn monitor rate of TTL deletion on table? - monitor cái <code>TimeToLiveDeletedItemCount</code></p>
+
+<p>Nếu muốn xem dynamo table của mình đang có provisioned throughput là bao nhiêu? - monitor cái <code>ConsumedReadCapacityUnits</code> hoặc <code>ConsumedWriteCapacityUnits</code></p>
+
+<p>Nếu muốn xác định request nào vượt quá limit của throughput? - monitor cái <code>ThrottledRequest, ReadThrottleEvents, WriteThrottleEvents</code></p>
+
+<p>Nếu muốn xác định có lỗi system err ko? - monitor cái <code>SystemErrors</code> xem có lỗi HTTP 500 (Server error) hay ko</p>
+
+<blockquote>
+<p>Q. Cty bạn có 1 S3 bucket trên EU region. Giờ có yêu cầu replicate các object sang 1 region khác, cần ensurre điều gì?</p>
+</blockquote>
+
+<p>Cả source và destination bucket đều phải enable versioning</p>
+
+<p>và tất nhiên là chúng phải khác AWS region</p>
+
+<blockquote>
+<p>Q. Cty bạn có 2 account AWS, 1 cái cho Dev, 1 cái cho Prod, giờ Dev cần access vào Prod account để update application thì làm nào cho secure?</p>
+</blockquote>
+
+<p>Tạo 1 cross account role, rồi share ARN cho Role</p>
+
+<p>Trong AWS Document có ghi:</p>
+
+<p>1- Trong Prod account, admin tạo 1 role <code>UpdateApp</code>, trong trust policy của role sẽ chỉ định AWS account id của Dev Account. Trong permission của role thì define những cái quyền cụ thể như write s3 bucket&hellip;</p>
+
+<p>2- Trong Dev account, admin sẽ grant quyền cho group developer có quyền AssumeRole, để từ đó nhưng IAM trong group developer sẽ có thể switch role sang.</p>
+
+<p>3- User sẽ switch Role trên console, hoặc CLI</p>
+
+<p>4- STS sẽ verify và return credential tạm thời,</p>
+
+<p>5- Từ đó User sẽ tự động dc redirect sang console của account Prod</p>
+
+<blockquote>
+<p>Q. Cty có 1 on-premise web, muốn healthcheck liên tục, nếu health bị degrade thì sẽ switch sang 1 static website trên aws, làm nào?</p>
+</blockquote>
+
+<p>Dùng Route53, health check to failover</p>
+
+<blockquote>
+<p>Q. Bạn có set các EC2 trong private subnet (10.0.1.0/24), những EC2 này cần download update từ internet HTTPS. Bạn đã setup NAT instance trong public subnet. Giờ cần setup SG cho NAT instance như nào?</p>
+</blockquote>
+
+<p>Inbound rule: cho phép traffic từ private subnet IP qua port 443</p>
+
+<p>Theo AWS Document:<br />
+SG của NAT instance nên setting là:</p>
+
+<p>■ Inbound cho phép traffic từ private subnet IP qua port <sup>443</sup>&frasl;<sub>80</sub></p>
+
+<p>■ Outbound cho phép traffic từ port <sup>80</sup>&frasl;<sub>443</sub> ra 0.0.0.0/0 (để cho NAT access internet)</p>
+
+<p>Giải thích thêm: Bản thân con NAT đã nằm ở <code>public</code> subnet rồi, nó đã nhận dc traffic từ World rồi, chỉ cần config thêm cho nó dc nhận traffic từ <code>private</code> subnet nữa thôi</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/config-route-table-vpc.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Bạn có 1 app host trên aws. Bạn muốn setup instance type hiệu quả, sẽ flexible khi spikes usage. Nên chọn cái gì?</p>
+</blockquote>
+
+<p>T2.micro, Config T2 unlimited option</p>
+
+<p>Ví dụ: bạn có 1 ec2 t3.large, baseline CPU của nó là 30%, nếu nó chạy trung bình ở 30% hoặc ít hơn trong khoảng 24h, thì sẽ ko phát sinh thêm chi phí. Nhưng nếu run trung bình ở mức 40% trong khoảng 24h đó thì sẽ mất thêm tiền 10% đó.</p>
+
+<blockquote>
+<p>Q. Bạn plan host 1 batch process app trên ec2. Nên Instances loại nào? General Purpose, Memory Optimized, Storage Optimized, Compute Optimized</p>
+</blockquote>
+
+<p>Compute Optimized</p>
+
+<blockquote>
+<p>Q. VPC có 2 subnet là public và private. Public subnet cần 1 NAT gateway. Thì config trên main route table và custom route table cần như nào? các route table ở trong private hay public subnet?</p>
+</blockquote>
+
+<p><strong>main</strong> route table phải ở trong <strong>private</strong> subnet, target đến NAT:<br />
+0.0.0.0/0 target đến NAT gateway</p>
+
+<p>custom route table phải ở trong public subnet, target đến IGW:<br />
+0.0.0.0/0 target đến IGW</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/config-route-table-vpc.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. 1 Cty lưu document trên s3. Họ bị audit raise vấn đề về non-maintaining access logs. Bạn dự định enable s3 server access log cho all buckets. Cần chú ý gì?</p>
+</blockquote>
+
+<p>Source và target bucket phải là 2 bucket riêng và cùng trong 1 region</p>
+
+<p>AWS Document viết:<br />
+Server access logging để track request vào bucket. Bạn ko tốn tiền cho việc dùng feature này. Tất nhiên vẫn trả phí lưu trữ, phí access vào xem log như các request thông thường.</p>
+
+<p><code>source bucket</code> là bucket bạn muốn config để track access log của nó, (sẽ config phần logging)</p>
+
+<p><code>target bucket</code> là bucket lưu access log của source</p>
+
+<p>default encrpytion trên target bucket là AES256 (S3-SSE), và ko thể thay đổi sang cái khác như SSE-KMS dc.</p>
+
+<blockquote>
+<p>Q. Cty bạn có 1 Redshift cluster trên EU region. Họ cần phải ensure là cluster sẽ available trên other region đề phòng TH primary cluster bị isue do region. Làm nào? Có thể Multi-AZ, Cross Region Read Replica, Global table hay ko?</p>
+</blockquote>
+
+<p>Readshift ko có mấy tính năng trên đâu mà chỉ có thể Config Redshift automatic/manual copy snapshot to secondary region.</p>
+
+<p>ko thể Multi-AZ hay Read replica như RDS dc</p>
+
+<p>cũng ko thể global table như DynamoDB dc</p>
+
+<blockquote>
+<p>Q. Bạn muốn block public access vào all s3 buckets. Làm nào?
+apply trên bucket level hay object level?<br />
+apply theo region hay toàn bộ region?
+apply cho current bucket hay future bucket?</p>
+</blockquote>
+
+<p>block public access sẽ apply trên bucket level or account level, trên toàn bộ region (globally), cho cả current và future bucket</p>
+
+<blockquote>
+<p>Q. Bạn đang deploy 1 vài Cloudformation templates. Khi deploy gặp lỗi sau:<br />
+Sender<br />
+Throttling<br />
+Rate exceeded<br />
+Làm nào?</p>
+</blockquote>
+
+<p>add 1 exponential backoff giữa các lần call API createStack</p>
+
+<p>Lỗi xảy ra do createStack API tạo quá nhiều resource cùng 1 thời điểm. Cần phải có delay giữa các request đó</p>
+
+<p>(Bạn ko thể add pause trong CF template mà chỉ có thể dùng wait hoặc depend on condition thôi)</p>
+
+<blockquote>
+<p>Q. 1 công ty Audit đang audit your infra. Họ muốn biết loại security nào đang dc implement ở data centre mà host các AWS resource của bạn? làm nào?</p>
+</blockquote>
+
+<p>Dùng document cung cấp ở AWS Artifact service</p>
+
+<p>AWS Artifact service là service cung cấp các security &amp; compliance
+documents giống như ISO cert, PCI, SOC reports</p>
+
+<blockquote>
+<p>Q. App của bạn dùng RDS host database. Sau khoảng vài ngày, 1 table bị drop accidently và cần phải retrieve ngay lập tức trong vòng 5 phút sau khi bị drop. Dùng tính năng nào của RDS?
+Multi-AZ hay Read replica hay Automated backup?</p>
+</blockquote>
+
+<p>RDS Automated backup</p>
+
+<p>RDS tự động backup DB instance theo period mà bạn chỉ định, và bạn có thể recover db về bất kỳ thời điểm nào trong backup retention period đó</p>
+
+<p>AWS Document viết:<br />
+Khi bạn delete DB instance, nếu ko chọn giữ lại backup thì mặc định sẽ xóa hết các bản backup luôn</p>
+
+<p>Backup retention period, nếu bạn ko setup thì mặc định là 1 ngày nếu bạn tạo DB instance qua CLI, API. Là 7 ngày nếu tạo DB instance qua Console.</p>
+
+<p>Automated backup chỉ diễn ra với DB trong trạng thái <code>Avalable</code>.</p>
+
+<p>Automated backup diễn ra hàng ngày. Nếu ko chỉ định thì default là 30 phút backup windows, chọn ngẫu nhiên trong block 8h tùy theo region (ví dụ: virginia: 3-11h, tokyo: 13-21h)</p>
+
+<blockquote>
+<p>Q. Bạn muốn setup EC2 trong VPC. Yêu cầu là support higher bandwidth và higher packet per second (PPS) performance. Làm nào?
+Có dùng EBS Optimized Instance type dc ko?</p>
+</blockquote>
+
+<p>Dùng Instance type loại mà support Enhanced Networking</p>
+
+<p>ko dùng EBS Optimized Instance type vì nó chỉ dùng để tăng performance cho EBS volumes</p>
+
+<p>AWS Document viết:<br />
+ENA (Elastic Network Adapter) support tăng tốc network <strong>100 Gbps</strong>: a1, c5, m5, t3, r5, p2, p3</p>
+
+<p>VF (Intel Virtual function) support tăng tốc network <strong>10 Gbps</strong>: c3, c4, d2, i2, m4, r3</p>
+
+<blockquote>
+<p>Q. Bạn có 1 ASG trong đó có 1 số ec2, giờ app đang có issue và cần debug thì làm nào?
+có thể dùng AWS Config để lấy config snapshot của ec2 để điều tra ko?</p>
+</blockquote>
+
+<p>Cần suspend 1 hoặc nhiều scaling process để điều tra ec2</p>
+
+<p>ko thể dùng AWS config vì điều đó là ko thể</p>
+
+<p>AWS Document viết:<br />
+Có 1 số scaling process trong ASG có thể suspend như:<br />
+<code>Launch</code>: add ec2 vào ASG,<br />
+<code>Terminate</code>: remove ec2 khỏi ASG,<br />
+<code>AddToLoadBalancer</code>: add ec2 vào LB or target group,<br />
+<code>AlarmNotification</code>: chấp nhận thông báo của Cloudwatch,<br />
+<code>AZRebalance</code>: cân bằng số lượng ec2 giữa các AZ,<br />
+<code>HealthCheck</code>: check health of ec2,<br />
+<code>ReplaceUnhealthy</code>: terminate ec2 và create cái mới,<br />
+<code>ScheduledActions</code>: thực hiện scheduled scaling action</p>
+
+<blockquote>
+<p>Q. 1 công ty có các file mà nếu đã dc verify thì sẽ ko cần trong tương lai trừ TH có issue. Nên lưu ở đâu cho tiết kiệm? Glacier hay S3 RRS hay S3 IA</p>
+</blockquote>
+
+<p>Glacier vì nó rẻ hơn hẳn</p>
+
+<p>■ Dùng S3-RRS (Reduced Redundancy Storage) nếu bạn muốn lưu những data ko quan trọng và nếu mất thì cũng dễ tái tạo lại<br />
+■ Dùng IA nếu bạn muốn 1 chỗ lưu long-term nhưng có thể retrieve ngay lập tức<br />
+■ Dùng Glacier nếu bạn muốn 1 chỗ lưu long-term nhưng có thể retrieve trong vòng 3-5 giờ</p>
+
+<blockquote>
+<p>Q. Bạn cần capture all traffic flowing giữa client và server, bạn plan to enable Access log trên Application Load Balancer. Có loại traffic nào mà Access log ALB ko capture lại?</p>
+</blockquote>
+
+<p>health check request từ ALB đến target group sẽ <strong>ko</strong> dc ALB access log capture lại</p>
+
+<blockquote>
+<p>Q. 1 Cty muốn implement quá trình deployment automatically tạo LAMP stack, download latest PHP từ s3, setup ELB. Nên dùng service nào để tạo 1 orderly deployment of software?<br />
+Beanstalk hay Opswork?</p>
+</blockquote>
+
+<p>AWS Elastic Beanstalk</p>
+
+<blockquote>
+<p>Q. Cty bạn plan setup 1 performance-sensitive workload trên aws. Bạn cần setup ec2 cho hosting this workload. Cần chú ý gì về config?</p>
+</blockquote>
+
+<p>Chọn EBS Optimized Instance</p>
+
+<p>Hoặc Chọn Instance type with 10 Gigabit network connectivity</p>
+
+<p>khi bạn plan config EBS volume cho app, 2 cái trên rất quan trọng khi bạn muốn stripe nhiều volume lại trong RAID configuration</p>
+
+<p>Có 1 list các loại instance type dc support EBS Optimized, đa số dc enable by default, 1 số cần phải enable bằng tay.</p>
+
+<p>Có 1 list các instance type dc support Enhanced Networking lên đến 10 Gbps bandwidth</p>
+
+<h2 id="p3"><strong>&mdash;P3&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Bạn đang setup DynamoDB, có 40 device ghi data mỗi 10s, mỗi data 1KB. Vậy Write throughput set cho table là bao nhiêu?</p>
+</blockquote>
+
+<p>4WCU</p>
+
+<blockquote>
+<p>Q. Cty của bạn có VPN connection giữa AWS VPC và on-premise data centre. Họ cần các ec2 sử dụng DNS server của On-premise cho việc resolve DNS, làm nào?</p>
+</blockquote>
+
+<p>Tạo 1 DHCP Option set rồi asign nó vào VPC</p>
+
+<p>Chú ý sau khi tạo DHCP Option set rồi thì bạn ko thể modify nó. Muốn thì phải tạo cái mới.</p>
+
+<blockquote>
+<p>Q. Cty đang quản lý MySQL DB trên on-premise. Họ muốn migrate lên AWS, họ ko muốn mất công managed hay scaling DB thì nên dùng RDS hay Aurora?</p>
+</blockquote>
+
+<p>Aurora, vì RDS vẫn cần 1 phần quản lý manage và scale<br />
+Còn Aurora là full-managed by AWS</p>
+
+<blockquote>
+<p>Q. Công ty bạn muốn cắt giảm cost thì có nên consider việc ko sử dụng Autoscaling group vì nó gây cost ko?</p>
+</blockquote>
+
+<p>ko, vì ASG ko phát sinh cost</p>
+
+<blockquote>
+<p>Q. Bạn cần phải tạo các metric cloudwatch, cái nào sau đây là cái bạn cần phải tạo <strong>custom</strong> metric?</p>
+</blockquote>
+
+<p>CPU Utilization.</p>
+
+<p>Network Throughput.</p>
+
+<p>Số bytes read/writte vào volume.</p>
+
+<p>Dung lượng Disk storage còn lại trong volume.<br />
+????</p>
+
+<p>cái cần tạo custom metric là <code>Dung lượng Disk storage còn lại trong volume</code>,<br />
+những cái kia đều là default metric, ko cần custom, ngay cả số lượng byte read/write vào volume cũng default</p>
+
+<blockquote>
+<p>Q. Limit về ELB và DynamoDB table?</p>
+</blockquote>
+
+<p>ELB limit 20 LB mỗi region, có thể request để tăng<br />
+DynamoDB limit 256 tables per account, có thể request để tăng</p>
+
+<blockquote>
+<p>Q. Công ty bạn đang audit cả những AWS resource, họ yêu cầu compliance của aws resources thì lấy đâu?</p>
+</blockquote>
+
+<p>Vào compliance portion của AWS website để lấy all:<br />
+<code>https://aws.amazon.com/compliance/resources/</code></p>
+
+<blockquote>
+<p>Q. Bạn access dc vào web server qua bastion nhưng ko thể access vào qua ELB, cần ensure gì?</p>
+</blockquote>
+
+<p>ensure là ELB có attach vào public subnet<br />
+ensure SG hoặc ACL của ELB có allow inbound traffic</p>
+
+<blockquote>
+<p>Q. Công ty bạn muốn keep control cost, và muốn nhận alert cho billing thì cần enable gì trước khi tạo alarm for estimated metric? Còn nếu muốn tạo billng alarm thì tạo ở đâu?</p>
+</blockquote>
+
+<p>Enable billing alert ở mục Account Preferences</p>
+
+<p>Nếu muốn tạo billing alarm thì tạo ở Cloudwatch</p>
+
+<blockquote>
+<p>Q. Bạn có 1 web app static content có nhiều truy cập gây bị chậm, nên làm nào? host trên s3 hay dùng read replica hay elastiCache?</p>
+</blockquote>
+
+<p>host trên s3</p>
+
+<p>app bị chậm vì bị truy cập nhiều, app respone ko phải vì dynamic content dc fetch từ DB nên dùng elastiCache ko hợp lý.</p>
+
+<p>read replica cũng chỉ dùng để giảm độ trễ của dynamic data thôi.</p>
+
+<p>1 static website gồm các static content, có thể chứa client-side script.</p>
+
+<p>1 dynamic website thì dựa vào server-side process, script như PHP, JSP, .NET. S3 ko hỗ trợ server-side scripting.</p>
+
+<blockquote>
+<p>Q. Team member của bạn launch 1 ec2 thuộc loại EBS-backed instance, xong vài tuần sau thì mất private key, ko thể login vào dc nữa. Giờ làm nào?</p>
+</blockquote>
+
+<p>chú ý các step sau chỉ dành cho EBS-backed instance, ko dành cho instance store-backed instance:</p>
+
+<p>0- đầu tiên, tạo 1 keypair mới,<br />
+1- launch 1 <code>temp instance</code> cũng từ ami đó,<br />
+2- stop <code>origin instance</code>,<br />
+3- detach root volume của <code>origin</code> ra, attach vào <code>temp instance</code> dưới dạng data volume,<br />
+4- connect vào temp insntace,<br />
+5- mount volume mới vào 1 folder tạm để modify file system của volume đó,<br />
+5- modify authorized_keys: copy authorized_keys từ <code>temp instance</code> sang origin volume vừa mount,<br />
+6- move cái volume đó trở lại <code>origin instance</code>,<br />
+7- restart instance.</p>
+
+<blockquote>
+<p>Q. Bạn lưu billing report trên 1 s3 bucket theo dạng csv. Giờ cần dùng Athena để query những report đó. Thì trong Athena chỉ specify s3 bucket theo path nào?</p>
+</blockquote>
+
+<p>s3://bucketname/prefix/<br />
+hay<br />
+s3://bucketname/prefix/*</p>
+
+<p>Phải dùng: <code>s3://bucketname/prefix/</code></p>
+
+<blockquote>
+<p>Q. Team bạn có 1 ASG và 1 ELB, trong đó có 1 set ec2. Sau khi cho ng dùng thử thì thấy là traffic ko distribute đều qua các ec2. Lý do gì?</p>
+</blockquote>
+
+<p>sticky session đã dc enable cho LB</p>
+
+<p>all subnets có ec2 ko dc register với LB</p>
+
+<p>AWS Document viết:
+sticky session sẽ ensure là all request của user trong suốt session sẽ gửi dến cùng 1 ec2</p>
+
+<blockquote>
+<p>Q. Khác nhau giữa Dedicated Host và Dedicated Instance?</p>
+</blockquote>
+
+<p>EC2 - Dedicated Host:<br />
+AWS cho bạn toàn quyền trên 1 con server vật lý luôn, ko chia sẻ với ai, cho bạn toàn quyền control số lượng core, socket…, cho bạn quyền sử dụng licence có sẵn của bạn (BYOL-bring your own licene), ko mất tiền mua license của AWS nữa.<br />
+Bạn có thể run nhiều instances trên cái host đó. Các instance trong host sẽ có network performance cao.</p>
+
+<p>EC2 - Dedicated Instance:<br />
+Tạo Ec2 trên 1 con server vật lý, đảm bảo duy nhất cho bạn (tuân thủ về mặt compliance)</p>
+
+<blockquote>
+<p>Q. Bạn cần migrate Oracle 10g Release 2 và MySQL 5.6 lên AWS RDS read replica. Cần chú ý gì?</p>
+</blockquote>
+
+<p>RDS ko support Oracle version dưới 12.1</p>
+
+<blockquote>
+<p>Q. Bạn dùng RDS MySQL. Thì ở <code>Maintenance Window</code> sẽ thực hiện những activities về RDS?</p>
+</blockquote>
+
+<p>Update DB instance hardware,<br />
+Update OS,<br />
+Update DB engine version,<br />
+Patching server.</p>
+
+<blockquote>
+<p>Q. Cty đang dùng RDS MySQL, giờ đang gặp vấn đề về performance với read request, làm nào?<br />
+có nên enable Multi-AZ ko? add Read Replica? tăng instance type của DB instance?</p>
+</blockquote>
+
+<p>Add Read Replica (là scaling theo chiều ngang).<br />
+Tăng instance type của DB instance (là scaling theo chiều dọc)</p>
+
+<p>Việc enable multi-AZ chỉ để làm cho RDS có HA (high-avalability) thôi</p>
+
+<blockquote>
+<p>Q. Số lượng Read Replica của các loại DB: RDS, Aurora, DynamoDB?</p>
+</blockquote>
+
+<p>RDS có thể có max 5 <code>Read Replica</code>,<br />
+Aurora có thể có max 15 <code>Read Replica</code>.<br />
+DynamoDB thì <strong>ko</strong> có khái niệm <code>Read Replica</code> (chỉ có global table: là 1 <code>Read/Write Replica</code>),<br />
+DynamoDB DAX thì có max 9 <code>Read Replica</code></p>
+
+<blockquote>
+<p>Q. Team bạn setup ASG để launch ec2, nhưng ec2 ko launch nên bạn cần debug. Lý do có thể là gì?</p>
+</blockquote>
+
+<p>_AZ ko còn support<br />
+_instance type ko còn available<br />
+_keypair của ec2 ko tồn tại<br />
+_Security group (SG) ko tồn tại<br />
+_ko tìm thấy ASG<br />
+_bạn ko subcribed cái service đó<br />
+_EBS ko support instance-store AMI<br />
+_placement groups ko làm dc với ec2 m1.large<br />
+_client error</p>
+
+<blockquote>
+<p>Q. Cty bạn host 1 app trên ec2, app sau 1 ELB. Bạn cần config Route53 với company DNS ELB. Sử dụng loại record nào của R53?
+A, MX, ALIAS, AAAA record?</p>
+</blockquote>
+
+<p>Dùng ALIAS</p>
+
+<p>theo AWS documents thì ALIAS record để dùng cho các service sau:<br />
+Cloudfront, Elastic Beanstalk, ELB, S3 bucket, another R53 record</p>
+
+<p>còn các lựa chọn khác:<br />
+■ A record dùng để point 1 resource qua Ipv4 record<br />
+■ MX record dùng cho Mail Server record<br />
+■ AAAA record dùng để point 1 resource qua Ipv6 record</p>
+
+<blockquote>
+<p>Q. 1 Cty có 1 critical app trên VPC. Giờ bạn cần 1 list các connection dc tạo ra trên SSH port. Làm nào để rẻ và tiện?</p>
+</blockquote>
+
+<p>Dùng Athena query S3 bucket nơi chưa VPC flow logs đã save</p>
+
+<p>cách 2 tốn công hơn là: Export VPC flow logs ra CSV format rồi filter port SSH</p>
+
+<blockquote>
+<p>Q. Cty muốn launch các ec2, chúng cần độ trễ thấp, và network performance cao thì làm nào?</p>
+</blockquote>
+
+<p>tạo 1 placement group trong single AZ<br />
+chọn instance type loại Enhanced Networking</p>
+
+<blockquote>
+<p>Q. 1 cty dùng Aurora MySQL, họ cần dùng Read Replica để cải thiện read performance, nhưng họ muốn Read Replica ở trên 1 region khác (cross-region read replica) thì cần chú ý gì?</p>
+</blockquote>
+
+<p>Chú ý là bạn có thể tạo 5 cross-region Read Replica (cả encrypted và unencrypted)</p>
+
+<p>Aurora ko tự động tạo cross-region replica, bạn phải tạo manual</p>
+
+<blockquote>
+<p>Q. Cty bạn có 1 set các resource trên AWS. Giờ muốn là tất cả những thay đổi của resource đều cần monitor lại. Nên dùng service gì? Cloudwatch? cloudtrail? Config?</p>
+</blockquote>
+
+<p>Cloudtrail và Config</p>
+
+<p>không dùng Cloudwatch vì nó ko cung cấp detail về những config thay đổi</p>
+
+<p>AWS config giúp bạn review những config thay đổi của resource</p>
+
+<p>Cloudtrail thì cung cấp monitor các account activity trên Aws acocunt bạn</p>
+
+<blockquote>
+<p>Q. Cty bạn có infra trên aws. Giờ họ muốn share project data store vơi 1 công ty khác (A), user của công ty A làm việc trên linux và sẽ access vào data đó. Cách nào để most secure và khả thi nhất?</p>
+</blockquote>
+
+<p>Dùng EFS Mount Target, với 1 Security Group mở inbound NFS port cho công ty A access qua AWS Direct Connect/hoặc VPN.</p>
+
+<p>EFS MOunt Target chỉ dc access với điều kiện:<br />
+■ EC2 trong AWS VPC,<br />
+■ EC2 trong VPC perring with other VPC,<br />
+■ On-premise server có AWS Direct Connect hoặc AWS VPN to VPC<br />
+Chú ý là SG gắn vào Mount Target phải mở port NFS</p>
+
+<blockquote>
+<p>Q. Cty bạn deploy 1 web app trên US-east region. Có 1 ALB config để HA. Có dùng Cloudfront @edge. Bộ phận Security yêu cầu block 1 black list IP spam tại điểm farthest point from cloud infa. Làm nào?</p>
+</blockquote>
+
+<p>Dùng AWS WAF, tạo 1 Web ACL để block IP ở Global Region, và apply tại edge level Cloudfront</p>
+
+<p>AWS Documents có viết:<br />
+WAF có thể dùng để block IP, pattern in HTTP header&amp;body, SQL injection, URL String, cross-site scripting, geographical location.<br />
+WAF có thể làm điều trên ở tầng Cloudfront edge at Global level, hoặc tầng Applicaion at regional level</p>
+
+<p><strong>chú ý về ACL</strong> WAF có khái niệm <em>Web ACL</em>, còn VPC có khái niệm <em>Network ACL</em></p>
+
+<blockquote>
+<p>Q. Cty bạn đang dùng RDS Database. Bạn cần dự toán cost. Cái nào bạn cần consider về cost khi dùng RDS?</p>
+</blockquote>
+
+<p>Số giờ DB running, loại DB instance type (small hay large&hellip;)</p>
+
+<p>Storage mỗi tháng</p>
+
+<p>số lượng I/O request mỗi tháng</p>
+
+<p>số lượng data transfer khi sang Region khác (chứ trong cùng region thì data transfer là <strong>free</strong>)</p>
+
+<blockquote>
+<p>Q. Bạn có 1 set Ec2, yêu cầu là tất cả EBS volume (root/data) cần preserve khi instance bị terminate, làm nào?</p>
+</blockquote>
+
+<p>set giá trị DeleteOnTerminationcủa volume = False</p>
+
+<p>thì khi ec2 bị terminate thì volume sẽ ko bị xóa theo, còn nếu ko set, default là cái ổ root dc set là true nên khi terminate ec2 nó sẽ bị xóa theo.</p>
+
+<blockquote>
+<p>Q. Dev team đang làm 1 web intranet, data content từ s3. Bạn cần làm 1 access policy để cho least quyền vào s3 bucket. Sẽ cần những gì?</p>
+</blockquote>
+
+<p>Dùng <code>StringLike</code> và <code>aws:Referer</code> để allow <code>s3:getObject</code>
+ action, Deny all other actions từ site intranet đó.</p>
+
+<p>Với <code>StringLike</code> và <code>aws:Referer</code>, chỉ những request dc khởi tạo từ website đó (intranet) mới có thể get object đc.</p>
+
+<p>Nếu dùng cái <code>IPAddress</code> và <code>aws:SourceIp</code> thì những ip range đó vẫn có thể get object trực tiếp từ s3 bucket</p>
+
+<pre><code>{
+  &quot;Version&quot;:&quot;2012-10-17&quot;,
+  &quot;Id&quot;:&quot;http referer policy example&quot;,
+  &quot;Statement&quot;:[
+    {
+      &quot;Sid&quot;:&quot;Allow get requests originating from www.example.com and example.com.&quot;,
+      &quot;Effect&quot;:&quot;Allow&quot;,
+      &quot;Principal&quot;:&quot;*&quot;,
+      &quot;Action&quot;:&quot;s3:GetObject&quot;,
+      &quot;Resource&quot;:&quot;arn:aws:s3:::examplebucket/*&quot;,
+      &quot;Condition&quot;:{
+        &quot;StringLike&quot;:{&quot;aws:Referer&quot;:[&quot;http://www.example.com/*&quot;,&quot;http://example.com/*&quot;]}
+      }
+    }
+  ]
+}
+</code></pre>
+
+<p>Rồi phải ensure là browser bạn dùng có include http referer header ở trong request</p>
+
+<blockquote>
+<p>Q. App của bạn đang muốn dùng SQS, yêu cầu là cần có 1 queue riêng để keep những msg mà ko dc process success. Dùng feature gì?</p>
+</blockquote>
+
+<p>Dead-letter queue (DLQ)</p>
+
+<blockquote>
+<p>Q. Cty bạn dùng 1 số EC2, yêu cầu là các file log từ ec2 cần ship lên s3 bucket để sau này analysis. Dùng service nào?</p>
+</blockquote>
+
+<p>AWS DataPipeline</p>
+
+<p>Service này giúp bạn automate quá trình movement và transform data. Ví dụ log từ ec2 -&gt; S3 -&gt; EMR để analisis</p>
+
+<blockquote>
+<p>Q. Cty bạn dùng S3 bucket lưu docs. Bạn cần tạo policy apply cho nhiều nhân viên để họ có quyền get/put/delete object trên folder cá nhân của họ trên s3, làm nào?</p>
+</blockquote>
+
+<pre><code>{ 
+   &quot;Version&quot;:&quot;2012-10-17&quot;,
+   &quot;Statement&quot;:[ 
+      { 
+         &quot;Effect&quot;:&quot;Allow&quot;,
+         &quot;Action&quot;:[ 
+            &quot;s3:PutObject&quot;,
+            &quot;s3:GetObject&quot;,
+            &quot;s3:DeleteObject&quot;
+         ],
+         &quot;Resource&quot;:&quot;arn:aws:s3:::test2019bucket/${aws:userid}*&quot;
+      }
+   ]
+}
+</code></pre>
+
+<blockquote>
+<p>Q. Công ty bạn đã setup 1 dual tunnel VPN connection từ On-premise đến AWS. Giờ cần làm 1 kết nối dự phòng (redundant connection) trong TH VPN bị fail. Thì làm nào?</p>
+</blockquote>
+
+<p>Tạo thêm 1 secondary VPN connection</p>
+
+<p>Mặc dù 1 VPN connection đã có 2 tunnel để đảm bảo connection trong TH 1 cái bị fail, thì bạn vẫn cần tạo thêm 1 secondary VPN connection thì mới đề phòng dc Trường hợp customer gateway bị fail</p>
+
+<blockquote>
+<p>Q. Bạn đang run 1 ec2 và giờ muốn tăng type của ec2, làm nào?</p>
+</blockquote>
+
+<p>stop, change type, start</p>
+
+<blockquote>
+<p>Q. Bạn cần publish metric lên Cloudwatch, yêu cầu là interval của metric là 1s, làm nào, dùng CLI hay Console?</p>
+</blockquote>
+
+<p>publish metric high resolution, via CLI (chứ đây là <strong>custom metric</strong> thì không thể publish qua Console dc, phải dùng CLI)</p>
+
+<blockquote>
+<p>Q. Tạo billing alarm từ đâu? Cloudwatch? Cost Explorer?
+Tạo billng alert thì sao?</p>
+</blockquote>
+
+<p>Tạo billing alarm từ Cloudwatch</p>
+
+<p>Tạo billing alert từ Account Preferences</p>
+
+<blockquote>
+<p>Q. Bạn tạo 1 SAML indentity provider, những attribute nào mà SAML cần cung cấp cho AWS STS?</p>
+</blockquote>
+
+<p>Role, RoleSessionName, Audience, NameID</p>
+
+<blockquote>
+<p>Q. Cty bạn có 1 set CMK keys đc define trong KMS. Bạn muốn control quyền access các key đó trong KMS thì dùng cái gì?
+KMS policies hay Key policies?</p>
+</blockquote>
+
+<p>Key policies, bởi vì ko có khái niệm KMS policies</p>
+
+<blockquote>
+<p>Q. Bạn đang dùng Cloudtrail log. Bạn muốn ensure là các file log này ko bị gia mạo, làm nào?</p>
+</blockquote>
+
+<p>Enable tính năng <code>log file integrity</code> cho log files</p>
+
+<blockquote>
+<p>Q. Công ty bạn có 1 vendor muốn access vào AWS account của cty bạn. Bạn tạo cho họ 1 IAM user, giờ muốn tạo 1 policy cho user đó thôi thì dùng policy nào? AWS Managed policy hay Inline policy?</p>
+</blockquote>
+
+<p>Inline policy thôi, khi bạn tạo inline policy thì cái policy đó sẽ ko dc sử dụng cho user khác, và khi bạn xóa user thì cái policy đó cũng bị xóa theo</p>
+
+<h2 id="p4"><strong>&mdash;P4&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. 1 cty có 1 set S3 bucket, và họ lo sợ data bị stolen hoặc bị virus ransomeware tấn công, làm nào? Nên dùng tính năng nào <code>enable s3 versioning</code>, hay <code>enable s3 encryption</code>?</p>
+</blockquote>
+
+<p>enable s3 versioning</p>
+
+<p>chứ cái s3 encryption thì ko giúp chặn virus ransomeware dc.</p>
+
+<blockquote>
+<p>Q. Bạn muốn bật enable MFA delete s3 bucket versioning thì cần làm gì?</p>
+</blockquote>
+
+<p>Dùng root account credential và làm bằng CLI</p>
+
+<p>chứ cái MFA delete này ko thể dùng IAM account và Console được</p>
+
+<p>Những task cần dùng root credential: tạo Cloudfront keypair, S3 MFA delete, change aws support plan (có nhiều nhưng chỉ nêu 3 cái đặc biệt thế thôi)</p>
+
+<blockquote>
+<p>Q. Bạn upload khoảng 70 TB lên S3 Glacier nhưng khi upload thì file name bị thay đổi khi đưa lên Glacier, làm nào?</p>
+</blockquote>
+
+<p>1_Dùng AWS Snowball upload lên s3 rồi từ s3 move sang Galicer dùng Lifecycle rule</p>
+
+<p>2_Upload lên S3 IA rồi move sang Galicer dùng Lifecycle rule</p>
+
+<p>Không nên up trực tiếp lên S3 Glacier</p>
+
+<p>Không nên dùng Snowball Edge vì tốn kém</p>
+
+<blockquote>
+<p>Q. Memory utilization có phải metric built-in của Cloudwatch ko?</p>
+</blockquote>
+
+<p>Không, Memory là custom metric</p>
+
+<blockquote>
+<p>Q. Cty muốn tất cả những API call đến EC2 dc log lại, và nếu có cái Termination api dc call thì sẽ notify bạn, làm nào?</p>
+</blockquote>
+
+<p>Tạo 1 trail trong Cloudtrail, trail sẽ deliver log vào s3 bucket</p>
+
+<p>tạo 1 lambda dc trigger khi s3 có object dạng terminate dc put vào, dùng SNS để notify</p>
+
+<blockquote>
+<p>Q. Bạn dùng Cloudwatch metric <code>DiskReadBytes</code> cho EC2, nhưng sau vài ngày vào xem thấy chỉ hiển thị 0 bytes mặc dù app vẫn đọc data đều, vì sao?</p>
+</blockquote>
+
+<p>■ Có những loại metric chỉ dùng cho <code>instance store volumes</code>, ko phải EBS-backed volumes:</p>
+
+<p>DiskReadOps</p>
+
+<p>DiskWriteOps</p>
+
+<p>DiskReadBytes</p>
+
+<p>DiskWriteBytes</p>
+
+<p>■ Có những loại metric chỉ có trong <code>Basic monitoring</code>:</p>
+
+<p>NetworkPacketsIn</p>
+
+<p>NetworkPacketsOut</p>
+
+<blockquote>
+<p>Q. 1 Cty có service quản lý <code>asymmetric key</code>, muốn integrate với aws thì làm nào?</p>
+</blockquote>
+
+<p>Dùng CloudHSM cho <code>asymmetric key</code> để integrate với on-premise service</p>
+
+<p>Chứ KMS là dịch vụ <code>multi-tenant key storage</code> &amp; chỉ support <code>symetric key</code> thôi.</p>
+
+<p>trước đây từng viết:<br />
+CloudHSM, bạn tự gen ra encryption key và quản lý key đó<br />
+Ephemeral backup key (EBK) dùng để encrpyt data, Persistent backup key (PBK) để encrpyt EBK sau đó save to S3 in same region với CloudHSM.</p>
+
+<blockquote>
+<p>Q. Cy bạn sẽ tạo vài RDS instance, bạn muốn tạo alarm để notify nếu có 75% instance limit dc launch thì làm nào?</p>
+</blockquote>
+
+<p>Enable Bussiness/Enterprise support plan và dùng Trust advisor để check limit rồi alarm cloudwatch</p>
+
+<p>chú ý là Developer support plan ko thể làm dc</p>
+
+<blockquote>
+<p>Q. Cty bạn muốn lấy trung bình CPU Utilization của all EC2 của nhiều region, làm nào?</p>
+</blockquote>
+
+<p>Ko thể tạo aggregate của cross region dc. Phải là từng region.</p>
+
+<p>Và muốn làm thì phải enable detailed monitoring</p>
+
+<blockquote>
+<p>Q. Bạn chuẩn bị deploy 1 static web lên s3. Dùng Route53 bạn đã register domain và sub-domain rồi. Vậy s3 bucket có cần phải trùng tên với domain hay sub-domain ko?</p>
+</blockquote>
+
+<p>Có, cả sub-domain và domain</p>
+
+<blockquote>
+<p>Q. Bạn bị DDos attack lớn, thì nên dùng cái gì để protect website?</p>
+</blockquote>
+
+<p>AWS shield advanced</p>
+
+<p>hoặc WAF nhưng cái này ko chống dc DDos lớn</p>
+
+<blockquote>
+<p>Q. Cty hiện đang setup Direct connect connection từ Onpremise data centre đến 1 VPC us-west. Giờ họ lại cần connect data centre đến 1 VPC trong us-east. Đảm bảo cost-effective thì dùng gì?
+Dùng AWS Direct connect Gateway hay AWS Direct Connect?</p>
+</blockquote>
+
+<p>Dùng AWS Direct connect Gateway (tuy nhiên ko support connect vpc trong account khác, ko support China, ko connect trực tiếp vpc với vpc)</p>
+
+<p>AWS Direct Connect thì đắt hơn</p>
+
+<blockquote>
+<p>Q. Nếu phải lựa chọn CNAME và ALIAS record trong Route53?</p>
+</blockquote>
+
+<p>Luôn chọn alias, Chọn Alias chứ ko chọn CNAME record vì Alias thì có thể tạo cho cả root domain và sub domain, trong khi CNAME thì chỉ có thể tạo cho sub domain.</p>
+
+<blockquote>
+<p>Q. Cty bạn có 1 app dùng để distribute patches. User sẽ download patches update về. Họ complain về respone chậm, làm nào?
+Dùng Cloudfront, ALB, CLB, Route53?</p>
+</blockquote>
+
+<p>Cloudfront, nó sẽ speed up cái tốc độ respone</p>
+
+<blockquote>
+<p>Q. Bạn có 1 EC2 dùng volume General Purpose SSD, giờ muốn tăng IOPS của volume thì làm nào?</p>
+</blockquote>
+
+<p>gp2 max IOPS chỉ 16000, io1 (provisioned IOPS thì max 32000)</p>
+
+<p>hoặc là đặt volume trong RAID 0 Configuration (có thể stripe các volume lại tăng thêm IOPS)</p>
+
+<blockquote>
+<p>Q. Bạn dùng EC2 và nhận thấy đôi khi CPU credit bị go down = 0. Nên làm gì?</p>
+</blockquote>
+
+<p>change instance type cao lên</p>
+
+<p>hoặc dùng t2.unlimited, t3.unlimited</p>
+
+<blockquote>
+<p>Q. 1 ASG có các EC2, bạn nhận thấy các ec2 mới launch ko dc liệt kê là 1 phần của aggregated metric. Làm nào?</p>
+</blockquote>
+
+<p>vì các instance mới launch vẫn còn trong giai đoạn warming, giai đoạn đó sẽ phải expired xong mới dc tính vào metric trung bình</p>
+
+<blockquote>
+<p>Q. Công ty bạn sắp dc audit thì cần cấp quyền access cho auditor như nào?</p>
+</blockquote>
+
+<p>tạo IAM user có quyền read log tạo bởi Cloudtrail trong s3</p>
+
+<blockquote>
+<p>Q. Công ty bạn dev app mobile, user của app đó cần access vào resource trong aws. Dùng service nào? có dùng dc AWS Federated Access ko?</p>
+</blockquote>
+
+<p>Cognito, IAM role</p>
+
+<p>ko dùng AWS Federated Access</p>
+
+<blockquote>
+<p>Q. Khi bạn launch EC2 gặp các lỗi sau nghĩa là gì?
+<code>InstanceLimitExceeded</code>, <code>InsufficientInstanceCapacity</code>, <code>Instance Terminates Immediately</code></p>
+</blockquote>
+
+<p>AWS Document mô tả:<br />
+■ <code>InsufficientInstanceCapacity</code>: khi launch/restart EC2 thì có thể do AWS đang ko đủ available On-demand capacity cho bạn<br />
+Giải pháp: chờ vài phút, hoặc chuyển AZ khác, instance type khác, giảm lượng EC2 muốn start&hellip;</p>
+
+<p>■ <code>InstanceLimitExceeded</code>: vượt quá limit số ec2 có thể run trong 1 region, cần request AWS</p>
+
+<p>■ <code>Instance Terminates Immediately</code>:<br />
+_EBS volume limit has been reached.<br />
+_EBS snapshot của cái instance đó bị corrupt (hỏng).<br />
+_EBS root volume bị encrypt và bạn ko có quyền access vào KMS để decrypt key.<br />
+_AMI mà bạn dùng để launch instance bị thiếu file nào đó.</p>
+
+<blockquote>
+<p>Q. Bạn vừa tạo 1 RDS instance, app của bạn sẽ config để connect RDS. Nhưng từ app đang bị lỗi “Error connecting to database” Vì sao?</p>
+</blockquote>
+
+<p>Sai port</p>
+
+<p>Security groups sai</p>
+
+<p>RDS vẫn đang tạo và chưa available (có thể phải chờ 20 phút)</p>
+
+<blockquote>
+<p>Q. Công ty bạn có EC2, S3, PostgreSQL, EFS, giờ muốn encrpyt data at rest, những cái nào có thể encrypt mà ko làm gián đoạn user dùng?</p>
+</blockquote>
+
+<p>S3 thôi</p>
+
+<p>Những cái còn lại đều phải encrpyt từ đầu khi tạo, giờ muốn thì phải tạo lại</p>
+
+<blockquote>
+<p>Q. EFS có khả năng scale lên peta byte ko?</p>
+</blockquote>
+
+<p>có</p>
+
+<blockquote>
+<p>Q. Bạn có web server ở 2 region us-east-1 và us-west-1, config routing policy lần lượt là latency-based và weighted-based. Khi test failover thì nếu all ec2 ở us-west-1 bị down thì traffic ko shift sang us-east-1 vì sao?</p>
+</blockquote>
+
+<p>Do thiếu config <code>Evaluate Target Health</code> check = yes</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/evaluate-target-health-check.jpg" alt="" /></p>
+
+<p>Hình trên nếu <code>Evaluate Target Health</code> check = NO thì Route53 sẽ ko thể quay lại cái chỗ branch cha để nó switch sang region khác được</p>
+
+<blockquote>
+<p>Q. Bạn có AWS env với EC2 cho web app, CLB, RDS, bạn thấy giá trị high-value <code>SpilloverCount</code> ở trong metric của Cloudwatch, bạn nên monitor cái gì để ko còn cái giá trị này ?</p>
+</blockquote>
+
+<p><code>SpilloverCount</code> là tổng số request bị reject do surge queue is full.</p>
+
+<p>Giải thích về 4 loại metric của LB đây:</p>
+
+<p><code>SurgeQueueLength</code>: tổng số request (HTTP listener) hoặc connection (TCP listener) đang pending. Max của queue là 1024. Nếu queue bị full thì request sẽ bị reject. Số request bị reject đó sẽ hiển thị ở metric <code>SpilloverCount</code></p>
+
+<p><code>RequestCount</code>: là số request completed trong 1 khoảng time nhất định (1 or 5 phút)</p>
+
+<p><code>BackendConnectionErrors</code>: số lượng connection fail khi connect giữa LB và Instances</p>
+
+<blockquote>
+<p>Q. Phân biệt các loại ELB: CLB, NLB, ALB (cái nào cũng có tính scalability):</p>
+</blockquote>
+
+<p>Classic Load Balancer: cung cấp (HTTP, HTTPS or TCP listeners) cho only 1 backend port. Chạy bên ngoài VPC. ( Nếu app của bạn chạy ngoài VPC). Ko thể handle đc hàng triệu request 1 giây như NLB</p>
+
+<p>Network Load Balancer: Layer 4, cung cấp only TCP. Dùng EIP/static IP. Nhiều ports. Dùng với những app mà chỉ cần sử dụng TCP. Và muốn quản lý bằng whilelist IP. Có thể scale để handle workload lên đến hàng triệu request 1 giây (millions of requests per second)</p>
+
+<p>Application Load Balancer: Layer7, cung cấp cân bằng tải cho only HTTP/HTTPS. Nhiều ports. flexible hơn CLB. Nhiều ng dùng. Cung cấp tính năng nâng cao về routing đến target, dùng cho các app hiện đại, micro-services, containers. Ko thể handle đc hàng triệu request 1 giây như NLB</p>
+
+<blockquote>
+<p>Q. Bạn cần tạo stack Cloudformation, và muốn chắc chắn bạn có thể sửa lỗi bằng manually nếu có thì làm nào?</p>
+</blockquote>
+
+<p>Set giá trị <code>OnFailure = DO_NOTHING</code> khi create stack, để khi xảy ra lỗi stack ko tự động rollback</p>
+
+<blockquote>
+<p>Q. Bạn dùng cloudformation tạo stack gồm có các resource trong đó có RDS, bạn muốn RDS dc giữ lại nếu stack bị delete, làm nào?</p>
+</blockquote>
+
+<p>Dùng <code>DeletionPolicy</code> attribute cho các resource trong stack ở trong file template (json/yml)</p>
+
+<blockquote>
+<p>Q. Bạn muốn hệ thống của bạn trên AWS khi mà có issue với hardware host AWS resource (những phần cứng host AWS resource của bạn) thì bạn dc notify, làm nào?</p>
+</blockquote>
+
+<p>Personal Health Dashboard</p>
+
+<blockquote>
+<p>Q. Bạn đang dùng RDS, muốn encrpyt data in transit làm nào?</p>
+</blockquote>
+
+<p>Dùng SSL certificate mà RDS cung cấp</p>
+
+<p>Edit Parameter Group của RDS instance (rds.force_ssl = true)</p>
+
+<p>cuối cùng phải Reboot RDS instance</p>
+
+<p>Trong AWS Document viết: Có 2 cách dùng SSL để encrypt data in transit RDS là:</p>
+
+<p>■ Force SSL cho all connection (Client sẽ ko cần làm gì)
+Cái này sẽ cần sửa parameter group (rds.force_ssl = true)</p>
+
+<p>■ Encrpyt những connection cụ thể (setup SSL trên client computer)</p>
+
+<blockquote>
+<p>Q. Bạn dùng S3, trước đó là Cloudfront, bạn gặp 1 số lỗi 4xx error, thì đó là vì sao? lỗi 5xx thì sao?</p>
+</blockquote>
+
+<p>■ lỗi 4xx liên quan đến <code>client</code></p>
+
+<p>404-Not Found</p>
+
+<p>405-Method Not Allowed</p>
+
+<p>414-Request-URI Too Large</p>
+
+<p>■ lỗi 5xx liên quan đến <code>server</code></p>
+
+<p>500-Internal Server Error</p>
+
+<p>501-Not Implemented</p>
+
+<p>502-Bad Gateway</p>
+
+<p>503-Service Unavailable</p>
+
+<p>504-Gateway Time-out</p>
+
+<blockquote>
+<p>Q. Bạn dùng AWS CloudHSM cho SSL/TLS processing. Có incident là có user xóa key của CloudHSM làm ảnh hưởng traffic, giờ bạn cần check log của CloudHSM để xác định user nào, làm sao?
+check field nào trong các field sau: Time, Reboot Counter, Sequence No, Command Type, Opcode, Session Handle, Response, Log Type</p>
+</blockquote>
+
+<p>Opcode (nó chỉ ra action của command như CN_CREATE_USER, CN_GENERATE_KEY, CN_DESTROY_OBJECT, CN_CHANGE_PSWD)</p>
+
+<p>Những cái khác thì:<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cloudhsm-log-code.jpg" alt="" /></p>
+
+<p><code>Time</code>: thời gian in UTC,<br />
+<code>Reboot Counter</code>: chuỗi 32-bit,<br />
+<code>Sequence No</code>: chuỗi 64-bit,<br />
+<code>Command Type</code>: 2 category của command (CN_MGMT_CMD, CN_CERT_AUTH_CMD),<br />
+<code>Opcode</code>: action của cmd,<br />
+<code>Session Handle</code>: chuỗi kí tự,<br />
+<code>Response</code>: SUCCESS hoặc ERROR,<br />
+<code>Log Type</code>: 4 loại MINIMAL_LOG_ENTRY, MGMT_KEY_DETAILS_LOG, MGMT_USER_DETAILS_LOG, GENERIC_LOG</p>
+
+<blockquote>
+<p>Q. Khi bạn setup VPC peering giữa 2 vpc, thì việc config routing CIDR giữa 2 VPC dc làm thế nào? tự động route table update khi VPC connection dc accept, hay phải làm bằng tay?</p>
+</blockquote>
+
+<p>Phải làm bằng tay (manually) chứ AWS ko tự động config route table cho bạn</p>
+
+<blockquote>
+<p>Q. Bạn đang dùng DynamoDB, giờ muốn giảm độ trễ của request gửi vào DynamoDB thì nên dùng gì? (Global table, secondary index, DAX,  dynamodb stream?)</p>
+</blockquote>
+
+<p>Nên dùng DAX (có cache cho DynamoDB, HA)</p>
+
+<p>ngoài ra những cái khác thì:</p>
+
+<p>Global table (multi-region master db, cũng là 1 cách giảm độ trễ)</p>
+
+<p>Secondary Indexes (tăng performance khi query)</p>
+
+<p>DynamoDB stream (get notify nếu có sự thay đổi trong DynamoDB table)</p>
+
+<h2 id="p5"><strong>&mdash;P5&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Cty bạn dự định move MySQL lên RDS. Họ muốn biết là việc dùng AWS RDS thì sẽ giúp giảm công tác quản lý như thế nào cho họ?</p>
+</blockquote>
+
+<p>Tạo và maintain backup để bạn có thể restore về any point in time (max 35 ngày trước) vì RDS nó upload transaction log lên s3 mỗi 5 phút</p>
+
+<p>Tự động install critical security patch (bản vá bảo mật cho db)</p>
+
+<blockquote>
+<p>Q. Về VPC peering qua Ipv6 thì cần chú ý gì?</p>
+</blockquote>
+
+<p>VPC Peering qua IPv6 chỉ support intra-region (trong 1 region), chú ý là ko dc overlaping IPv4 (hoặc ko cần IPv4 chỉ có IPv6 thì ok)</p>
+
+<p>VPC Peering qua IPv6 không support inter-region (còn gọi là cross-region)</p>
+
+<blockquote>
+<p>Q. Web app của bạn dùng EC2, SQS. Giờ Server trên on-premise cũng cần connect SQS. Mà bạn cần giải pháp để kết nối on-premise với AWS mà bandwitch lớn, traffic secure thì làm nào?</p>
+</blockquote>
+
+<p>Tạo interface endpoint trong private subnet, dùng AWS Direct Connect để nối với On-premise server, rồi từ đó interface endpoint (<code>PrivateLink</code>) sẽ giúp connect với SQS 1 cách secure</p>
+
+<p>(vì interface endpoint sẽ giúp kết nối các resource trong AWS với nhau ko cần internet)</p>
+
+<p>Chú ý là interface endpoint ko support AWS VPN (thế nên dùng AWS Direct Connect)</p>
+
+<blockquote>
+<p>Q. VPC A peering với VPC B &amp; C, B và C thì có CIDR block giống nhau (10.0.0.0/16). EC2 trong VPC B send traffic qua pcx-aaabbb đến VPC A, VPC A trả về respone ko về EC2 trong VPC B, mà về 1 EC2 trùng IP trong VPC C, làm sao ngăn chặn việc này?<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/vpc-peering-scen-1.jpg" alt="" /></p>
+</blockquote>
+
+<p>Sửa cái Route table trong VPC A, thêm cái routing đến cụ thể ip EC2 nào của VPC B (more specific routing):<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/vpc-peering-scen-1-fix-1.jpg" alt="" /></p>
+
+<p>hoặc fix thành:<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/vpc-peering-scen-1-fix-2.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Cty muốn thực hiện backup các EBS volumes, vì trong đó chứa data quan trọng, nên tạo RAID 1 config of multi volume hay dùng regular EBS snapshot?</p>
+</blockquote>
+
+<p>Dùng regular EBS snapshot</p>
+
+<p>Chứ RAID 1 Config chỉ có tác dụng mirroring data (dùng cho HA)</p>
+
+<blockquote>
+<p>Q. 1 Cty lưu document trong S3. Muốn add thêm 1 layer security khi mà User muốn delete document S3, làm nào? có enable MFA Delete trên S3 bucket dc ko?</p>
+</blockquote>
+
+<p>Sửa bucket policy, dùng cái condition key <code>aws:MultiFactorAuthPresent</code>, để chỉ những user đã authen vào aws bằng MFA mới delete dc docs</p>
+
+<p>ko thể enable MFA Delete S3 bucket dc, vì nó chỉ dành cho root account</p>
+
+<blockquote>
+<p>Q. Cty sẽ deploy 1 số ec2, workload của các ec2 ko đổi về CPU Utilization và thi thoảng sẽ burstable performance. Nên dùng loại ec2 type nào? giữa các loại T2 T3 M5 C5 R5</p>
+</blockquote>
+
+<p>chọn T2, T3, T3a (Chúng cung cấp khả năng Burstable Performance)</p>
+
+<p>T Unlimited thì cung cấp high CPU Performance</p>
+
+<p>M5 C5 R5 thì cung cấp Fixed Performance</p>
+
+<blockquote>
+<p>Q. 1 Cty muốn tạo connection hybrid giữa On-premise và AWS, mà cost rẻ nhất và implement nhanh, thì nên chọn cái gì? AWS VPN hay Direct Connect, hay Direct Connect Gateway?</p>
+</blockquote>
+
+<p>Dùng AWS VPN,</p>
+
+<p>vì nó rẻ hơn Direct Connect</p>
+
+<p>Direct Connect chỉ nên dùng khi muốn low latency và bạn giàu vl</p>
+
+<blockquote>
+<p>Q. Cty dùng AWS Organization để quản lý nhiều account. Muốn deny access vào S3 của root user, chỉ cho phép IAM user thôi thì làm nào?</p>
+</blockquote>
+
+<p>Dùng SCP từ tầng Master account rồi deny access s3 của root user</p>
+
+<blockquote>
+<p>Q. Nếu <code>SCP</code> (Service control policy) của AWS Organizations cho phép User access EC2, S3. Nhưng <code>IAM Policy</code> cho phép User access EC2, S3, ELB thôi. Thì User sẽ dùng dc những service nào?</p>
+</blockquote>
+
+<p>Thì user sẽ chỉ có quyền access service chung giữa 2 policy đó là EC2, S3</p>
+
+<blockquote>
+<p>Q. Bạn cần setup EC2, EC2 sẽ có nhiều read/write activity. Và metric cho volume cần update mỗi 2 phút.<br />
+Vậy thì cần chọn volume Provisioned IOPS<br />
+hay Enable Detailed Monitoring của EBS volume?</p>
+</blockquote>
+
+<p>Chọn Provisioned IOPS là đủ, loại <strong>io1</strong> này sẽ tự động send metric 1 phút update đến cloudwatch mà ko cần enable Detailed monitoring</p>
+
+<blockquote>
+<p>Q. Bạn dùng VPN cho cty, bạn đã tạo VGW và Customer Gateway, routing attach vào VPC. Nhưng Tunnel vẫn đang bị down. Làm sao để active VPN tunnel giữa VGW và Customer Gateway?</p>
+</blockquote>
+
+<p>muốn active Tunnel thì phải init traffic từ Customer side ở on-premise location tới server trong AWS VPC.</p>
+
+<blockquote>
+<p>Q. Bạn có 1 app setup trên ec2 ELB. Muốn ensure việc HA và traffic sẽ dc distribute across các backend node thì làm nào?</p>
+</blockquote>
+
+<p>launch ec2 trên MultiAZ</p>
+
+<p>enable cross zone load balancing cho ELB</p>
+
+<p>AWS Document viết: Khi bạn enable 1 AZ cho ELB. ELB sẽ tạo 1 <code>load balancer node</code> trong AZ đó. Mặc định là mỗi <code>load balancer node</code> chỉ distribute traffic đến các target trong AZ của nó thôi.
+Nếu bạn enable cross-zone load balancing thì mỗi <code>load balancer node</code> sẽ distribute traffic across các target trên tất cả AZ đã dc enable.</p>
+
+<blockquote>
+<p>Q. Cty bạn thiết lập AWS VPN giữa on-premise network và VPC. Đã tạo Virtual Private Gateway, Customer Gateway, VPN connection. Đã config router ở phía Customer side, và connection ở Console đã show UP. Còn thiếu gì nữa?</p>
+</blockquote>
+
+<p>config router ở phía Virtual Private Gateway</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/vpn-diagram.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Nếu RDS thực hiện patching OS thì report về process việc patching đó sẽ có ở đâu?</p>
+</blockquote>
+
+<p>RDS Console</p>
+
+<blockquote>
+<p>Q. Bạn thấy có issue với ASG, khi Launch Configuration update, ASG sẽ làm vài node bị offline làm ảnh hưởng customer. Team dùng Cloudformation để update app bằng cách change parameter. Làm nào để hạn chế ảnh hưởng đến customer?</p>
+</blockquote>
+
+<p>Trong CF template, add cái <code>AutoScalingRollingUpdate</code> trong <code>UpdatePolicy</code> attribute, enable <code>WaitOnResourceSignals</code>, append 1 cái healthcheck ở cuối user data script để signal cho ASG biết là việc update instance đã success.</p>
+
+<blockquote>
+<p>Q. Bạn muốn Cloudformation template luôn lấy cái Windows AMI latest khi launch thì làm nào?</p>
+</blockquote>
+
+<p>_Cách 1: subcribe Windows AMI noti cho SNS và trigger Lambda update template với new AMI</p>
+
+<p>_Cách 2: trong Cf template thì chỗ Parameter AMI để chỉ định cái Parameter trong SSM Parameter Store (nơi chứa các public parameter dùng cho toàn bộ AWS resource).<br />
+Trước đó thì phải tạo 1 Parameter trong SSM Parameter Store, value kiểu như sau: <code>/aws/service/ami-windows-latest/Windows_Server-2016-English-Core-Containers</code></p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cf-ssm-param-1.jpg" alt="" /><br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cf-ssm-param-2.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Cty bạn có 1 bucket đã versioning enable. Giờ muốn xóa delete bucket thì làm nào?</p>
+</blockquote>
+
+<p>Xóa bằng AWS SDK (như boto3)</p>
+
+<p>Xóa bằng bucket lifecycle config</p>
+
+<p>Xóa bằng Console</p>
+
+<p>Còn các command này thì:<br />
+<code>aws s3 rb s3://example-bucket-july --force</code>: cái này ko xóa dc bucket đã versioning</p>
+
+<p><code>aws s3 rm s3:// example-bucket-july --recursive</code>: cái này ko xóa dc bucket đã versioning</p>
+
+<blockquote>
+<p>Q. S3 có những file hiếm khi access sau 45 days. Cách nào để reduce cost mà có thể cung cấp access vào file cho user từ 1-5 phút?</p>
+</blockquote>
+
+<p>Dùng Glacier Expedited Retrieval (1-5 min)</p>
+
+<p>S3 IA đắt hơn Glacier nên ko chọn</p>
+
+<blockquote>
+<p>Q. Cty migrate 500 TB lên S3, đang concern về cost, time, performance. Dùng gì? Storage Gateway hay Snowball?</p>
+</blockquote>
+
+<p>nên dùng Snowball<br />
+Snowball: cost 1562 $<br />
+Storage Gateway: 11500 $</p>
+
+<blockquote>
+<p>Q. Bạn dùng AWS Opswork mà cần monitor log của app dc deploy trên instance của stack trong Opswork làm nào? có Opswork log ko?</p>
+</blockquote>
+
+<p>Dùng Cloudwatch logs</p>
+
+<p>ko có cái gọi là Opswork logs</p>
+
+<blockquote>
+<p>Q. Bạn cần delete Customer Master Key thì cần check những gì?</p>
+</blockquote>
+
+<p>Check CMK permission trong KMS để xem ai hoặc cái gì đang dùng CMK đó</p>
+
+<p>Check Cloudtrail logs, để xem lịch sử sử dụng CMK đó, xem cái CMK đó có cần thiết nữa ko</p>
+
+<blockquote>
+<p>Q. Bạn đang dùng Redshift thì có những loại log nào?</p>
+</blockquote>
+
+<p>3 loại:<br />
+■ <code>Connection log</code>: những log authen, connect, disconnect</p>
+
+<p>■ <code>User log</code>: log mà làm liên quan đến db user như: Create User, Drop User, Alter User</p>
+
+<p>■ <code>User activity log</code>: Log những query trước khi nó run trên DB</p>
+
+<p>Tuy nhiên thì logging của Redshift default disable. Muốn logging thì phải enable lên.</p>
+
+<p>Chú ý cái <code>User activity log</code> muốn enable thì phải set <code>enable_user_activity_logging=True</code> nữa</p>
+
+<p>ko có Transaction Logs nhé</p>
+
+<blockquote>
+<p>Q. Cty bạn dùng RDS MySQL, giờ muốn disable backup của RDS bằng cách set retention period=0 nhưng bị lỗi, vì sao?</p>
+</blockquote>
+
+<p>Vì bạn đang setup Read Replica thì ko set retention period = 0 được</p>
+
+<p>AWS Documents viết:</p>
+
+<p>■ Nếu bạn lock yourself ở ngoài cái db_owner của SQL DB. Bạn có thể reset DB instance master password để lấy lại quyền</p>
+
+<p>■ DB instance reboot và hỏi bạn có <code>Apply Immediately?</code> khi bạn:<br />
+_thay đổi rentention period từ 0 hoặc tới 0,<br />
+_change DB instance class.</p>
+
+<p>■ DB instance reboot <strong>ngay lập tức</strong> khi bạn:<br />
+_change storage type (SSD, Standard)</p>
+
+<p>■ DB instance reboot theo kiểu bắt bạn tự làm manually khi:<br />
+_change static param trong DB parameter group<br />
+(chứ nếu change dynamic param thì ko cần reboot sẽ take effect ngay)</p>
+
+<p>■ DB instance hết storage space, bạn cần modify tăng storage lên</p>
+
+<p>■ Nếu bị lỗi <code>InsufficientDBInstanceCapacity</code> khi tạo/sửa db, restore db từ snapsshot thì nên:<br />
+_thử lại với db instance class khác<br />
+_thử lại với AZ khác, hoặc thử lại mà ko chỉ định AZ<br />
+_1 số DB instance cần ở trong VPC</p>
+
+<p>■ MySQL version &lt; 5.6 có thể bị lỗi khi query: nên upgrade lên version MySQL &gt; 5.6</p>
+
+<p>■ PostgreSQL lỗi connection timeout thì nên:<br />
+_check hostname là DB instance enpoint chưa<br />
+_check port number đúng chưa<br />
+_check SG đúng rule chưa</p>
+
+<blockquote>
+<p>Q. Cty đang dùng Kinesis muốn encrpyt data at rest thì nên dùng server-side hay client-side encryption?</p>
+</blockquote>
+
+<p>Nên dùng server-side vì đỡ tốn effort hơn</p>
+
+<h2 id="p-monitoring-reporting"><strong>&mdash;P:monitoring-reporting&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Bạn đang setting AWS Config qua CLI, bạn đã tạo S3 bucket tên 12345. Bạn ko nhận dc thông báo về change configuration của bucket đó. Vì sao?</p>
+</blockquote>
+
+<p>Cái s3 bucket policy attach vào bucket cần allow AWS Config quyền record lại những thay đổi</p>
+
+<p>Cái IAM Role assign cho AWS Config CLI cần có quyền AWSConfigRole</p>
+
+<blockquote>
+<p>Q. Cty bạn là global company. Bạn muốn check xem RDS DB instance nào trên khắp các region không dc enable multi-AZ, dùng cái gì?</p>
+</blockquote>
+
+<p>AWS Config hoặc Trusted Advisor</p>
+
+<blockquote>
+<p>Q. Cty Bạn có 1 EC2 run app, bên audit yêu cầu xem report những cái config change liên quan đến con server đó. Làm nào?</p>
+</blockquote>
+
+<p>Dùng AWS Config Periodic rule 1h, 3h, 6h, 12h, 24h</p>
+
+<p>chú ý là ko có 4h</p>
+
+<blockquote>
+<p>Q. Cty bạn có infras trên nhiều regions. Và cũng có nhiều AWS account. Giờ muốn tổng hợp report về resource count và compliance của all account all regions thì làm dc ko?</p>
+</blockquote>
+
+<p>Dùng AWS Config Aggregated view</p>
+
+<blockquote>
+<p>Q. AWS Config pricing như nào, trả tiền cho những cái gì?</p>
+</blockquote>
+
+<p>Bạn trả tiền cho tổng số Config rule đang active, Số lượng Config items</p>
+
+<blockquote>
+<p>Q. Các member đang tạo 1 số lượng lớn EC2. Bạn muốn evaluate xem có bao nhiêu m4.large EC2 nên bạn đã tạo AWS Config custom rule + Lambda function. Rule tạo ok, nhưng ở section <code>Compliance</code> bạn thấy lỗi <code>No resources in scope</code> Vì sao?</p>
+</blockquote>
+
+<p>Cần verify lại xem cái Custom rule bạn tạo có đang record EC2 hay ko, ko thì phải add thêm vào</p>
+
+<p>Chứ nếu member tạo toàn t2.micro instance thì sẽ báo tổng số Non-compliance count chứ ko phải lỗi kia</p>
+
+<blockquote>
+<p>Q. S3 Glacier đã được support bởi AWS Config Managed Rule chưa? muốn record S3 Glacier vault làm nào?</p>
+</blockquote>
+
+<p>Chưa, giải pháp là:</p>
+
+<p>1_Tạo 1 lambda function để evaluate S3 Glacier vault,</p>
+
+<p>2_Rồi tạo 1 AWS Config Custom Rule và assign cái Lambda tạo bên trên cho rule này</p>
+
+<blockquote>
+<p>Q. Bạn có 1 S3 bucket cần monitoring và tự correct nếu có bất kỳ policy violation thì làm nào?</p>
+</blockquote>
+
+<p>Enable AWS Config để monitor bucket ACL và policy violation</p>
+
+<p>Nếu detect có violation thì sẽ trigger Cloudwatch Event, rồi trigger tiếp Lambda đi correct lại bucket ACL (hoặc set bucket ACL to private)</p>
+
+<h2 id="p-storage-management"><strong>&mdash;P:storage-management&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Bạn có 1 lượng lớn document trên s3 bucket dc upload từ khoảng 10 regions trên TG. Để analyse thì bạn dùng AWS Athena + Quicksight, nhưng sau 1 tháng thấy performance thấp, cost nhiều, giờ làm nào?</p>
+</blockquote>
+
+<p>Khi CREATE TABLE, dùng PARTITIONED BY để partition base on time/date.
+Bạn sẽ hạn chế dc lượng data dc scan bởi query và giảm cost.</p>
+
+<p>Khi chọn storage format thì chọn Apache Parquet và ORC - đây là dạng columnar storage format (thay vì dùng JSON,CSV) để Athena retrieve data nhanh nhất</p>
+
+<blockquote>
+<p>Q. Cty cần analyse data nhanh và ko có budget để dựng server thì dùng gì?</p>
+</blockquote>
+
+<p>Athena + QuickSight</p>
+
+<blockquote>
+<p>Q. Bạn muốn file dc encrpyt trước khi đưa lên s3, tìm 1 giải pháp full managed và cost-effective?</p>
+</blockquote>
+
+<p>KMS client-side</p>
+
+<p>Khi enable client-side encryption thì bạn cần cung cấp <code>CMK ID</code> cho KMS</p>
+
+<p>Khi muốn upload 1 object to s3, bạn dùng <code>CMK ID</code> để request KMS trả về: <code>plain-text key</code> để encrypt object, và <code>cipher blob</code> để làm object metadata</p>
+
+<blockquote>
+<p>Q. 1 Cty cần 1 nơi lưu trữ key kiểu <code>single tenant key storage</code> và support <code>asymetric key integration</code>. Dùng gì? KMS hay AWS CloudHSM?</p>
+</blockquote>
+
+<p>Dùng CloudHSM</p>
+
+<p>Chứ KMS là dịch vụ <code>multi-tenant key storage</code> &amp; chỉ support <code>symetric key</code> thôi.</p>
+
+<blockquote>
+<p>Q. Bạn tạo 1 vault trong S3 Glacier để lưu data lâu dài, cần ensure là ko có thay đổi hoặc deletion xảy ra trong đó. Nhưng vẫn cần vào đọc nhiều lần. Dùng policy gì?</p>
+</blockquote>
+
+<p>Vault Lock Policy</p>
+
+<blockquote>
+<p>Q. Bạn cần lưu document 1 chỗ khoảng 5 năm mà sẽ ko cho bất cứ ai sửa. Bạn dùng vault trong s3 glacier. Bạn cần setup Vault Lock thì cần chú ý gì?</p>
+</blockquote>
+
+<p>Init Vault lock với Vault Lock policy rồi đi vào trạng thái <code>in-progress</code></p>
+
+<p>Phải hoàn thành Vault Lock trong vòng 24h sau khi Init</p>
+
+<p>Sau khi vault đã locked thì ko thể unlock</p>
+
+<p>Nếu ko hoàn thành Vault lock trong 24h thì vault lock policy sẽ bị remove và sẽ phải làm lại</p>
+
+<blockquote>
+<p>Q. Trong cái GET URL sau <code>s3.amazonaws.com/mybucket/photos/2014/08/puppy.jpg?x-user=johndoe</code> thì <code>x-user=johndoe</code> nghĩa là gì?</p>
+</blockquote>
+
+<p>S3 sẽ ignore những query bắt đầu bằng <code>x-</code>, tuy nhiên sẽ lưu lại trong access log record.</p>
+
+<blockquote>
+<p>Q. Phân biệt aws gateway cached volume và aws gateway stored volume?</p>
+</blockquote>
+
+<p>Aws gateway cached volume: lưu data trên s3, 1 cục cần access thường xuyên sẽ lưu locally. dễ scale, độ trễ thấp</p>
+
+<p>Aws gateway stored volume: data sẽ lưu hoàn toàn ở locally, rồi snapshot sẽ dc async lên s3</p>
+
+<h2 id="p1-udemy"><strong>&mdash;P1-udemy&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Team member của bạn upload Django project lên Beanstalk. Nhưng gặp lỗi <code>The instance profile aws-elasticbeanstalk-ec2-role associated with the environment does not exist.</code> Vì sao?</p>
+</blockquote>
+
+<p>Beanstalk CLI chưa thể tạo instance profile role nếu IAM role của nó ko có quyền tạo role</p>
+
+<p>Hoặc là instance profile role đã tạo nhưng bị insufficient hoặc outdate với những gì mà Beanstalk cần</p>
+
+<blockquote>
+<p>Q. Bạn cần dựng 1 web app mà web server cần connect to internet và Db server thì ko, vậy nên dựng ELB như nào?</p>
+</blockquote>
+
+<p>internet-facing load balancer cho web server</p>
+
+<p>internal load balancer cho db server</p>
+
+<p>Nếu có thêm yêu cầu db server cần init Ipv4 traffic ra Internet và chặn việc nhận traffic từ internet thì mới cần NAT Gateway (or NAT instance),<br />
+nhưng sẽ cần NAT ở trong <code>public subnet</code></p>
+
+<blockquote>
+<p>Q. Cty bạn tạo 1 VPC với 1 subnet, sẽ có 20 instance bên trong thì CIDR block sẽ phải là 172.0.0.0/x, x sẽ là bao nhiêu 27 28 29 30?</p>
+</blockquote>
+
+<p>cách tính là 2 step: Giả sử x = 27<br />
+★ 32 - 27 = 5<br />
+★ 2 mũ 5 = 32 (suy ra VPC của bạn có 32 ip available)</p>
+
+<p>★ Tuy nhiên trong AWS, 4 ip đầu tiên và 1 ip cuối cùng trong mỗi subnet bạn sẽ ko dùng dc:<br />
+-&gt; 32 - 4 - 1 = 27 (số ip bạn có thể assign cho instance)</p>
+
+<p>★ Chú ý nữa là block size dc cho phép chỉ là giữa /28 và /16 thôi<br />
+Thế nên /29 và /30 là loại ngay</p>
+
+<blockquote>
+<p>Q. Bạn cần migrate data <strong>80 TB</strong> lên s3 thì nên dùng gì cho rẻ và nhanh?
+Snowball thường, Snowball Edge, Storage Gateway?</p>
+</blockquote>
+
+<p>Snowball thường thì 1 cái appliance chỉ usable 72 TB data thôi, nghĩa là phải dùng 2 cái appliances -&gt; thành ra giá đắt hơn Snowball Edge</p>
+
+<p>Snowball Edge usable 80 TB data/100 TB nên đủ -&gt; nên dùng</p>
+
+<p>Storage Gateway thì mục đích chính của nó ko phải để migration, với lại nó sẽ dùng Internet để upload nên chậm</p>
+
+<blockquote>
+<p>Q. Bạn cần monitor dashboard cho EC2 và on-premise server thì cần làm gì?</p>
+</blockquote>
+
+<p>IAM Role và User để dùng cho Cloudwatch Agent</p>
+
+<p>Install CW agent trên cả EC2 và On-premise server</p>
+
+<p>Tạo CW agent configure file</p>
+
+<blockquote>
+<p>Q. S3 bucket store data. Bạn cần generate 1 report trên replication và encryption status của object. Dùng gì?</p>
+</blockquote>
+
+<p>S3 Inventory để gen ra report</p>
+
+<blockquote>
+<p>Q. Phân biệt về 2 policy: Latency routing và Geolocation routing của Route53?</p>
+</blockquote>
+
+<p><code>Latency</code> routing chỉ đảm bảo về term &ldquo;latency&rdquo; chứ ko đảm bảo traffic dc route đến resource gần nhất.</p>
+
+<p>Thế nên 1 số trường hợp Ví dụ như bạn có 2 server ở UK, US,<br />
+yêu cầu của Compliance là data của User ở UK cần đặt ở UK, data user ở US cần đặt ở US,<br />
+thế thì phải dùng <code>Geolocation</code> để đảm bảo user ở đâu thì họ sẽ dc route đến server đặt data của họ ở đó</p>
+
+<p>Ngoài ra thì nếu User ở 1 chỗ khác UK và US thì bạn cần tạo 1 record default chứ nếu ko R53 sẽ respone &ldquo;no answer&rdquo;</p>
+
+<p>Còn cái <code>Geoproximity</code> thì dùng khi bạn có 1 cái instance size rất lớn ở 1 region và muốn route user đến cái server đó</p>
+
+<p>Ngoài ra:</p>
+
+<p>Multivalue answer routing policy: route traffic 1 cách ngẫu nhiên đến max là 8 record healthy.</p>
+
+<p>Simple routing policy: Dùng 1 resource cho 1 domain.</p>
+
+<p>Latency routing policy: Nếu có nhiều resource thì sẽ route traffic đến location có best latency nhất.</p>
+
+<p>Weighted routing policy: route traffic đến nhiều resoure theo tỉ lệ bạn defined.</p>
+
+<p>Geoproximity routing policy: route traffic dựa trên location của resource của bạn.</p>
+
+<p>Geolocation routing policy: route traffic dựa trên location của user.</p>
+
+<p>Failover routing policy: dùng để configure Active/passive failover.</p>
+
+<blockquote>
+<p>Q. Bạn cần terminate ec2 trong ASG mà không update size của ASG thì dùng command nào?</p>
+</blockquote>
+
+<p><code>terminate-instance-in-auto-scaling-group --instance-id &lt;value&gt; --no-should-decrement-desired-capacity</code></p>
+
+<p>nhớ là <code>--no-should-decrement-desired-capacity</code> chứ ko phải <code>--should-decrement-desired-capacity</code></p>
+
+<blockquote>
+<p>Q. Bạn cần host Oracle DB trên Ec2 mà data cũng access ko thường xuyên lắm, chọn loại EBS nào cho cost-effective?</p>
+</blockquote>
+
+<p>Cold HDD</p>
+
+<p>Chứ General purpose SSD mục đích chính ko phải host db, tốn tiền hơn</p>
+
+<p>Provisioned IOPS HDD để host db nhưng tốn tiền hơn</p>
+
+<p>Throughput Optimized HDD thì cost cũng thấp nhưng ko thấp bằng Cold HDD, và data đó là cho access thường xuyên</p>
+
+<blockquote>
+<p>Q. Bạn cần setup Disaster Recovery infra, họ cần 1 giải pháp quick recovery và cost effective, so sánh warm standby, backup &amp; restore, pilot light?</p>
+</blockquote>
+
+<p>Dùng pilot light</p>
+
+<p>So sánh:</p>
+
+<p>về giá thì <code>backup &amp; restore</code> &lt; <code>pilot light</code> &lt; <code>warm standby</code><br />
+về recovery time thì càng đắt càng recovery nhanh</p>
+
+<p>pilot light thì chỉ những core element dc run all the time (db server replica chẳng hạn)</p>
+
+<p>warm standby thì giống như hệ thống thật nhưng là version bị scale down và run all the time</p>
+
+<p><a href="https://tutorialsdojo.com/aws-cheat-sheet-backup-and-restore-vs-pilot-light-vs-warm-standby-vs-multi-site/" target="_blank">https://tutorialsdojo.com/aws-cheat-sheet-backup-and-restore-vs-pilot-light-vs-warm-standby-vs-multi-site/</a></p>
+
+<blockquote>
+<p>Q. Bạn cần install và config app trên 1 ec2 mà bạn sẽ deploy bằng CF, sẽ dùng policy gì trong cái CF template? UpdatePolicy, UpdateReplacePolicy, CreationPolicy ?</p>
+</blockquote>
+
+<p>Dùng <code>CreationPolicy</code></p>
+
+<p>chứ dùng UpdatePolicy khi bạn muốn update resource của stack</p>
+
+<p>còn dùng UpdateReplacePolicy khi bạn muốn backup cái ec2 hiện tại khi nó sắp bị replace bởi update stack</p>
+
+<blockquote>
+<p>Q. Nếu khi launch EC2 bị lỗi <code>EC2 instance &lt;instance ID&gt; is in VPC. Updating load balancer configuration failed</code> nghĩa là sao?</p>
+</blockquote>
+
+<p>LB đang thuộc loại EC2-Classic, ASG thì ở trong VPC</p>
+
+<blockquote>
+<p>Q. Kinesis và Redshift cơ bản là làm gì?</p>
+</blockquote>
+
+<p>Kinesis là service để collect data real-time<br />
+còn Redshift là service để storage peta-byte data cho OLAP app (online analysis processing)</p>
+
+<blockquote>
+<p>Q. So sánh Snowball và Snowmobile?</p>
+</blockquote>
+
+<p>Snowmobile dùng cho dataset tầm 10 PB (petabyte) trở lên.</p>
+
+<p>Còn nhỏ hơn 10 PB thì dùng Snowball thường thôi</p>
+
+<blockquote>
+<p>Q. Cần 1 service để phân tích behavior của AWS resource từ đó xác định những issue về security tiềm tàng thì dùng gì?</p>
+</blockquote>
+
+<p>AWS Inspector</p>
+
+<blockquote>
+<p>Q. AWS Trusted Advisor và AWS Performance Insights thì cái nào giúp bạn phân tích issue về Database?</p>
+</blockquote>
+
+<p>AWS Performance Insights</p>
+
+<blockquote>
+<p>Q. Bạn có 1 volume Provisioned IOPS size là 10 GB, vậy thì max IOPS có thể set là bao nhiêu?</p>
+</blockquote>
+
+<p>công thức là IOPS:VolumeSize = 50:1</p>
+
+<p>=&gt; 10 GB thì max IOPS = 500 (input/output per second)</p>
+
+<blockquote>
+<p>Q. Cty có 1 VPC cần connect với on-premise network, thì AWS resource cần cung cấp những gì?</p>
+</blockquote>
+
+<p>Internet Gateway attach to VPC</p>
+
+<p>Virtual Private Gateway</p>
+
+<p>việc tạo EIP hay public IP, hay additional ENI (network interface) là ko cần thiết</p>
+
+<blockquote>
+<p>Q. Route53 có thể thực hiện bao nhiêu loại healhcheck?</p>
+</blockquote>
+
+<p>3 loại:</p>
+
+<p>healthcheck mà monitor 1 enpoint</p>
+
+<p>healthcheck mà monitor những healthcheck khác</p>
+
+<p>healthcheck mà monitor Cloudwatch alarm</p>
+
+<blockquote>
+<p>Q. Bạn cần investigate hệ thống nên cần suspend ASG scaling process tên là <code>Terminate</code>, khi đó thì nó sẽ ảnh hưởng như nào đến AZ rebalance process của ASG?</p>
+</blockquote>
+
+<p>ASG sẽ có thể tăng lên max là thêm 10% so với maximum size</p>
+
+<p>Còn nếu suspend <code>AZRebalance</code> process, khi đó nếu scale-out thì nó vẫn cố gắng rebalance AZ với bằng cách launch thêm 1 số ít nhất EC2</p>
+
+<p>CÒn nếu suspend <code>Launch</code> process, AZRebalance sẽ ko xóa hay tạo thêm EC2</p>
+
+<blockquote>
+<p>Q. Bạn có 1 bucket S3 cần delete. Bucket đó đã dc enable versioning và MFA delete. Bạn cần làm gì để xóa?</p>
+</blockquote>
+
+<p>Cách 1_Remove cái bucket policy mà yêu cầu MFA delete, Rồi dùng SDK để xóa bucket&rsquo;s markers và version, Rồi xóa lại bằng CLI command</p>
+
+<p>Cách 2_Dùng root account để suspend MFA và versioning feature đi. Rồi Config Lifecycle để remove version, xóa object và markers, rồi delete bucket again</p>
+
+<h2 id="p2-udemy"><strong>&mdash;P2-udemy&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Để 1 EC2 có thể communicate ra Internet qua IPv6 thì VPC cần config như nào?</p>
+</blockquote>
+
+<p>_associate /56 CIDR block cho VPC</p>
+
+<p>_associate /64 CIDR block cho subnet</p>
+
+<p>_tạo custom route table rồi associate cho subnet</p>
+
+<p>Việc setup egress-only gateway chỉ để tác dụng là VPC ipv6 chặn connect từ internet vào trong</p>
+
+<blockquote>
+<p>Q. Bạn có 1 S3 bucket mà dạo này user complain là toàn lỗi 503. Vì sao?</p>
+</blockquote>
+
+<p>Có object nào đó có hàng triệu version, khi đó s3 sẽ throttle các request đến bucket</p>
+
+<p>Giải pháp là dùng S3 inventory tool để xác định object nào</p>
+
+<blockquote>
+<p>Q. Bạn có 3 VPC và muốn ensure là các ec2 trong đó có thể communicate với nhau thì làm nào?</p>
+</blockquote>
+
+<p>Setup VPC Peering <code>full mesh</code> config cho cả 3 VPC (<code>full mesh</code> nghĩa là 3 cái VPC sẽ peering từng cặp với nhau)</p>
+
+<p>Ensure là all route table của mỗi VPC dc setup</p>
+
+<p>ENsure là VPC ko bị overlapping IPv4 CIDR block</p>
+
+<blockquote>
+<p>Q. Bạn dùng PostgreSQL run trên EC2, nó sẽ dc dùng bởi nhiều internal app trong VPC của bạn. Bạn muốn đơn giản việc naming convention bằng cách đặt 1 custom domain name cho cái DB server, làm nào?</p>
+</blockquote>
+
+<p>setup private hosted zone trong Route53.<br />
+Tạo A hoặc AAAA record,<br />
+specify IP của DB server vào record đó</p>
+
+<blockquote>
+<p>Q. Bạn cần 1 tool để có thể coordinate nhiều AWS resources với nhau, vào 1 serverless workflow, dùng cái gì? SWF hay Step Function?</p>
+</blockquote>
+
+<p>Dùng Step Functions</p>
+
+<p>Chứ SWF là service để track state và task, nó cũng ko phải là serverless orchestration cho nhiều resource</p>
+
+<blockquote>
+<p>Q. Bạn muốn enable Cloudwatch Detailed monitoring cho Auto Scaling Group thì có được ko?</p>
+</blockquote>
+
+<p>có, nhưng sẽ bị tính phí</p>
+
+<p>Nếu Basic monitoring cho ASG thì ko tính thêm phí</p>
+
+<p>Cloudwatch monitoring support cho hầu hết các AWS Services</p>
+
+<blockquote>
+<p>Q. Cty bạn có nhiều thiết bị đo nhiệt độ muốn gửi data custom metric lên AWS Cloudwatch để xem trên AWS 1 cách graph visually, thì có dc ko?</p>
+</blockquote>
+
+<p>Dùng CLI or API để upload data metric lên Cloudwatch</p>
+
+<blockquote>
+<p>Q. Cty bạn dùng heavily used RDS, giờ muốn chắc chắn rằng ko có outage khi thực hiện snapshot cho DB thì làm nào? Multi-AZ hay Read replica?</p>
+</blockquote>
+
+<p>Design DB kiểu Multi-AZ và Snapshot sẽ thực hiện trên con Standby</p>
+
+<p>còn nếu Read Replica thì mặc dù cũng ko có outage nhưng mà do <code>replica lag</code> nên có thể có nhiều transaction chưa kịp đồng bộ từ con master sang con replica tại thời điểm đó (đây là heavily used RDS và ko quan tâm cost)</p>
+
+<blockquote>
+<p>Q. Bạn có 2 subnet trong VPC, EC2 trong 1 subnet ko ping dc EC2 còn lại vì sao?</p>
+</blockquote>
+
+<p>Cần check lại config của SG</p>
+
+<p>và check Network ACL có cho phép ICMP traffic ko</p>
+
+<blockquote>
+<p>Q. Bạn thấy website của bạn có CPU usage trên EC2 instance 90% và CPU usage DB chỉ 20% nên làm gì để cải thiện respone time?</p>
+</blockquote>
+
+<p>Đổi loại EC2 instance type khác,</p>
+
+<p>Config cho ASG của EC2 sẽ base trên CPU load để scale out</p>
+
+<blockquote>
+<p>Q. S3 bucket Access control list (ACL) có những loại quyền gì?</p>
+</blockquote>
+
+<p>READ</p>
+
+<p>WRITE</p>
+
+<p>READ_ACP</p>
+
+<p>WRITE_ACP</p>
+
+<p>FULL_CONTROL</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/s3bucket-acl-permission.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Khi bạn cần apply cái s3 server side encryption cho bucket của bạn, và bạn sẽ sử dụng cái key của bạn thì trong header của reuqest cần có gì?</p>
+</blockquote>
+
+<p>1_  <code>x-amz-server-side​-encryption​-customer-algorithm</code> (nếu dùng cái này thì value phải là AES256)<br />
+2_  <code>x-amz-server-side​-encryption​-customer-key</code><br />
+3_  <code>x-amz-server-side​-encryption​-customer-key-MD5</code></p>
+
+<blockquote>
+<p>Q. <code>network packet sniffing</code> thuộc trách nhiệm của Customer hay AWS?</p>
+</blockquote>
+
+<p>AWS chịu trách nhiệm protect người dùng khỏi việc đánh cắp các gói tin network</p>
+
+<blockquote>
+<p>Q. Cty bạn có 1 app host trên EC2 và ALB, Có 1 member thay đổi ALB dẫn đến app bị down, cần monitoring changes dc tạo ra trên ALB, thì cái ELB healthchecks có phải là service giúp monitor info của ELB ko?</p>
+</blockquote>
+
+<p>ko, ELB healthchecks chỉ check info của EC2 có health hay ko thôi</p>
+
+<blockquote>
+<p>Q. Cloudfront có offer tính năng monitoring ko?</p>
+</blockquote>
+
+<p>Có, monitor, report, access log để tracking activity</p>
+
+<blockquote>
+<p>Q. Bạn muốn S3 tự phân tích storage và khi mà lượng access vào content ít thì sẽ transit chúng vào S3-IA, sau đó tạo lifecycle policy để transit tiếp vào Glacier, dùng gì?</p>
+</blockquote>
+
+<p>S3 analytics</p>
+
+<blockquote>
+<p>Q. Bạn có những RDS db instances, trong 1 VPC. Cần làm nào để make maximum security cho db và db connection? Có nên dùng Db security group ko?</p>
+</blockquote>
+
+<p>tạo snapshot của db instance rồi start 1 db mới dc encrypted từ bản snapshot đó</p>
+
+<p>dùng SSL cho RDS để encrypt traffic</p>
+
+<p>tạo riêng VPC SG cho EC2 và VPC SG cho DB</p>
+
+<p>*ko nên dùng DB SG vì đó là EC2-clasic platform, ko phải VPC platform</p>
+
+<blockquote>
+<p>Q. Auto Scaling Group ASG giúp bạn tự động scale các loại resource nào? có thể scaling ra 1 region khác ko?</p>
+</blockquote>
+
+<p>EC2,</p>
+
+<p>EC2 spot fleet,</p>
+
+<p>ECS,</p>
+
+<p>DynamoDB,</p>
+
+<p>và <strong>Aurora</strong></p>
+
+<p>*ko thể làm với resource ở region khác</p>
+
+<blockquote>
+<p>Q. Sự khác biệt giữa HTTP, TCP?</p>
+</blockquote>
+
+<p>★ Trước khi bạn dùng ELB, bạn cần config 1 or nhiều listener cho CLB của bạn, listener có nhiệm vụ check các request connection. Listener dc config với 1 protocol và port cho LB của front-end, 1 protocol và port cho LB của back-end</p>
+
+<p>★ ng ta dùng SSL protocol để secure cho HTTP layer (khi đó gọi là HTTPS protocol)</p>
+
+<p>★ cũng có thể dùng SSL protocol dùng để secure cho TCP layer</p>
+
+<p>★ Nếu frontend dùng TCP hoặc SSL thì backend cũng có thể dùng TCP hoặc SSL</p>
+
+<p>★ Nếu frontend dùng HTTP hoặc HTTPS thì backend cũng có thể dùng HTTP hoặc HTTPS</p>
+
+<p>★ Khi dùng TCP (layer 4) cho cả frontend và backend thì: LB sẽ forward request đến backend mà <strong>không</strong> modify headers</p>
+
+<p>★ Khi dùng HTTP (layer 7) cho cả frontend và backend thì: LB sẽ modify (hoặc gọi là parse) headers của request, rồi terminate connection, rồi mới forward request đến backend</p>
+
+<blockquote>
+<p>Q. Khách hàng đang sử dụng ELB, để enhance security nên bạn muốn config ELB với SSL dùng 1 policy được define trước quá trình negotiate SSL connection giữa ELB và client. Dùng cái gì để ensure là ELB sẽ quyết định cipher nào sẽ được dùng cho SSL connection, (chứ ko phải tuân theo thứ tự cipher từ phía client) ?</p>
+</blockquote>
+
+<p>Server Order Preference</p>
+
+<p>Default thì cái cipher đầu tiên trong client&rsquo;s list mà match với 1 cipher nào đó của ELB&rsquo;s list sẽ được chọn để dùng cho SSL connection.<br />
+Nhưng nếu ELB được config với <code>Server Order Preference</code> thì cái cipher đầu tiên của ELB&rsquo;s list mà match với 1 cipher nào đó trong client&rsquo;s list sẽ được chọn để dùng cho SSL connection. Config này đảm bảo ELB sẽ được quyết định cipher nào dùng cho SSL</p>
+
+<blockquote>
+<p>Q. Bạn có thể tạo 1 ELB với những feature nào về security?
+<code>SSL Server Certificates</code>, <code>SSL Negotiation</code>, <code>Back-End Server Authentication</code>, <code>Front-End Server Authentication</code></p>
+</blockquote>
+
+<p>ko thể có <code>Front-End Server Authentication</code>, chỉ còn 3 cái kia</p>
+
+<blockquote>
+<p>Q. Bạn muốn cho phép 1 admin vào setup EC2, EC2 đó cần quyền access vào DynamoDB. Những policy permission gì cần để đảm bảo security?
+Cần trust policy tác dụng gì?<br />
+IAM permission policy tác dụng gì?</p>
+</blockquote>
+
+<p>Trust policy cho phép EC2 Instance assume role<br />
+IAM permission policy cho phép <strong>User Pass role</strong> to EC2</p>
+
+<p>Nói chung chỉ cần nhớ <code>User Pass Role</code> là được</p>
+
+<blockquote>
+<p>Q. Có thể lấy ở đâu cái Credential Report của List các AWS User gồm current status, access key age, MFA or not?</p>
+</blockquote>
+
+<p>AWS IAM Console -&gt; download Credential Report</p>
+
+<blockquote>
+<p>Q. Bạn có 1 VPC with a CIDR block of 10.0.0.0/16, trong đó có 1 subnet có CIDR giống với VPC. Bạn định tạo 1 subnet thứ 2 (CIDR 10.0.1.0/24) nhưng bị lỗi, làm thế nào? Có nên sửa cái CIDR của subnet thứ 1 ko?</p>
+</blockquote>
+
+<p>Bạn phải associate 1 secondary IPv4 CIDR block vào VPC để tăng size cho VPC đó. Thì sau đó mới add thêm cái subnet thứ 2 dc</p>
+
+<blockquote>
+<p>Q. Bạn có 1 VPC với primary IPv4 CIDR block of 10.0.0.0/24, và 4 secondary IPv4 CIDR block nữa.
+Gần hết các IP đã đc dùng và bạn phải tăng size để có thể add thêm EC2. Làm nào? lại add thêm secondary IPv4 CIDR block à?</p>
+</blockquote>
+
+<p>Chỉ có thể tạo tối đa 4 secondary IPv4 CIDR block thôi.<br />
+Thế nên phải xóa cái subnet nào ko sử dụng đi, để có thể tạo subnet mới</p>
+
+<blockquote>
+<p>Q. Bạn dùng API Gateway và Lambda, bạn muốn trace và analyze các user request gửi đến API Gateway thì dùng service nào của AWS? VPC Flow Log hay Cloudtrail hay X-Ray?</p>
+</blockquote>
+
+<p>Dùng AWS X-Ray, nó cho bạn khả năng debug và analyze việc tracing user request để tim root cause về performances</p>
+
+<p>Cloudtrail chỉ dùng cho API logging (chứ ko phải tracing),<br />
+VPC Flow Log thì ko tốt bằng X-Ray</p>
+
+<blockquote>
+<p>Q. Bạn đang serve content từ S3 và dùng CloudFront để tăng tốc độ deliver content đến user toàn cầu. Bạn muốn improve service của bạn nên cần lấy report về hệ thống hiện tại từ CloudFront thì Cloudfront cung cấp những loại report như nào?<br />
+<code>Cache Statistics Reports</code>, <code>Top Referrers Reports</code>, <code>Usage Reports</code>, <code>Popular Objects Report</code>, <code>Viewers Reports</code>?</p>
+</blockquote>
+
+<p><code>Top Referrers Reports</code>: List ra 25 website domain mà tạo ra HTTP/HTTPS request đến object của bạn</p>
+
+<p><code>Usage Reports</code>: Số lượng về các request HTTP/HTTPS mà Cloudfront phản hồi từ edge location</p>
+
+<p><code>Popular Objects Report</code>: Những object nào được access thường xuyên nhất</p>
+
+<p><code>Viewers Reports</code>: Xem location của những user access vào xem content nhiều nhất, và họ đang dùng loại browser nào</p>
+
+<p><code>Cache Statistics Reports</code>: Get dữ liệu của các request được nhóm lại bởi HTTP status code</p>
+
+<blockquote>
+<p>Q. Bạn đang dùng RDS và muốn monitoring về CPU và Memory của các process chạy trong RDS Instance. Nên làm gì?</p>
+</blockquote>
+
+<p>Enable Enhanced Monitoring trong RDS</p>
+
+<p>chứ ko dùng Cloudwatch, vì Cloudwatch chỉ lấy metric về CPU utilization của DB Instance thôi, còn RDS Enhanced Monitoring thì lấy metric từ cái agent trong DB đó</p>
+
+<h2 id="p3-udemy"><strong>&mdash;P3-udemy&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. Cty bạn có 1 website và có 2 môi trường UAT và dev. Bạn deploy app lên 1 EC2 m1.small. Khi test nhận thấy là performance giảm xuống khi tăng workload ở môi trường UAT. Làm nào? Có nên enable Enhanced Networking ko?</p>
+</blockquote>
+
+<p>Dùng EC2 size to hơn m1.small, chứ Enhanced Networking ko support EC2 m1.small (chỉ support m4,m5,c5..etc thôi)</p>
+
+<blockquote>
+<p>Q. 1 cty đang dùng MongoDB và NGINX server. Họ muốn 1 service có thể cung cấp 200,000 IOPS trong 4000 random I/O Read cho Database. Thì nên dùng loại Volume nào? (io1? st1? sc1&hellip;)</p>
+</blockquote>
+
+<p>Storage Optimized Instances</p>
+
+<p><code>Storage Optimized Instances</code> được design cho workload lớn, đọc và ghi (Read write) liên tục vào Dataset cực lớn. Ví dụ i3.4xlarge có thể cung cấp 825,000 Random Read IOPS và 360,000 Write IOPS.</p>
+
+<p>chứ các instance như <code>Provisioned IOPS SSD (io1) EBS Volumes</code> max có 64k IOPS thôi</p>
+
+<blockquote>
+<p>Q. Bạn đang có 1 portal 20 EC2, chia 4 regions. 1 ALB dc setup trên mỗi region để distribute traffic. Làm nào để duy trì availability nếu 1 trong 4 regions bị disconnect?</p>
+</blockquote>
+
+<p>Set Evaluate Target Health check = <code>true</code></p>
+
+<p>và setup Latency Based Routing cho Route53, tạo record set mà sẽ resolve đến ALB trên mỗi regions</p>
+
+<p>Ví dụ như này: Bạn có ELB ở <code>Oregon và Singapore</code>, bạn tạo 1 latency record cho mỗi ELB đó. Khi 1 user ở <code>London</code> truy cập vào domain của bạn thì:<br />
+1-DNS route cái query đến R53<br />
+2-R53 refer về độ trễ giữa London ⇔ Singapore và London ⇔ Oregon<br />
+3-Nếu độ trễ giữa London ⇔ Oregon là thấp hơn, thì R53 sẽ reponse cái IP của ELB ở Oregon</p>
+
+<blockquote>
+<p>Q. Bạn có vài S3 bucket giữ các thông tin quan trọng. Bạn có 1 app (ở private subnet) cần edit file trong S3 rồi tạo report gửi đến công ty partner  qua internet public. Bạn đã tạo S3 VPC Enpoint rồi cần làm gì nữa?</p>
+</blockquote>
+
+<p>Update Route table của Private subnet để connect trực tiếp với S3 VPC enpoint còn send outbound traffic thì qua NAT Gateway</p>
+
+<blockquote>
+<p>Q. Những service nào sau đây cung cấp khả năng backup automatic và rotation backup mà user có thể config? S3, EC2, RDS, Redshift, EFS?</p>
+</blockquote>
+
+<p>RDS và Redshift (Redshift default đã bật tính năng automated backup rồi, với 1 retention day. RDS thì vốn đã có)</p>
+
+<p>S3 ko có backup policy, vốn nó đã rất durable và ko cần option backup</p>
+
+<p>EC2 thì muốn backup thì cần làm tay (hoặc giờ đã có service AWS Backup gì đó, nhưng đang giả sử chưa có)</p>
+
+<p>EFS thì vốn đã HA và durable rồi, ko có option backup</p>
+
+<blockquote>
+<p>Q. Về Route53 health check. Nếu &gt;18% Health checker report là healthy thì R53 sẽ consider nó là healthy. Vậy những HTTP/HTTPS status codes nào trả về thì R53 sẽ nhận là healthy?</p>
+</blockquote>
+
+<p>2XX, 3XX</p>
+
+<blockquote>
+<p>Q. 1 Cty về data analytics sắp mở 1 số service. Bạn cần tạo 1 Cloudformation template sẽ init 1 số service quan trọng trước, trong CF template đó cần tạo những gì?</p>
+</blockquote>
+
+<p>EC2, Redshift, EMR configuration</p>
+
+<p>(chú ý là công ty về data analytics nên cần Redshift, EMR&hellip;)</p>
+
+<blockquote>
+<p>Q. Bạn là Database engineer, đang cần setup storage cho EC2 Server. Mỗi server cần handle lượng lớn DB workload. Họ cũng cần phải secure và seprate để keep các file backup và logs. Nên dùng gì làm root volume, dùng gì làm file system để cost-effective?</p>
+</blockquote>
+
+<p>Dùng <code>EBS-Provisioned IOPS SSD</code> volume để làm root volume (vì nó được optimized để high disk read/write performance)</p>
+
+<p>Dùng <code>Cold HDD</code> volume để làm file system (vì nó rất rẻ và great cho data access ko thường xuyên infrequently)</p>
+
+<p>Ko dùng <code>EFS</code> vì đắt, ko dùng <code>Throughput Optimized HDD</code> vì nó tập trung vào throughput hơn là IOPS nên có thể ảnh hưởng đến database performance</p>
+
+<blockquote>
+<p>Q. Bạn có subnet A có 2 EC2, giờ tạo thêm subnet B. Nếu xóa subnet A thì sao?</p>
+</blockquote>
+
+<p>Sẽ ko xóa dc, vì phải xóa hết EC2 trong ấy đi đã. Còn việc xóa route của nó thì sẽ tự động bị xóa khi bạn xóa thành công subnet</p>
+
+<blockquote>
+<p>Q. 1 Cty đang có 1 platform host trên EC2 sau ASG, và 1 CLB với HTTPS listener. Họ yêu cầu thay thế cái certificate hiện tại trong load balancer bằng cái cert mới mà đã upload lên IAM. Và cần làm bằng CLI, làm nào?</p>
+</blockquote>
+
+<p>1-<code>aws iam get-server-certificate</code> để get ARN of the certificate.</p>
+
+<p>2-<code>aws elb set-load-balancer-listener-ssl-certificate</code> để add cert mới vào LB</p>
+
+<blockquote>
+<p>Q. Bạn có 1 VPC với CIDR block 10.0.0.0/16. Bạn cần tạo connect từ VPC tới data center. Đã có 1 public subnet CIDR (10.0.0.0/24) và 1 VPN-only subnet (10.0.1.0/24) cùng với VPN Gateway (vgw-51898). Để cho phép traffic ra ngoài internet, bạn đã setup NAT instance (i-918273). Data center có CIDR 172.16.0.0/12. Vậy config của Main Route table và Custom Route table nên như nào?</p>
+</blockquote>
+
+<p><code>Custom Route table</code> associate với Public Subnet:<br />
+| Destination | Target |<br />
+|&mdash;&mdash;&mdash;&mdash;-|&mdash;&mdash;&ndash;|<br />
+| 10.0.0.0/16 | local  |<br />
+| 0.0.0.0/0   | igw-id |</p>
+
+<p><code>Main Route table</code> associate với VPN-only Subnet:<br />
+| Destination | Target |<br />
+|&mdash;&mdash;&mdash;&mdash;-|&mdash;&mdash;&ndash;|<br />
+| 10.0.0.0/16 | local  |<br />
+| 0.0.0.0/0   | vgw-id |</p>
+
+<p>Chú ý Destination là CIDR của VPC chứ ko phải của Subnet</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/diagram-vpc-with-vpn-only-subnet.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Về Cloudformation thì có những cái anatomy nào là bắt buộc, cái nào là optional?</p>
+</blockquote>
+
+<p>Chỉ có Resource là bắt buộc phải có. Ngay cả Format Version như <code>AWSTemplateFormatVersion</code> cũng chỉ là optional</p>
+
+<blockquote>
+<p>Q. Phía AWS chịu trách nhiệm gì trong hệ thống infra của bạn?</p>
+</blockquote>
+
+<p>Phía AWS chịu trách nhiệm:</p>
+
+<p>Quản lý Global infra cái run all your service</p>
+
+<p>Patch và update OS</p>
+
+<p>Bảo vệ Network traffic <strong>tầng abstract service</strong> như S3, Dynamo</p>
+
+<p>Còn phía bạn cần có trách nhiệm:</p>
+
+<p>Client side data encryption và data integrity authentication.</p>
+
+<p>Server side encryption (file system and data)</p>
+
+<p>Bảo vệ Network traffic của bạn</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/aws-customer-responsibility.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. 1 Cty có nhiều VPC trên nhiều regions. Để monitor hệ thống bạn cần lấy aggregate CPU Utilization của các EC2 running trên all VPC. Làm nào?</p>
+</blockquote>
+
+<p>Setup Cloudwatch Dashboard, add 1 widget mỗi region, lấy aggregate CPU Utilization all EC2 trong mỗi regions. (Chứ ko thể setup all regions dc)</p>
+
+<p>Bật Detailed Monitoring cho các EC2 (Bắt buộc phải bật cái này vì Cloudwatch chỉ lấy aggregate dc của các EC2 đã bật cái này thôi)</p>
+
+<blockquote>
+<p>Q. 1 App muốn user của họ có thể send pic, videos lên. Login bằng Social media account và app sẽ lưu detail vào DynamoDB. Cần dùng những service gì?</p>
+</blockquote>
+
+<p>Dùng <code>AWS Cognito</code> và <code>AWS IAM Roles</code></p>
+
+<p>Việc dùng <code>Federated Access</code> là sai</p>
+
+<blockquote>
+<p>Q. Bạn có 1 hệ thống ASG các EC2 chạy trên các AZ, và 1 CLB. Bạn nhận thấy có nhiều lỗi 4xx. Giờ nên enable VPC Flow Logs hay Load Balancer access log để lấy Client IP và request path?</p>
+</blockquote>
+
+<p>Nên dùng enable access log của Load Balancer, chứ ko cần lấy IP address của toàn bộ traffic ra vào VPC</p>
+
+<blockquote>
+<p>Q. Nếu Instance bị lỗi <code>Insufficient Instance Capacity</code> thì có thể root cause là gì?</p>
+</blockquote>
+
+<p>Do hiện tại AWS Ko có đủ available capacity về số lượng instance On-demands</p>
+
+<blockquote>
+<p>Q. Bạn có 1 S3 bucket lưu các thông tin của user. Bucket cần dc monitor để secure. Nhiệm vụ của bạn là <code>automate the assessment of your resource configurations and resource changes</code>, thì cần làm gì? Config bucket policy dùng IAM role? Hay dùng policy deny unauthored User? hay AWS Config?</p>
+</blockquote>
+
+<p>Dùng AWS Config, vì yêu cầu là automate việc đánh giá/theo dõi resource thay đổi</p>
+
+<blockquote>
+<p>Q. Giữa AWS Shield Advanced và AWS WAF khác nhau như nào?</p>
+</blockquote>
+
+<p>AWS Shield Advanced là cái đắt tiền tác dụng chống DDoS attacks</p>
+
+<p>chứ WAF chỉ có thể chặn các common attack như SQL injection, cross-site scripting thôi, ko chống dc DDoS attack</p>
+
+<blockquote>
+<p>Q. Bạn được yêu cầu assess (theo dõi) behaivor của các resource như EC2, để xác định nhưng nguy hiểm về security. Bạn cần bản report về các activity diễn ra trong EC2 ví dụ như detail về sự giao tiếp với các service khác. Service nào sẽ giúp bạn làm điều này? Trusted Advisor hay Inspector?</p>
+</blockquote>
+
+<p>AWS Inspector</p>
+
+<p>Nói chung cứ Security Assessment, Network Assessment thì phải là Inspector</p>
+
+<blockquote>
+<p>Q. 1 website cung cấp livescore, tin tức, hình ảnh thể thao. Đang đc dựng trên hệ thống ASG multi-AZ, dùng ALB (Application Load Balancer). Gần đây vì Worldcup nên traffic tăng lên, người dùng báo cáo là load chậm. Giải pháp nào để scale và cải thiện load time của website?
+<code>Cloudfront</code>? hay <code>NLB</code>? hay bật <code>Enhaced Networking</code>?</p>
+</blockquote>
+
+<p>Dùng Cloudfront vì nó cung cấp khả năng deliver content đến user 1 cách low latency, tốc độ transfer cao.</p>
+
+<p>Ko phải NLB vì nó chủ yếu dùng để load balancing cho TCP traffic, handle hàng triệu request mỗi giây với độ trễ cực thấp, tuy có thể tăng performance nhưng nó <strong>ko phải</strong> giải pháp để tăng thời gian load time của website trên toàn thế giới (respone time around globe)</p>
+
+<p>Ko phải Enhanced Networking vì nó chủ yếu để cho phép high-performance networking đối với 1 số loại EC2 cụ thể mới support</p>
+
+<blockquote>
+<p>Q. So sánh 4 cái sau: <code>Cost Optimization Monitor</code>? <code>TCO calculator</code>? <code>Simple Monthly Calculator</code>? <code>AWS Pricing page</code>?</p>
+</blockquote>
+
+<p>1-<code>Cost Optimization Monitor</code>: report cho về chi phí operation chi tiết. Generate report và cung cấp insight về service usage và cost</p>
+
+<p>2-<code>TCO calculator</code>: dùng để compare cost của on-premise hoặc môi trường hosting truyền thống so với AWS</p>
+
+<p>3-<code>Simple Monthly Calculator</code>: dùng để estimate billing hàng tháng. Nhưng ko generate report 1 cách chi tiết như cái <code>Cost Optimization Monitor</code>. Và nó cũng ko monitor cost hiện tại mình đang chịu</p>
+
+<p>4-<code>AWS Pricing page</code>: chỉ show ra thôi, chứ ko gen ra report cho bạn.</p>
+
+<blockquote>
+<p>Q. Những task mà bạn có thể perform bằng sự tự động của System Manager cho EC2 của bạn?</p>
+</blockquote>
+
+<p>Build Automation <strong>workflow</strong> để config và quản lý EC2</p>
+
+<p>Tạo custom <strong>workflow</strong> hoặc sử dụng cái workflow mà AWS đã defined sẵn</p>
+
+<p>Nhận noti về Automation <strong>Workflow</strong>/Task bằng Cloudwatch Event</p>
+
+<p>Monitor quá trình <strong>Automation</strong> và chi tiết về quá trình execute</p>
+
+<p>Nói chung có chữ Automation hoặc workflow thì là task của SSM</p>
+
+<blockquote>
+<p>Q. Bạn muốn monitor system infra. Bạn đã có 1 custom shell script để check memory ultilization của EC2 rồi. Giờ bạn muốn dc notified mỗi khi memory breach threshold thì làm nào?</p>
+</blockquote>
+
+<p>Cài Cloudwatch agent trên EC2 nó sẽ đọc cái custom metric script mà bạn đã chuẩn bị</p>
+
+<p>Setup 1 cái CW alarm base trên cái custom metric</p>
+
+<p>set SNS topic để nhận noti</p>
+
+<blockquote>
+<p>Q. CloudWatch alarms có thể có những trạng thái nào?</p>
+</blockquote>
+
+<p><code>OK</code><br />
+<code>ALARM</code>  (metric outside khỏi threshold đã defined)<br />
+<code>INSUFFICIENT_DATA</code>  (alarm vừa start, hoặc metric not available, hoặc ko đủ data cho metric)<br />
+ko có trạng thái Pending đâu nhé</p>
+
+<blockquote>
+<p>Q. Về AWS Risk and Compliance Whitepaper?</p>
+</blockquote>
+
+<p>Khách hàng dc tùy chọn data của họ ở trong region vật lý nào, AWS sẽ ko di chuyển mà ko thông báo với user, trừ khi có yêu cầu của chính quyền</p>
+
+<p>AWS ngăn chặn việc xâm nhập vào host vật lý hoặc ảo hóa mà user ko có quyền sở hữu, ko dc assign</p>
+
+<p>Khách hàng retain quyền và sự sở hữu về data của họ (AWS ko can thiệp)</p>
+
+<p>Chú ý là AWS ko cho bên third-party nào deliver service của AWS đến KH</p>
+
+<p>AWS ko cho phép các auditor làm 1 <strong>tour</strong> vào data center để validate hệ thống đâu nhé</p>
+
+<p>AWS ko notify khi hệ thống của họ cần bring offline, bởi vì việc maintain và patch hệ thống sẽ ko ảnh hưởng đến KH</p>
+
+<blockquote>
+<p>Q. 1 cty đang host web app e-commerce và blog fetch data từ database. 1 số bài viết (static web page) có nhiều truy cập làm app hoạt động chậm. Phải làm sao để giảm load time như vậy? ElastiCache? hay S3? hay Read replica cho DB?</p>
+</blockquote>
+
+<p>Dùng S3 để host các web pages</p>
+
+<p>Việc dùng ElastiCache chỉ để caching content dc fetch thường xuyên từ DB</p>
+
+<p>Read replica chỉ để scaling những web mà nặng về đọc</p>
+
+<blockquote>
+<p>Q. Bạn quản lý 1 hệ thống batch chạy trên EC2 và CLB. EC2 deploy trên 3 AZ us-west-2a, 2b, 2c. Bạn nhận thấy EC2 trong 2b thực hiện các request rất chậm. Cần monitor metric nào để biết dc tổng số request hoặc connection đang pending trước khi dc route tới 1 EC2 khỏe mạnh healthy?
+<code>SurgeQueueLength</code> hay <code>RequestCount</code> hay <code>BackendConnectionErrors</code> hay <code>SpilloverCount</code> ?</p>
+</blockquote>
+
+<p>dùng <code>SurgeQueueLength</code>: tổng số request (HTTP listener) hoặc connection (TCP listener) đang pending. Max của queue là 1024. Nếu queue bị full thì request sẽ bị reject. Số request bị reject đó sẽ hiển thị ở metric <code>SpilloverCount</code></p>
+
+<p><code>RequestCount</code>: là số request completed trong 1 khoảng time nhất định (1 or 5 phút)</p>
+
+<p><code>BackendConnectionErrors</code>: số lượng connection fail khi connect giữa LB và Instances</p>
+
+<blockquote>
+<p>Q. Bạn ping 1 EC2 từ máy của bạn, nhưng ko nhận dc respone, bạn check VPC flow log thì như sau:<br />
+<code>2 123456789010 eni-1235b8ca 110.237.99.166 172.31.17.140 0 0 1 4 336 1432917027 1432917142 ACCEPT OK</code><br />
+<code>2 123456789010 eni-1235b8ca 172.31.17.140 110.237.99.166 0 0 1 4 336 1432917094 1432917142 REJECT OK</code>
+Vì sao?</p>
+</blockquote>
+
+<p>Vì Network ACL đang ko cho phép outbound ICMP traffic (vì NACL là stateless)</p>
+
+<p>chứ còn nếu là SG thì bởi SG là stateful nên nếu inbound traffic dc cho phép thì outbound cũng sẽ được cho phép (ngay cả khi rule trong SG của bạn chặn outbound traffic) 😂</p>
+
+<h2 id="p4-udemy"><strong>&mdash;P4-udemy&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. App của bạn là app share ảnh, deploy trên 1 group các EC2. Team dev muốn nhanh chóng push 1 bản update cho app, và bản update đó sẽ được download bởi user trên global từ bên trong mobile app. Làm nào để ng dùng có trải nghiệm tốt.</p>
+</blockquote>
+
+<p>Lưu file trên S3, Config sao cho Cloudfront sử dụng S3 bucket như là 1 Origin.</p>
+
+<p>không thể upload thẳng file update đó lên Cloudfront</p>
+
+<blockquote>
+<p>Q. App của bạn có nhiều user, User tăng lên nên cần tăng Storage lên. Bản Backup cần để ở chỗ nào secure và durable. Bạn muốn dùng AWS vì nó unlimited. Tuy nhiên bạn vẫn muốn giữ dc sự access thường xuyên vào data. Làm nào?</p>
+</blockquote>
+
+<p>Dùng Storage Gateway vì nó cho bạn trải nghiệm liền mạch (seamlessly) trong việc integrate app và AWS block object storage</p>
+
+<blockquote>
+<p>Q. Làm sao để dùng 1 Cloudformation Template để tạo stack trên nhiều AWS account?</p>
+</blockquote>
+
+<p>Dùng Cloudformation StackSet</p>
+
+<blockquote>
+<p>Q. Khi bạn enable <strong>MFA Delete</strong> cho 1 S3 bucket, thì sẽ như nào?</p>
+</blockquote>
+
+<p><code>MFA Delete</code> cần enable cùng với <code>Bucket Versioning</code></p>
+
+<p>Phải enable bằng CLI, bằng root account</p>
+
+<p>Feature này chỉ dành cho root account. Chỉ root account mới có thể xóa Object trong S3 bucket đó</p>
+
+<p>1 IAM User nếu có cung cấp MFA thì cũng ko thể xóa dc object trong bucket đó.</p>
+
+<p><a href="https://www.cloudmantra.net/blog/how-to-enable-mfa-delete-for-s3-bucket/" target="_blank">https://www.cloudmantra.net/blog/how-to-enable-mfa-delete-for-s3-bucket/</a></p>
+
+<blockquote>
+<p>Q. Command nào để put custom metric lên Cloudwatch?</p>
+</blockquote>
+
+<p><code>put-metric-data</code> command CLI</p>
+
+<blockquote>
+<p>Q. Cái helper script nào của Cloudformation giúp bạn retrieve và interpret metadata, install package, tạo file, start service?</p>
+</blockquote>
+
+<p><code>cfn-init</code></p>
+
+<p>ko phải <code>cfn-signal</code> vì nó chỉ giúp báo WaitCondition chờ sync với các resource khác cảu stack khi app ready</p>
+
+<p>ko phải <code>cfn-get-metadata</code> vì nó chỉ dùng để get metadata thôi</p>
+
+<blockquote>
+<p>Q. Bạn tạo 1 Chef Server trong AWS Opswork, với 3 node running. Bạn cần phải add nhiều hơn, nhưng thấy là mỗi lần add mất thời gian quá. Có cách nào tự động tạo EC2 Node vào Chef Server ko?</p>
+</blockquote>
+
+<p>Có, dùng Chef Client Cookbook</p>
+
+<blockquote>
+<p>Q. Bạn muốn sử dụng Pupet Enterpise, AWS có service nào làm các nhiệm vụ như operation, backup, restore, upgrade software cho Pupet Enterprise ko?</p>
+</blockquote>
+
+<p>Có, AWS Opswork</p>
+
+<blockquote>
+<p>Q. Bạn muốn secure cho data của mình, 1 service của AWS mà dùng FIPS 140-2 compliant, và <strong>nằm trong VPC của bạn</strong> thì dùng cái gì? CloudHSM hay KMS ?</p>
+</blockquote>
+
+<p>CloudHSM vì nó nằm trong VPC của bạn, do bạn quản lý, bạn tự generate ra key và dùng key đó trong AWS<br />
+chứ KMS là Service nằm ngoài VPC của bạn</p>
+
+<blockquote>
+<p>Q. Về RDS thì Cloudwatch có những metric như sau, chúng nó ý nghĩa gì? FreeStorageSpace, BinLogDiskUsage, FreeableMemory, DiskQueueDepth?</p>
+</blockquote>
+
+<p><code>FreeStorageSpace</code>: monitor số space còn thừa trong RDS instance,</p>
+
+<p><code>BinLogDiskUsage</code>: monitor dung lượng đã dùng (chỉ apply cho MySQL read replicas),</p>
+
+<p><code>FreeableMemory</code>: số RAM còn trống,</p>
+
+<p><code>DiskQueueDepth</code>: số I/O (read/write) request đang chờ access vào disk</p>
+
+<blockquote>
+<p>Q. Bạn cần quick update RDS, launch thêm vài EC2, new ALB vào cái Cloudformation Stack hiện tại. Bạn muốn có thể preview những cái thay đổi trong stack mới, chắc chắn là new infra sẽ dc provision đúng thì làm nào?</p>
+</blockquote>
+
+<p><strong>Cloudformation Change Sets</strong> (nó sẽ list ra những thay đổi cho bạn review trước khi thực sự execute)</p>
+
+<blockquote>
+<p>Q. Bạn muốn tự động xóa những EBS snapshot khi đủ maximum snapshot thì làm nào?</p>
+</blockquote>
+
+<p>Dùng Amazon Data Lifecycle Manager</p>
+
+<blockquote>
+<p>Q. Cross-zone Load balancing là như nào?</p>
+</blockquote>
+
+<p>xem hình sau:<br />
+Nếu disable <code>Cross-zone Load balancing</code> thì traffic từ client vào sẽ chia đều 2 LB, mỗi LB 50% (chia theo Route53 define), dẫn đến mỗi EC2 trong Zone A sẽ là 25%, còn mỗi EC2 trong Zone B là <sup>50</sup>&frasl;<sub>8</sub> (%) -&gt; ko đều.<br />
+Nếu enable <code>Cross-zone Load balancing</code> thì traffic sẽ chia đều cho các EC2, mỗi cái 10%</p>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cross-zone-load-balacing.jpg" alt="" /></p>
+
+<blockquote>
+<p>Q. Bạn muốn mỗi khi snapshot đc tạo ra từ EC2, chúng sẽ dc copy qua region khác để đảm bảo durability, làm nào?</p>
+</blockquote>
+
+<p>Cloudwatch Event cho EBS, rồi trigger Lambda để copy qua region khác</p>
+
+<blockquote>
+<p>Q. RDS Multi-AZ hoạt động như nào?</p>
+</blockquote>
+
+<p>Con Primary Instance của bạn sẽ dc synchonize replicate data sang con DB Instance standby ở Zone khác. 2 con này chỉ sync về Data, còn infra của chúng độc lập với nhau.</p>
+
+<blockquote>
+<p>Q. Về Cloudfront, hệ thống của bạn cung cấp ảnh, tin tức. Có writer post 1 bức ảnh fake và đã bị cache lại trên Cloudfront, và cần phải đc xóa ngay lập tức (ko thể đợi cache expire, mà phải luôn và ngay), làm nào?</p>
+</blockquote>
+
+<p>■ Cách 1: Invalidate file đó ở edge cache bằng CLI command <code>aws cloudfront create-invalidation</code>, thì từ lần sau viewer vào request, Cloudfront sẽ gửi đến origin để fetch file mới nhất</p>
+
+<p>■ Cách 2: Dùng <strong>file versioning</strong> để serve 1 version khác của file đó</p>
+
+<p><strong>Chú ý</strong> cách invalidate file thì ko thể invalidate file media định dạng Microsoft Smooth Streaming, ko thể invalidate 1 file đã dc serve bởi RTMP (Real-Time Messaging Protocol)</p>
+
+<blockquote>
+<p>Q. Bạn có S3 bucket và muốn secure data. Chỉ những user có MFA thì mới đc vào access content bucket đó. Làm nào?</p>
+</blockquote>
+
+<p>COnfig bucket policy chỉ cho phép access nếu User đã authen bằng MFA</p>
+
+<p>Ensure MFA dc bật cho các User</p>
+
+<blockquote>
+<p>Q. 1 Cty dùng DynamoDB, bạn cần ensure là backup cần có sẵn available, làm nào?</p>
+</blockquote>
+
+<p>Bật chức năng <code>On-demands backup for DynamoDB</code> tables (Nó cho phép bạn backup for long-term, bạn có thể backup và restore bất cứ lúc nào chỉ với vài click chuột, việc backup và restore sẽ ko ảnh hưởng đến perfomance hay tính availability của table)</p>
+
+<blockquote>
+<p>Q. 1 Cty muốn bạn manage hệ thống infa của họ trên cả cloud và on-premise. Họ muốn hệ thống backup và archive ổn định trên cả on-premise và cloud cho Document của họ. Những document phải luôn đc accessible ngay lập tức trong 6 tháng, và sau 6 tháng thì sẽ dc archive cho 10 năm. Dùng gì?</p>
+</blockquote>
+
+<p>Storage Gateway với <code>File gateway</code> connect đến onpremise data center. Dùng lifecycle để move sang Glacier</p>
+
+<p>Ko dùng <code>Tape gateway</code> vì nó lưu data trên <strong>Glacier</strong> nên ko thể retrive data ngay lập tức được như <code>File gateway</code></p>
+
+<p>AWS Storage Gateway cung cấp, File-based, Volume-based, Tape-based, thì:<br />
+<code>File Gateway</code> chính là <strong>File-based</strong>,<br />
+<code>Tape Gateway</code> chính là <strong>Tape-based</strong>.</p>
+
+<h2 id="p5-udemy"><strong>&mdash;P5-udemy&mdash;</strong></h2>
+
+<blockquote>
+<p>Q. 1 Cty có nhiều AWS account trong 1 Org. Bạn cần ensure là các tag cần dc apply nhất quán khi tạo resource trong các account. Làm nào?</p>
+</blockquote>
+
+<p>Dùng Cloudformation Resource Tags</p>
+
+<p>Dùng AWS Service Catalogs</p>
+
+<blockquote>
+<p>Q. Cty  bạn quản lý nhiều AWS resource, giờ muốn optimize cost của các resource thì cần dùng cái gì? AWS Inspector? hay AWS Cost &amp; Usage report?</p>
+</blockquote>
+
+<p>Dùng AWS Cost &amp; Usage report</p>
+
+<p>Vì Inspector chỉ để check xem server có bị vulnerabilities hay ko thôi</p>
+
+<blockquote>
+<p>Q. Những limit của RDS encrpyted Database Instance là gì?</p>
+</blockquote>
+
+<p>Chỉ có thể enable encryption ngay khi tạo DB, chứ ko thể sau khi DB đã được tạo</p>
+
+<p>DB đã bật encryption thì ko thể disable đi được</p>
+
+<p>Bạn ko thể có 1 bản Read Replica <code>unencrypted</code> của 1 DB <code>encrypted</code><br />
+Bạn ko thể có 1 bản Read Replica <code>encrypted</code> của 1 DB <code>unencrypted</code></p>
+
+<p>Read Replica với DB gốc cần dc encrypt bằng cùng 1 key</p>
+
+<p>Bạn ko thể restore 1 bản backup/snapshot <strong>unencrypted</strong> vào 1 DB Instance đã được <strong>encrypted</strong></p>
+
+<p>Khi copy encrpyted snapshot từ 1 region sang regions khác, bạn cần chỉ định key KMS vì KMS ra specific cho mỗi region bạn tạo DB</p>
+
+<blockquote>
+<p>Q. 1 Cty có 1 app host trên EC2. Giờ cần 1 high throughput data storage cho quản lý content và có thể cung cấp parallel share access vào server của họ, thì sẽ dùng gì? EBS Volume Throughput Optimize hay EFS hay S3?</p>
+</blockquote>
+
+<p>Dùng EFS</p>
+
+<p>Vì EBS chủ yếu dùng cho local block level storage, mặc dù có thể cung cấp high throughput nhưng ko thể cung cấp khả năng parallel access vào multiple instances được</p>
+
+<blockquote>
+<p>Q. Cty bạn cần migrate app lên AWS. Cần infa có thể HA và chống dc cross-site scrpting, SQL injection, HTTP flood attacks. Thì dùng WAF hay Shield Advanced? dùng Network Load Balancer hay Application Load Balancer?</p>
+</blockquote>
+
+<p>WAF và ALB (vì WAF là đủ để chống những cái trên rồi, bao giờ cần chống DDos thì mới cần Shield. <strong>WAF thì nó ko thể integrate với NLB được</strong>, nên mới chọn ALB)</p>
+
+<blockquote>
+<p>Q. Bạn có 1 số EC2 trong ASG và 1 vài hàm Lambda. Mỗi khi bạn release 1 version code mới, xảy ra sự ko ổn định vì bạn ko thể manually update all resource liên quan đúng cách. Vì số lượng lớn resource, bạn cần 1 cách để nhóm chúng lại và deploy new version của code 1 cách ổn định cho cái nhóm đó với downtime bé thôi. Làm nào?</p>
+</blockquote>
+
+<p>Dùng deployment group trong AWS Code Deploy để automate việc deploy code</p>
+
+<blockquote>
+<p>Q. Cloudwatch agent có thể cung cấp thông tin về vulnerabilities và errors trong system của bạn ko?</p>
+</blockquote>
+
+<p>KO, muốn cái đó thì dùng Inspector</p>
+
+<blockquote>
+<p>Q. Data Lifecycle Manager cung cấp 1 cách đơn giản, tự động để backup data trên EBS volume của bạn. Vậy nó có khả năng tạo snapshot rồi tự động copy sang region khác hay ko?</p>
+</blockquote>
+
+<p>Không nhé. Bạn phải tự làm việc move sang region khác đó</p>
+
+<blockquote>
+<p>Q. App của bạn dùng ELB Clasic Load Balancer. Bạn muốn enable ticky session để CLB sẽ bind cái user session với 1 instance cụ thể. Khi đó tên của cookie mà CLB sẽ tạo để map với user session là gì?</p>
+</blockquote>
+
+<p>AWSELB</p>
+
+<p>Nếu App của bạn có session cookie sẵn rồi, bạn có thể config ELB để cái session cookie của ELB follow cái duration của App&rsquo;s session cookie.</p>
+
+<p>Nếu App của bạn ko có session cookie, bạn có thể config ELB để nó tạo ra session cookie và chỉ định duration bạn muốn. Khi ELB tạo cookie sẽ có tên là <strong>AWSELB</strong> dùng để map cái session vào Instance</p>
+
+<blockquote>
+<p>Q. Khi bạn delete CMK (Customer Master Key) của KMS, thì cần chú ý gì? Có thể xóa ngay lập tức ko? thời gian default?</p>
+</blockquote>
+
+<p>Bạn không thể xóa CMK ngay lập tức, bạn phải lên schedule cho nó</p>
+
+<p>Thời gian schedule để xóa CMK default là 30 ngày (30 days)</p>
+
+<p>KMS sẽ ko thực hiện rotate với nhưng CMK đang trọng trạng thái pending deletion</p>
+
+<p>1 CMK pending deletion ko thể sử dụng tron bất cứ hoạt động cryptographic nào</p>
+
+<blockquote>
+<p>Q. App của bạn dựng trên EC2-Clastic Instance và trong 1 public subnet. Giờ muốn list các IP truy cập vào EC2 nên làm nào?</p>
+</blockquote>
+
+<p>Dùng VPC Flow log, nhưng trước hết phải migrate App sang EC2-VPC, chứ loại EC2-Clasic ko dùng VPC Flow log được</p>
+
+<blockquote>
+<p>Q. Cloudformation có cái <code>DeletionPolicy</code>, cái này có những option gì?</p>
+</blockquote>
+
+<p><code>Retain</code>: giữ lại resource khi Stack bị xóa<br />
+<code>Delete</code>: delete all (default)<br />
+<code>Snapshot</code>: tạo snapshot trước khi xóa</p>
+
+<blockquote>
+<p>Q. Default khi tạo VPC thì qua CLI/Console/VPC Wizard, những cái sau dc set true hay false: <code>enableDnsHostnames</code> và <code>enableDnsSupport</code>?</p>
+</blockquote>
+
+<p>Khi tạo bằng VPC Wizard: cả 2 set <code>true</code></p>
+
+<p>Khi tạo bằng Console, CLI: chỉ có <code>enableDnsSupport=true</code></p>
+
+<blockquote>
+<p>Q. Bạn cần setup 1 infra để có thể tự động provision ra hàng ngàn EC2 at any scale, dùng service gì?</p>
+</blockquote>
+
+<p>EMR (Elastic MapReduce), nó giúp bạn dễ dàng tăng giảm số lượng ec2 có thể access và quản lý.</p>
+
+<blockquote>
+<p>Q. Bạn có 1 bucket S3, muốn setting để chỉ có thể đọc và viết chứ ko thể xóa object thì làm nào? MFA Delete hay attach S3 bucket policy?</p>
+</blockquote>
+
+<p>Attach 1 S3 bucket policy</p>
+
+<p>ko chọn MFA delete vì nó dùng để chặn trường hợp xóa 1 cách vô ý thôi, nếu có quyền và MFA code vẫn có thể xóa dc</p>
+
+<blockquote>
+<p>Q. 1 Cty đang consider dùng RDS, khi dùng RDS thì những activities gì sẽ do AWS perform, ng dùng ko cần quan tâm?</p>
+</blockquote>
+
+<p>■ create và maintain backup với point in time recovery 5 minutes</p>
+
+<p>■ install các bản vá bảo mật (security patch)</p>
+
+<p>Chứ còn những thư như config Multi-AZ tự động, tạo Read Replica tự động khi utilization cao thì AWS ko perform, mà phía người dùng phải config/enable</p>
+
+<blockquote>
+<p>Q. 1 Game online đang host trên 1 EC2. Họ chuẩn bị release 1 bản game mới, cần chắc chắn là website của họ đủ khả năng support cho new players. Cần làm gì?</p>
+</blockquote>
+
+<p>Tạo 1 ASG từ cái EC2 đang chạy</p>
+
+<p>Có 2 kiểu tạo ASG Launch Configuration từ scratch, và tạo ASG Launch configuration từ exist EC2</p>
+
+<blockquote>
+<p>Q. Bạn cần report về tình trạng OS patching process của RDS, xem có cái gì vulnerability ko, thì có cần dùng AWS Inspector ko?</p>
+</blockquote>
+
+<p>Không. Chỉ cần dùng RDS Console là đủ rồi</p>
+
+<blockquote>
+<p>Q. Bạn cần ensure là all object S3 bucket được encrypt at rest. Cần config S3 bucket để nó deny những request mà ko có header là gì?</p>
+</blockquote>
+
+<p><code>x-amz-server-side-encryption</code></p>
+
+<blockquote>
+<p>Q. Bạn có 1 RDS database, giờ muốn chuyển sang DynamoDB, nên bạn cần disable backup của RDS vì ko dùng nữa. Bạn có thể set retention period xuống 1, nhưng khi set xuống 0 bị lỗi. Vì sao?</p>
+</blockquote>
+
+<p>Vì RDS của bạn đang setting có Read Replica</p>
+
+<blockquote>
+<p>Q. Bạn migrate 1 online accounting app dùng TCP protocol lên AWS. Cần đảm bảo tính scalability và availability, đồng thời phải record dc IP của client để tracking nữa. Dùng cái gì 2 cách sau?<br />
+1: ELB + 1 TCP Listener + enable Proxy Protocol<br />
+2: ELB + 1 TCP Listener + enable Cross-Zone Load Balancing</p>
+</blockquote>
+
+<p>Dùng cách 1, vì enable Cross-Zone Load Balancing sẽ ko thể record dc IP của User dùng app</p>
+
+<blockquote>
+<p>Q. 1 Cty dùng Kinesis để liên tục collect data của user. Vì data nhạy cảm nên cần secure at rest. Nên config Kinesis sử dụng server-side encryption hay client-side encryption?</p>
+</blockquote>
+
+<p>Dùng Kinesis <code>server-side encryption</code> (ko nên dùng client-side encrpytion vì khó setup hơn nhiều)<br />
+Câu hỏi là secure at rest, nên dùng server-side nó sẽ encrpyt khi nó chưa ghi vào DB, và decrypt sau khi lấy ra từ DB<br />
+Nếu cần secure in transit, thì nên dùng client-side, nó sẽ encrpyt khi nó đi ra khỏi client, và đến lúc vào DB thì nó đã dc encrypt rồi (quãng đường từ client đến server thì data đã dc encrpyt nên chính là in transit)</p>
+
+<h1 id="các-câu-hỏi-được-note-lại-trong-quá-trình-thi">Các câu hỏi được note lại trong quá trình thi</h1>
+
+<blockquote>
+<p>Q. EFS encrpytion thì cần dùng cái gì? CloudHSM hay Server-side Encryption có sẵn của EFS</p>
+
+<p>Q. Khi tạo Billing alert thì dùng service nào? AWS budget? hay Trusted Advisor? hay Cost Explorer? hay Cost and Usage?</p>
+
+<p>Q. Account A tạo AWS Catalog portfolio rồi share cho Account B, vậy thì B có thể làm gì với portfolio đó? Create/Update/Delete được ko? hay chỉ tạo được ở local?</p>
+
+<p>Q. NAT Gateway nằm trong public subnet hay private subnet?</p>
+
+<p>Q. Cloudformation, sau khi chạy stack lỗi, bạn sửa lại template xong thì xóa tạo lại stack hay update stack đó? hay tạo ChangeSet?</p>
+
+<p>Q. Bạn đã issued 1 certificate, giờ muốn tạo key trong 1 secure environment, có thể làm các crpytographic operation thì dùng service nào? CloudHSM hay KMS</p>
+
+<p>Q. Cty bạn đã centralized tất cả log vào 1 log group. Cần phải xem cái log để notify cho các team liên quan. Thì có cách nào most effective? Có nên chia ra nhiều log group rồi subcribe mỗi team 1 log group?</p>
+
+<p>Q. Khi dùng AWS Aurora thì resposibility của bạn là gì,
+provisioning storage DB?
+hay Schedule patch, maintain, update OS?
+hay Excute patch, maintain, update OS?</p>
+
+<p>Q. Lambda ở account A push object lên s3 bucket ở account B, nhưng B ko xóa dc object đó thì nên làm nào?
+Lambda cần put cả objectACl nữa, define owner có quyền full access</p>
+
+<p>Q. Cloudtrail có khái niệm <code>data event log</code> và <code>management event log</code> ko? hay có cái nào trong 2 cái đó?</p>
+
+<p>Q. AWS Orgnization của bạn muốn xem ai make request create new account thì xem ở đâu?
+<code>Cloudtrail log</code> hay <code>Organization access log</code>?
+Có cái gọi là <code>Orgnization access log</code> ko?</p>
+
+<p>Q. Khi tạo S3 bucket policy, có cái resource arn kiểu <code>...bucket/*</code> ko?</p>
+
+<p>Q. 1 VPC có 2 public subnet, 2 private subnet, 1 igw, 1 natgw, có potential nguy hiểm tiềm tàng gì?
+Single natgw ko redundant?,
+Single igw ko redundant?,
+VPC default route table chỉ associate dc với 1 AZ?</p>
+
+<p>Q. Về cloudtrail intergrity, để prevent modify/delete cái trail log, nên bật mfa delele cho bucket đó? Hay edit policy để  <code>DENY ALL</code></p>
+
+<p>Q. Có 2 VPC, VPC 1 là chính ở 1 region, VPC 2 là cái dự phòng đang để ở region khác, giờ muốn sync data từ VPC 1 sang 2, mà traffic ko bị expose qua internet thì nên làm nào? tạo 1 inter-vpc peering à? hay tạo 1 EC2 dùng làm VPN?</p>
+</blockquote>
+
+<p>Done!</p>
+
+<p>Chúc các bạn thành công, mình passed rồi 🎉 🎉 🎉</p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='categories'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M22,19a2,2,0,0,1-2,2H4a2,2,0,0,1-2-2V5A2,2,0,0,1,4,3H9l2,3h9a2,2,0,0,1,2,2Z"/>
+  
+</svg>
+<span class='screen-reader-text'>Categories: </span><a class='category' href='/categories/features/'>features</a></div>
+<div class='tags'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z"/>
+  <line x1="7" y1="7" x2="7" y2="7"/>
+  
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/notes/'>notes</a>, <a class='tag' href='/tags/aws/'>AWS</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/posts/send-message-to-discord-using-aws-lambda/'>
+        <span aria-hidden='true'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <line x1="20" y1="12" x2="4" y2="12"/>
+  <polyline points="10 18 4 12 10 6"/>
+  
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>Send Message to Discord Using Aws Lambda</a>
+    </div><div class='next-entry sep-before'>
+      <a href='/posts/k8s-i-app-micro-services-on-aws-w-minikube/'>
+        <span class='screen-reader-text'>Next post: </span>Kubernetes 1: App Micro Services on AWS with Minikube<span aria-hidden='true'>Next <svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <line x1="4" y1="12" x2="20" y2="12"/>
+  <polyline points="14 6 20 12 14 18"/>
+  
+</svg>
+</span>
+      </a>
+    </div></div>
+</nav>
+
+
+<section id='comments' class='comments'>
+  <div class='container sep-before'>
+    <div class='comments-area'><div id='submission-success' class='comment-submission-feedback'>
+  <h4>Thank You!</h4>
+  <span>Your comment has been submitted. It will appear on this page shortly!</span>
+  <a href='#comments' class='button'>OK</a>
+</div>
+
+<div id='submission-failure' class='comment-submission-feedback'>
+  <h4>Yikes, Sorry!</h4>
+  <span>Error occured. Couldn&#39;t submit your comment. Please try again. Thank You!</span>
+  <a href='#comments' class='button'>OK</a>
+</div>
+
+
+
+
+<div id='respond' class='comment-respond'>
+  <h4 class='comment-reply-title'>Leave a comment<small>
+      <a rel='nofollow' id='cancel-comment-reply-link' href='#respond' class='button' style='display:none' aria-label='Cancel comment'>Cancel</a>
+    </small>
+  </h4>
+  <form action='https://staticman3.herokuapp.com/v3/entry/github/hoangmnsd/hoangmnsd/master/comments' method='post' id='comment-form' class='comment-form'>
+    <input type='hidden' name='options[postId]' value='ef8dc7a2148be9ff09d676a362a69d50'>
+    <input type='hidden' name='options[redirect]' value='https://hoangmnsd.github.io/posts/aws-certified-sysops-administrator-associate-note/#submission-success'>
+    <input type='hidden' name='options[redirectError]' value='https://hoangmnsd.github.io/posts/aws-certified-sysops-administrator-associate-note/#submission-failure'>
+
+    <input type='address' name='fields[honeypot]' style='display:none'>
+    <input type='hidden' name='fields[permalink]' value='/posts/aws-certified-sysops-administrator-associate-note/'>
+    <input type='hidden' name='fields[parent_id]' value=''>
+
+    <div>
+      <label for='comment'>Comment*</label>
+      <textarea id='comment' name='fields[content]' required rows='3'></textarea>
+    </div>
+    <div>
+      <label for='name'>Name*</label>
+      <input id='name' name='fields[author]' type='text' required>
+    </div>
+    <div>
+      <label for='email'>Email*</label>
+      <input id='email' name='fields[email]' type='email' required>
+    </div>
+    <div>
+      <label for='url'>Website</label>
+      <input id='url' name='fields[site]' type='url'>
+    </div>
+    <div>
+      <button type='submit'>Comment!</button>
+    </div>
+  </form>
+</div>
+
+</div>
+  </div>
+</section>
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/hoangmnsd' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+  
+</svg>
+</a>
+      </li><li>
+        <a href='https://facebook.com/lehoangofficial' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Open Facebook account in new tab</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+  
+</svg>
+</a>
+      </li><li>
+        <a href='https://instagram.com/lehoang281' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Open Instagram account in new tab</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+  <line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/>
+  
+</svg>
+</a>
+      </li><li>
+        <a href='mailto:hoanglh2801@gmail.com' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Contact via Email</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+  <polyline points="22,6 12,13 2,6"/>
+  
+</svg>
+</a>
+      </li><li>
+        <a href='https://gitlab.com/inmessionante' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Open Gitlab account in new tab</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z"/>
+  
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2019-2020 hoangmsnd </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.67d669ac.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+
