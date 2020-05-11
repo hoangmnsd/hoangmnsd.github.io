@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang='en'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Giới thiệu  Keel is a tool for automating Kubernetes deployment updates. Keel is stateless, robust and lightweight.
+ Keel được đánh giá là 1 tool dễ cài đặt, dễ sử dụng, và rất nhẹ.
+Bài này chỉ đơn giản là mình muốn demo về cách sử dụng 1 tool lightweight được nhiều người giới thiệu (Keel) thôi. Ngoài ra còn 1 số tool khác cũng được suggest nhiều, đó là Weave Flux.'>
+<meta name='theme-color' content='#ffcd00'>
+
+<meta property='og:title' content='Using Keel on GKE Cluster for Continuous Deployment (CD) • hoangmnsd'>
+<meta property='og:description' content='Giới thiệu  Keel is a tool for automating Kubernetes deployment updates. Keel is stateless, robust and lightweight.
+ Keel được đánh giá là 1 tool dễ cài đặt, dễ sử dụng, và rất nhẹ.
+Bài này chỉ đơn giản là mình muốn demo về cách sử dụng 1 tool lightweight được nhiều người giới thiệu (Keel) thôi. Ngoài ra còn 1 số tool khác cũng được suggest nhiều, đó là Weave Flux.'>
+<meta property='og:url' content='https://hoangmnsd.github.io/posts/k8s-xi-using-keel-on-gke-cluster-for-continuous-deployment/'>
+<meta property='og:site_name' content='Hoang'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/7a4fb984a45dfe1129362728655c0b75?s=256'><meta property='article:author' content='https://facebook.com/lehoangofficial'><meta property='article:section' content='posts'><meta property='article:tag' content='keel'><meta property='article:tag' content='gke'><meta property='article:tag' content='kubernetes'><meta property='article:published_time' content='2020-05-09T17:36:12&#43;07:00'/><meta property='article:modified_time' content='2020-05-09T17:36:12&#43;07:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.55.6" />
+
+  <title>Using Keel on GKE Cluster for Continuous Deployment (CD) • hoangmnsd</title>
+  <link rel='canonical' href='https://hoangmnsd.github.io/posts/k8s-xi-using-keel-on-gke-cluster-for-continuous-deployment/'>
+  
+  
+  <link rel='icon' href='/favicon.ico'>
+<link rel='stylesheet' href='/assets/css/main.6a060eb7.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#ffcd00;}
+</style>
+
+  
+
+</head>
+<body class='page type-posts has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/logo.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Hoang
+      </a>
+    </h2>
+    <div class='desc'>
+    Working at Tokyo as a Developer
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-sidebar_menu sep-after'><nav id='sidebar-menu' class='menu sidebar-menu' aria-label='Sidebar Menu'>
+    <div class='container'>
+      <ul><li class='item'>
+  <a href='/'>Home</a></li><li class='item'>
+  <a href='/posts/'>Posts</a></li></ul>
+    </div>
+  </nav>
+
+</section><section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/ansible/' style='font-size:1.2em'>Ansible</a>
+      </li><li>
+        <a href='/tags/apigateway/' style='font-size:1em'>APIGateway</a>
+      </li><li>
+        <a href='/tags/aws/' style='font-size:1.8em'>AWS</a>
+      </li><li>
+        <a href='/tags/blog/' style='font-size:1.2em'>blog</a>
+      </li><li>
+        <a href='/tags/cert-manager/' style='font-size:1em'>cert-manager</a>
+      </li><li>
+        <a href='/tags/circleci/' style='font-size:1em'>CircleCI</a>
+      </li><li>
+        <a href='/tags/config/' style='font-size:1.3em'>Configuration</a>
+      </li><li>
+        <a href='/tags/discord/' style='font-size:1em'>discord</a>
+      </li><li>
+        <a href='/tags/docker/' style='font-size:1em'>docker</a>
+      </li><li>
+        <a href='/tags/docker-compose/' style='font-size:1em'>docker-compose</a>
+      </li><li>
+        <a href='/tags/efk/' style='font-size:1.1em'>EFK</a>
+      </li><li>
+        <a href='/tags/eks/' style='font-size:1em'>EKS</a>
+      </li><li>
+        <a href='/tags/eksctl/' style='font-size:1.1em'>eksctl</a>
+      </li><li>
+        <a href='/tags/elasticsearch/' style='font-size:1.1em'>ElasticSearch</a>
+      </li><li>
+        <a href='/tags/externaldns/' style='font-size:1em'>externalDNS</a>
+      </li><li>
+        <a href='/tags/fluentd/' style='font-size:1.1em'>Fluentd</a>
+      </li><li>
+        <a href='/tags/gcp/' style='font-size:1.1em'>GCP</a>
+      </li><li>
+        <a href='/tags/github/' style='font-size:1em'>Github</a>
+      </li><li>
+        <a href='/tags/gitlab/' style='font-size:1em'>gitlab</a>
+      </li><li>
+        <a href='/tags/gke/' style='font-size:1.2em'>gke</a>
+      </li><li>
+        <a href='/tags/helm/' style='font-size:1em'>helm</a>
+      </li><li>
+        <a href='/tags/hugo/' style='font-size:1em'>Hugo</a>
+      </li><li>
+        <a href='/tags/japanese/' style='font-size:1em'>japanese</a>
+      </li><li>
+        <a href='/tags/keel/' style='font-size:1em'>keel</a>
+      </li><li>
+        <a href='/tags/kibana/' style='font-size:1.1em'>Kibana</a>
+      </li><li>
+        <a href='/tags/kubectl/' style='font-size:1em'>kubectl</a>
+      </li><li>
+        <a href='/tags/kubernetes/' style='font-size:2em'>kubernetes</a>
+      </li><li>
+        <a href='/tags/lambda/' style='font-size:1.1em'>lambda</a>
+      </li><li>
+        <a href='/tags/micro-services/' style='font-size:1.2em'>micro-services</a>
+      </li><li>
+        <a href='/tags/nginx-ingress/' style='font-size:1em'>nginx-ingress</a>
+      </li><li>
+        <a href='/tags/notes/' style='font-size:1.2em'>notes</a>
+      </li><li>
+        <a href='/tags/packer/' style='font-size:1em'>packer</a>
+      </li><li>
+        <a href='/tags/postgres/' style='font-size:1em'>postgres</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <line x1="3" y1="12" x2="21" y2="12" />
+  <line x1="3" y1="6" x2="21" y2="6" />
+  <line x1="3" y1="18" x2="21" y2="18" />
+  
+</svg>
+</span>
+  <span class='close'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <line x1="18" y1="6" x2="6" y2="18" />
+  <line x1="6" y1="6" x2="18" y2="18" />
+  
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='/posts/'>Posts</a>
+      </li><li class='item'>
+        <a href='/about/'>About</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/posts/'>Posts</a></li><li><span>Using Keel on GKE Cluster for Continuous Deployment (CD)</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Hoang</p><p class='desc site-desc'>Working at Tokyo as a Developer</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>Using Keel on GKE Cluster for Continuous Deployment (CD)</h1>
+      
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+  <line x1="16" y1="2" x2="16" y2="6"/>
+  <line x1="8" y1="2" x2="8" y2="6"/>
+  <line x1="3" y1="10" x2="21" y2="10"/>
+  
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2020-05-09T17:36:12&#43;07:00'>2020, May 09</time>
+</span>
+
+  <span class='byline'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M21,21V20c0-2.76-4-5-9-5s-9,2.24-9,5v1"/>
+  <path d="M16,6.37A4,4,0,1,1,12.63,3,4,4,0,0,1,16,6.37Z"/>
+  
+</svg>
+<span class='screen-reader-text'> by </span><a href='/authors/hoangmnsd'>hoangmnsd</a></span>
+  
+<span class='reading-time'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <circle cx="12" cy="12" r="10"/>
+  <polyline points="12 6 12 12 15 15"/>
+  
+</svg>
+5 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+<details class='container entry-toc'>
+  <summary class='title'>
+    <span>Table of Contents</span>
+  </summary>
+  <nav id="TableOfContents">
+<ul>
+<li><a href="#giới-thiệu">Giới thiệu</a></li>
+<li><a href="#yêu-cầu">Yêu cầu</a></li>
+<li><a href="#cách-làm">Cách làm</a></li>
+<li><a href="#test">Test</a></li>
+</ul>
+</nav>
+</details>
+
+
+  <div class='container entry-content'>
+  
+
+<h1 id="giới-thiệu">Giới thiệu</h1>
+
+<blockquote>
+<p>Keel is a tool for automating Kubernetes deployment updates. Keel is stateless, robust and lightweight.</p>
+</blockquote>
+
+<p>Keel được đánh giá là 1 tool dễ cài đặt, dễ sử dụng, và rất <strong>nhẹ</strong>.<br />
+Bài này chỉ đơn giản là mình muốn demo về cách sử dụng 1 tool <code>lightweight</code> được nhiều người giới thiệu (Keel) thôi. Ngoài ra còn 1 số tool khác cũng được suggest nhiều, đó là Weave Flux. Tool này nhiều chức năng hơn Keel, mình cũng muốn thử dùng trong tương lai.</p>
+
+<p>quay lại với Keel:</p>
+
+<h1 id="yêu-cầu">Yêu cầu</h1>
+
+<p>Không gì khác ngoài 1 Cluster trên GKE.<br />
+Ngoài ra bài này mình sẽ dùng Docker Hub để làm Registry (chỗ lưu Docker images) nên bạn cũng cần có account Docker Hub.</p>
+
+<h1 id="cách-làm">Cách làm</h1>
+
+<p>1- Trong Cloudshell của GCP Console, tạo folder để làm workspace của bạn</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir keel-demo-golang-app <span style="color:#f92672">&amp;&amp;</span> cd keel-demo-golang-app</code></pre></div>
+<p>2- Chuẩn bị các biến môi trường, và login và Docker account của bạn</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export DOCKER_USERNAME<span style="color:#f92672">=</span>AAAAAA
+export DOCKER_PASSWORD<span style="color:#f92672">=</span>BBBBBB
+docker login -u<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$DOCKER_USERNAME<span style="color:#e6db74">&#34;</span> -p<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$DOCKER_PASSWORD<span style="color:#e6db74">&#34;</span></code></pre></div>
+<p>3- Viết 1 app đơn giản chạy bằng Go (command sau sẽ tạo ra file <code>main.go</code>)</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./main.go <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">package main
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">import (
+</span><span style="color:#e6db74"> &#34;fmt&#34;
+</span><span style="color:#e6db74"> &#34;log&#34;
+</span><span style="color:#e6db74"> &#34;net/http&#34;
+</span><span style="color:#e6db74">)
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">var version = 1
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">func handler(w http.ResponseWriter, r *http.Request) {
+</span><span style="color:#e6db74"> fmt.Fprintln(w, &#34;Hello 世界... from v %s&#34;, version)
+</span><span style="color:#e6db74">}
+</span><span style="color:#e6db74">func main() {
+</span><span style="color:#e6db74"> http.HandleFunc(&#34;/&#34;, handler)
+</span><span style="color:#e6db74"> log.Fatal(http.ListenAndServe(&#34;:8888&#34;, nil))
+</span><span style="color:#e6db74">}
+</span><span style="color:#e6db74">EOF</span></code></pre></div>
+<p>4- Tạo Dockerfile và build images riêng của bạn</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./Dockerfile <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">FROM golang:1.11-alpine AS build
+</span><span style="color:#e6db74">WORKDIR /
+</span><span style="color:#e6db74">COPY main.go go.* /
+</span><span style="color:#e6db74">RUN CGO_ENABLED=0 go build -o /bin/demo
+</span><span style="color:#e6db74">FROM scratch 
+</span><span style="color:#e6db74">COPY --from=build /bin/demo /bin/demo
+</span><span style="color:#e6db74">ENTRYPOINT [&#34;/bin/demo&#34;] 
+</span><span style="color:#e6db74">EOF</span></code></pre></div>
+<p>5- Build image từ Dockerfile trên</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker image build -t keeldemo:latest .</code></pre></div>
+<p>Confirm rằng images đã được tạo ra</p>
+
+<pre><code>docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+keeldemo            latest              83dc90c47721        18 seconds ago      6.51MB
+&lt;none&gt;              &lt;none&gt;              37109af028d4        19 seconds ago      325MB
+golang              1.11-alpine         e116d2efa2ab        8 months ago        312MB
+</code></pre>
+
+<p>Đánh tag cho images đó</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker image tag keeldemo:latest $DOCKER_USERNAME/keeldemo:latest</code></pre></div>
+<p>Push images có tag <code>latest</code> đó lên Docker Hub của bạn</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker push $DOCKER_USERNAME/keeldemo:latest</code></pre></div>
+<p>6- Login to your GKE cluster</p>
+
+<pre><code>gcloud container clusters get-credentials &lt;YOUR_CLUSTER&gt; --zone asia-northeast1-a --project &lt;YOUR_PROJECT&gt;
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for &lt;YOUR_CLUSTER&gt;.
+</code></pre>
+
+<p>7- Install Keel to your cluster, this will create new <code>keel</code> namespace for Keel</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -f https://sunstone.dev/keel?namespace<span style="color:#f92672">=</span>keel&amp;username<span style="color:#f92672">=</span>admin&amp;password<span style="color:#f92672">=</span>admin&amp;tag<span style="color:#f92672">=</span>latest</code></pre></div>
+<p>Check your Keel pods and service</p>
+
+<pre><code>kubectl get pods,svc -A
+NAMESPACE     NAME                                                      READY   STATUS    RESTARTS   AGE
+keel          pod/keel-7c75bc645c-tpbzw                                 1/1     Running   0          99s
+kube-system   pod/kube-dns-5f7d7d8796-5kz4s                             3/3     Running   0          14m
+kube-system   pod/kube-dns-autoscaler-6b7f784798-xtm6s                  1/1     Running   0          14m
+kube-system   pod/kube-proxy-gke-hoang1105-default-pool-4cc65383-5zqf   1/1     Running   0          14m
+kube-system   pod/l7-default-backend-84c9fcfbb-rv8fs                    1/1     Running   0          14m
+kube-system   pod/metrics-server-v0.3.3-7599dd85cd-vmzqb                2/2     Running   0          14m
+
+NAMESPACE     NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE
+default       service/kubernetes             ClusterIP      10.68.0.1       &lt;none&gt;         443/TCP          14m
+keel          service/keel                   LoadBalancer   10.68.170.35    35.221.94.65   9300:32712/TCP   101s
+kube-system   service/default-http-backend   NodePort       10.68.178.170   &lt;none&gt;         80:32137/TCP     14m
+kube-system   service/kube-dns               ClusterIP      10.68.0.10      &lt;none&gt;         53/UDP,53/TCP    14m
+kube-system   service/metrics-server         ClusterIP      10.68.177.176   &lt;none&gt;         443/TCP          14m
+</code></pre>
+
+<p>8- Tạo file <code>keel-demo-deployment.yaml</code> để deploy simple app</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./keel-demo-deployment.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">---
+</span><span style="color:#e6db74">apiVersion: extensions/v1beta1
+</span><span style="color:#e6db74">kind: Deployment
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: wd
+</span><span style="color:#e6db74">  namespace: default
+</span><span style="color:#e6db74">  labels:
+</span><span style="color:#e6db74">    name: &#34;wd&#34;
+</span><span style="color:#e6db74">  annotations:
+</span><span style="color:#e6db74">    keel.sh/policy: major
+</span><span style="color:#e6db74">    keel.sh/trigger: poll
+</span><span style="color:#e6db74">    keel.sh/pollSchedule: &#34;@every 30s&#34;
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  replicas: 1
+</span><span style="color:#e6db74">  template:
+</span><span style="color:#e6db74">    metadata:
+</span><span style="color:#e6db74">      name: wd
+</span><span style="color:#e6db74">      labels:
+</span><span style="color:#e6db74">        app: wd
+</span><span style="color:#e6db74">    spec:
+</span><span style="color:#e6db74">      containers:
+</span><span style="color:#e6db74">        - image: $DOCKER_USERNAME/keeldemo:latest
+</span><span style="color:#e6db74">          imagePullPolicy: Always
+</span><span style="color:#e6db74">          name: wd
+</span><span style="color:#e6db74">          ports:
+</span><span style="color:#e6db74">            - containerPort: 8888
+</span><span style="color:#e6db74">EOF</span></code></pre></div>
+<p>Giải thích file trên:<br />
+Giống như những file Deployment bình thường,<br />
+nhưng được add thêm annotations để dùng <code>keel</code>,<br />
+cứ 30s nó sẽ poll từ Docker Hub của bạn về xem có images mới ko,<br />
+nếu có thì nó sẽ tạo pod mới từ images mới 1 cách tự động (Đây chính là CD (Continuos Deployment))</p>
+
+<p>Deploy your simple application</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -f keel-demo-deployment.yaml</code></pre></div>
+<p>Check your simple app pod:</p>
+
+<pre><code>kubectl get pods,svc -A
+k get pods,svc -A
+NAMESPACE     NAME                                                      READY   STATUS    RESTARTS   AGE
+default       pod/wd-75c65cbf5b-fg2r2                                   1/1     Running   0          8s
+keel          pod/keel-7c75bc645c-tpbzw                                 1/1     Running   0          3m33s
+kube-system   pod/kube-dns-5f7d7d8796-5kz4s                             3/3     Running   0          16m
+kube-system   pod/kube-dns-autoscaler-6b7f784798-xtm6s                  1/1     Running   0          16m
+kube-system   pod/kube-proxy-gke-hoang1105-default-pool-4cc65383-5zqf   1/1     Running   0          16m
+kube-system   pod/l7-default-backend-84c9fcfbb-rv8fs                    1/1     Running   0          16m
+kube-system   pod/metrics-server-v0.3.3-7599dd85cd-vmzqb                2/2     Running   0          16m
+
+NAMESPACE     NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE
+default       service/kubernetes             ClusterIP      10.68.0.1       &lt;none&gt;         443/TCP          16m
+keel          service/keel                   LoadBalancer   10.68.170.35    35.221.94.65   9300:32712/TCP   3m34s
+kube-system   service/default-http-backend   NodePort       10.68.178.170   &lt;none&gt;         80:32137/TCP     16m
+kube-system   service/kube-dns               ClusterIP      10.68.0.10      &lt;none&gt;         53/UDP,53/TCP    16m
+kube-system   service/metrics-server         ClusterIP      10.68.177.176   &lt;none&gt;         443/TCP          16m
+</code></pre>
+
+<p>9- View app của bạn bằng chức năng Web Preview của Cloudshell</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl port-forward pod/wd-75c65cbf5b-fg2r2 <span style="color:#ae81ff">8888</span>:8888 </code></pre></div>
+<p>(ảnh)
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/using-keel-k8s-v1.jpg" alt="" /></p>
+
+<h1 id="test">Test</h1>
+
+<p>Giờ bạn muốn deploy 1 version mới của app thì chỉ cần tạo dc images mới thôi. Công việc còn lại do keel xử lý</p>
+
+<p>1- Sửa app thành version <code>2</code></p>
+
+<pre><code>package main
+
+import (
+ &quot;fmt&quot;
+ &quot;log&quot;
+ &quot;net/http&quot;
+)
+
+var version = 2
+
+func handler(w http.ResponseWriter, r *http.Request) {
+ fmt.Fprintln(w, &quot;Hello 世界... from v&quot;, version)
+}
+func main() {
+ http.HandleFunc(&quot;/&quot;, handler)
+ log.Fatal(http.ListenAndServe(&quot;:8888&quot;, nil))
+}
+</code></pre>
+
+<p>2- Build, tag, và push lại image mới lên Docker Hub</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker image build -t keeldemo:latest .
+docker image tag keeldemo:latest $DOCKER_USERNAME/keeldemo:latest
+docker push $DOCKER_USERNAME/keeldemo:latest</code></pre></div>
+<p>Chờ 30s và check pod mới của app đã được tạo ra</p>
+
+<pre><code>kubectl get pods,svc -A
+NAMESPACE     NAME                                                      READY   STATUS    RESTARTS   AGE
+default       pod/wd-69c5c4fd89-xwxhn                                   1/1     Running   0          12s
+keel          pod/keel-7c75bc645c-tpbzw                                 1/1     Running   0          19m
+kube-system   pod/kube-dns-5f7d7d8796-5kz4s                             3/3     Running   0          32m
+kube-system   pod/kube-dns-autoscaler-6b7f784798-xtm6s                  1/1     Running   0          32m
+kube-system   pod/kube-proxy-gke-hoang1105-default-pool-4cc65383-5zqf   1/1     Running   0          32m
+kube-system   pod/l7-default-backend-84c9fcfbb-rv8fs                    1/1     Running   0          32m
+kube-system   pod/metrics-server-v0.3.3-7599dd85cd-vmzqb                2/2     Running   0          32m
+
+NAMESPACE     NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)          AGE
+default       service/kubernetes             ClusterIP      10.68.0.1       &lt;none&gt;         443/TCP          32m
+keel          service/keel                   LoadBalancer   10.68.170.35    35.221.94.65   9300:32712/TCP   19m
+kube-system   service/default-http-backend   NodePort       10.68.178.170   &lt;none&gt;         80:32137/TCP     32m
+kube-system   service/kube-dns               ClusterIP      10.68.0.10      &lt;none&gt;         53/UDP,53/TCP    32m
+kube-system   service/metrics-server         ClusterIP      10.68.177.176   &lt;none&gt;         443/TCP          32m
+</code></pre>
+
+<p>3- View app của bạn bằng chức năng Web Preview của Cloudshell</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl port-forward pods/wd-69c5c4fd89-xwxhn <span style="color:#ae81ff">8888</span>:8888 </code></pre></div>
+<p>(ảnh)<br />
+Version đã được thay đổi<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/using-keel-k8s-v2.jpg" alt="" /></p>
+
+<p>Done! Như vậy là về cơ bản ta đã hiểu được cách thức hoạt động của keel, ngoài ra keel còn 1 vài tính năng hay ho nữa (notify qua Slack, UI Dashboard, integrate với AWS ECR, GCR, Gitlab&hellip;) mà bạn có thể tìm hiểu trên trang chủ của keel tại đây (<a href="https://keel.sh" target="_blank">https://keel.sh</a>)</p>
+
+<p><strong>REFERENCES</strong>
+<a href="https://github.com/keel-hq/keel" target="_blank">https://github.com/keel-hq/keel</a>
+<a href="https://keel.sh" target="_blank">https://keel.sh</a>
+<a href="https://github.com/Chams91/Golang_keelDemo" target="_blank">https://github.com/Chams91/Golang_keelDemo</a></p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='categories'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M22,19a2,2,0,0,1-2,2H4a2,2,0,0,1-2-2V5A2,2,0,0,1,4,3H9l2,3h9a2,2,0,0,1,2,2Z"/>
+  
+</svg>
+<span class='screen-reader-text'>Categories: </span><a class='category' href='/categories/features/'>features</a></div>
+<div class='tags'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z"/>
+  <line x1="7" y1="7" x2="7" y2="7"/>
+  
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/keel/'>keel</a>, <a class='tag' href='/tags/gke/'>gke</a>, <a class='tag' href='/tags/kubernetes/'>kubernetes</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/posts/apply-staticman-v3-for-hugo-blog-github/'>
+        <span aria-hidden='true'><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <line x1="20" y1="12" x2="4" y2="12"/>
+  <polyline points="10 18 4 12 10 6"/>
+  
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>Apply Staticman v3/v2 for Hugo blog Github to enable comment feature</a>
+    </div></div>
+</nav>
+
+
+<section id='comments' class='comments'>
+  <div class='container sep-before'>
+    <div class='comments-area'><div id='submission-success' class='comment-submission-feedback'>
+  <h4>Thank You!</h4>
+  <span>Your comment has been submitted. It will appear on this page shortly!</span>
+  <a href='#comments' class='button'>OK</a>
+</div>
+
+<div id='submission-failure' class='comment-submission-feedback'>
+  <h4>Yikes, Sorry!</h4>
+  <span>Error occured. Couldn&#39;t submit your comment. Please try again. Thank You!</span>
+  <a href='#comments' class='button'>OK</a>
+</div>
+
+
+
+
+<div id='respond' class='comment-respond'>
+  <h4 class='comment-reply-title'>Leave a comment<small>
+      <a rel='nofollow' id='cancel-comment-reply-link' href='#respond' class='button' style='display:none' aria-label='Cancel comment'>Cancel</a>
+    </small>
+  </h4>
+  <form action='https://staticman-mnsd.herokuapp.com/v2/entry/hoangmnsd/hoangmnsd/master/comments' method='post' id='comment-form' class='comment-form'>
+    <input type='hidden' name='options[postId]' value='9c78fdf2012b0c0119c53138d49a6d36'>
+    <input type='hidden' name='options[redirect]' value='https://hoangmnsd.github.io/posts/k8s-xi-using-keel-on-gke-cluster-for-continuous-deployment/#submission-success'>
+    <input type='hidden' name='options[redirectError]' value='https://hoangmnsd.github.io/posts/k8s-xi-using-keel-on-gke-cluster-for-continuous-deployment/#submission-failure'>
+
+    <input type='address' name='fields[honeypot]' style='display:none'>
+    <input type='hidden' name='fields[permalink]' value='/posts/k8s-xi-using-keel-on-gke-cluster-for-continuous-deployment/'>
+    <input type='hidden' name='fields[parent_id]' value=''>
+
+    <div>
+      <label for='comment'>Comment*</label>
+      <textarea id='comment' name='fields[content]' required rows='3'></textarea>
+    </div>
+    <div>
+      <label for='name'>Name*</label>
+      <input id='name' name='fields[author]' type='text' required>
+    </div>
+    <div>
+      <label for='email'>Email*</label>
+      <input id='email' name='fields[email]' type='email' required>
+    </div>
+    <div>
+      <label for='url'>Website</label>
+      <input id='url' name='fields[site]' type='url'>
+    </div>
+    <div>
+      <button type='submit'>Comment!</button>
+    </div>
+  </form>
+</div>
+
+</div>
+  </div>
+</section>
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/hoangmnsd' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+  
+</svg>
+</a>
+      </li><li>
+        <a href='https://facebook.com/lehoangofficial' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Open Facebook account in new tab</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+  
+</svg>
+</a>
+      </li><li>
+        <a href='https://instagram.com/lehoang281' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Open Instagram account in new tab</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+  <line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/>
+  
+</svg>
+</a>
+      </li><li>
+        <a href='mailto:hoanglh2801@gmail.com' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Contact via Email</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+  <polyline points="22,6 12,13 2,6"/>
+  
+</svg>
+</a>
+      </li><li>
+        <a href='https://gitlab.com/inmessionante' target='_blank' rel='noopener'>
+          <span class='screen-reader-text'>Open Gitlab account in new tab</span><svg class='icon' viewbox='0 0 24 24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' aria-hidden='true'>
+  
+  <path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z"/>
+  
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2019-2020 hoangmsnd </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.67d669ac.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+
