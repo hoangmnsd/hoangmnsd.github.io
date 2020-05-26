@@ -3,14 +3,12 @@
   <meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <meta name='description' content='Giới thiệu Lần mò về GitOps thì thấy đây là 1 khái niệm rất hay và thú vị
-(ảnh)
 Như các bạn thấy trên hình, Flux hoạt động như 1 operator sẽ đi scan 1 Git repository và 1 (hoặc nhiều) Docker registries.
 Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự động deploy file đó vào k8s (Đây chính là GitOps). Nếu bạn thay đổi nội dung file yaml đó và commit tiếp, Flux cũng sẽ update resources tương ứng.'>
 <meta name='theme-color' content='#ffcd00'>
 
-<meta property='og:title' content='Gitops: Using Flux with private Gitlab server and private Registry (GCR) for Continuous Deployment (CD) • hoangmnsd'>
+<meta property='og:title' content='GitOps: Using Flux with private Gitlab server and GCR for Continuous Deployment (CD) • hoangmnsd'>
 <meta property='og:description' content='Giới thiệu Lần mò về GitOps thì thấy đây là 1 khái niệm rất hay và thú vị
-(ảnh)
 Như các bạn thấy trên hình, Flux hoạt động như 1 operator sẽ đi scan 1 Git repository và 1 (hoặc nhiều) Docker registries.
 Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự động deploy file đó vào k8s (Đây chính là GitOps). Nếu bạn thay đổi nội dung file yaml đó và commit tiếp, Flux cũng sẽ update resources tương ứng.'>
 <meta property='og:url' content='https://hoangmnsd.github.io/posts/k8s-xii-gitops-using-flux-with-private-gitlab-server-private-registry-gcr-for-cd/'>
@@ -19,7 +17,7 @@ Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự đ�
 
 <meta name="generator" content="Hugo 0.55.6" />
 
-  <title>Gitops: Using Flux with private Gitlab server and private Registry (GCR) for Continuous Deployment (CD) • hoangmnsd</title>
+  <title>GitOps: Using Flux with private Gitlab server and GCR for Continuous Deployment (CD) • hoangmnsd</title>
   <link rel='canonical' href='https://hoangmnsd.github.io/posts/k8s-xii-gitops-using-flux-with-private-gitlab-server-private-registry-gcr-for-cd/'>
   
   
@@ -196,7 +194,7 @@ Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự đ�
     <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
   <section class='widget widget-breadcrumbs sep-after'>
     <nav id='breadcrumbs'>
-      <ol><li><a href='/'>Home</a></li><li><a href='/posts/'>Posts</a></li><li><span>Gitops: Using Flux with private Gitlab server and private Registry (GCR) for Continuous Deployment (CD)</span></li></ol>
+      <ol><li><a href='/'>Home</a></li><li><a href='/posts/'>Posts</a></li><li><span>GitOps: Using Flux with private Gitlab server and GCR for Continuous Deployment (CD)</span></li></ol>
     </nav>
   </section></div>
       </div>
@@ -215,7 +213,7 @@ Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự đ�
   <header class='header entry-header'>
   <div class='container sep-after'>
     <div class='header-info'>
-      <h1 class='title'>Gitops: Using Flux with private Gitlab server and private Registry (GCR) for Continuous Deployment (CD)</h1>
+      <h1 class='title'>GitOps: Using Flux with private Gitlab server and GCR for Continuous Deployment (CD)</h1>
       
 
     </div>
@@ -246,7 +244,7 @@ Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự đ�
   <polyline points="12 6 12 12 15 15"/>
   
 </svg>
-6 mins read
+7 mins read
 </span>
 
 
@@ -271,7 +269,11 @@ Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự đ�
 <li><a href="#1-setting-gitops-repository">1. Setting GitOps Repository</a></li>
 <li><a href="#2-tạo-1-app-sample-hello-world-app-để-test">2. Tạo 1 App sample <code>Hello World App</code> để test</a></li>
 <li><a href="#2-install-flux">2. Install Flux</a></li>
-<li><a href="#3-test">3. Test</a></li>
+<li><a href="#3-test">3. Test</a>
+<ul>
+<li><a href="#3-1-flux-tự-động-scan-gitops-repository-để-update-application">3.1. Flux tự động scan GitOps Repository để update application</a></li>
+<li><a href="#3-2-flux-tự-động-scan-registry-để-update-application">3.2. Flux tự động scan Registry để update application</a></li>
+</ul></li>
 </ul></li>
 <li><a href="#references">REFERENCES</a></li>
 </ul>
@@ -284,15 +286,12 @@ Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự đ�
 
 <h1 id="giới-thiệu">Giới thiệu</h1>
 
-<p>Lần mò về GitOps thì thấy đây là 1 khái niệm rất hay và thú vị</p>
+<p>Lần mò về GitOps thì thấy đây là 1 khái niệm rất hay và thú vị<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/flux-cd-overview.jpg" alt="" /><br />
+Như các bạn thấy trên hình, Flux hoạt động như 1 operator sẽ đi scan 1 Git repository và 1 (hoặc nhiều) Docker registries.<br />
+Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự động deploy file đó vào k8s (Đây chính là GitOps). Nếu bạn thay đổi nội dung file yaml đó và commit tiếp, Flux cũng sẽ update resources tương ứng. Hoặc khi bạn push 1 images mới lên Container Registry, Flux cũng scan Registry và sẽ update app của bạn sử dụng images mới.</p>
 
-<p>(ảnh)<br />
-<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/flux-cd-overview.jpg" alt="" /></p>
-
-<p>Như các bạn thấy trên hình, Flux hoạt động như 1 operator sẽ đi scan 1 Git repository và 1 (hoặc nhiều) Docker registries.<br />
-Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự động deploy file đó vào k8s (Đây chính là GitOps). Nếu bạn thay đổi nội dung file yaml đó và commit tiếp, Flux cũng sẽ update resources tương ứng. Hoặc khi bạn push 1 images mới lên Docker registry, Flux cũng scan Registry và sẽ update app của bạn sử dụng images mới.</p>
-
-<p>Như vậy việc centralize mọi thứ trong 1 Git repository giúp bạn dễ dàng audit những thay đổi thông qua commits của Git. Các kubernetes resources cũng dễ dàng được đọc và chỉnh sửa.</p>
+<p>Như vậy, việc centralize mọi thứ trong 1 Git repository giúp bạn dễ dàng audit những thay đổi thông qua các commit của Git. Các kubernetes resources cũng dễ dàng đọc hiểu và chỉnh sửa.</p>
 
 <p>Bài này mình sẽ làm 1 demo về việc sử dụng Flux để setup CD (Continuous Deployment) với Gitlab Server riêng và Private Registry riêng của Google (GCR). Mọi thứ làm trên GCP, GKE (cũng của Google thôi)</p>
 
@@ -301,17 +300,13 @@ Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự đ�
 <h1 id="yêu-cầu">Yêu cầu</h1>
 
 <p>Đã làm theo bài sau (<strong>Nếu bạn đã có Gitlab server riêng thì có thể bỏ qua</strong>):<br />
-- 2. <a href="https://hoangmnsd.github.io/posts/k8s-x-setup-gitlab-on-gke-cluster/" target="_blank">https://hoangmnsd.github.io/posts/k8s-x-setup-gitlab-on-gke-cluster/</a></p>
+<a href="https://hoangmnsd.github.io/posts/k8s-x-setup-gitlab-on-gke-cluster/" target="_blank">https://hoangmnsd.github.io/posts/k8s-x-setup-gitlab-on-gke-cluster/</a></p>
 
-<p>sau khi làm theo link trên thì chúng ta có 1 Gitlab server riêng ở domain sau:<br />
-<a href="https://gitlab.your-subdomain.your-domain.net/" target="_blank">https://gitlab.your-subdomain.your-domain.net/</a></p>
+<p>Sau khi làm theo link trên thì chúng ta có 1 Gitlab server riêng ở domain như sau:<br />
+<a href="https://gitlab.your-subdomain.your-domain.net/" target="_blank">https://gitlab.your-subdomain.your-domain.net/</a><br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-server-my-domain.jpg" alt="" /></p>
 
-<p>(ảnh)</p>
-
-<p>Bên cạnh đó thì bạn có app Echo nữa (là tác phẩm của link 1), thì hãy xóa app này đi, lát nữa chúng ta sẽ tạo App khác bằng Flux sau:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl delete -f echo-app.yaml
-kubectl delete -f echo-ingress-prod.yaml</code></pre></div>
-<p>Chuẩn bị biến môi trường:</p>
+<p>Chuẩn bị biến môi trường, những biến này sẽ sử dụng để tạo 1 số file ở các phần sau:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export PROJECT_ID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-project-id&#34;</span>
 export SUBDOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-subdomain.your-domain.net&#34;</span></code></pre></div>
 <h1 id="cách-làm">Cách làm</h1>
@@ -319,27 +314,22 @@ export SUBDOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">
 <h2 id="1-setting-gitops-repository">1. Setting GitOps Repository</h2>
 
 <p>Giờ sẽ setting 1 chút trên Gitlab server của bạn:<br />
-- Tạo user <code>flux</code> với role Admin
-- Login vào user <code>flux</code><br />
-- Tạo personal access token của user <code>flux</code> (<a href="https://gitlab.your-subdomain.your-domain.net/profile/personal_access_tokens" target="_blank">https://gitlab.your-subdomain.your-domain.net/profile/personal_access_tokens</a>)
-(ảnh)</p>
+Tạo user <code>flux</code> với role Admin<br />
+Login vào user <code>flux</code><br />
+Tạo personal access token của user <code>flux</code> (<a href="https://gitlab.your-subdomain.your-domain.net/profile/personal_access_tokens" target="_blank">https://gitlab.your-subdomain.your-domain.net/profile/personal_access_tokens</a>)
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-personal-access-token.jpg" alt="" /></p>
 
-<p>Token có dạng <code>3KzPQxrkoc6amdQKxAhw</code>, hãy giữ bí mật token này để lát sử dụng sau</p>
+<p>Token có dạng <code>3KzPQxrkoc6amdQKxAhw</code>, <strong>hãy giữ bí mật token này để lát sử dụng sau</strong></p>
 
-<ul>
-<li>Tạo project để <code>flux</code> sử dụng làm GitOps repository<br />
-
-<ul>
-<li>Tên project thì tùy ý: đây mình đặt <code>flux-get-started</code><br /></li>
-<li>Link project sẽ kiểu kiểu như này <a href="https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started" target="_blank">https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started</a><br />
-(ảnh)</li>
-</ul></li>
-</ul>
+<p>Trên CloudShell tạo biến môi trường lưu token vào:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export PERSONAL_ACCESS_TOKEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;3KzPQxrkoc6amdQKxAhw&#34;</span></code></pre></div>
+<p>Trên Gitlab tạo project để <code>flux</code> sử dụng làm GitOps repository<br />
+Tên project thì tùy ý: đây mình sẽ đặt <code>flux-get-started</code><br />
+Link project sẽ kiểu kiểu như này <a href="https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started" target="_blank">https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started</a></p>
 
 <p>Từ CloudShell clone project vừa tạo về:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd ~
-git clone https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started <span style="color:#f92672">&amp;&amp;</span> cd flux-get-started
-<span style="color:#75715e"># Nếu cần nhập user/password thì hãy nhập user flux và password là personal access token nhé</span></code></pre></div>
+git clone https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started <span style="color:#f92672">&amp;&amp;</span> cd flux-get-started</code></pre></div>
 <h2 id="2-tạo-1-app-sample-hello-world-app-để-test">2. Tạo 1 App sample <code>Hello World App</code> để test</h2>
 
 <p>Viết 1 app đơn giản chạy bằng Go (command sau sẽ tạo ra file <code>main.go</code>)</p>
@@ -373,24 +363,166 @@ git clone https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started <s
 </span><span style="color:#e6db74">ENTRYPOINT [&#34;/bin/demo&#34;] 
 </span><span style="color:#e6db74">EOF</span></code></pre></div>
 <p>Build image từ Dockerfile trên</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker image build -t helloapp:0.2.0 .</code></pre></div>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker image build -t helloapp:latest .</code></pre></div>
 <p>Confirm rằng images đã được tạo ra</p>
 
 <pre><code>docker images
 REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
-helloapp            0.2.0               c06c85757d4e        About a minute ago   6.51MB
+helloapp            latest              c06c85757d4e        About a minute ago   6.51MB
 &lt;none&gt;              &lt;none&gt;              9c7ddef38ecb        About a minute ago   325MB
 golang              1.11-alpine         e116d2efa2ab        9 months ago         312MB
 </code></pre>
 
 <p>Đánh tag cho images đó</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker tag helloapp:0.2.0 gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.0</code></pre></div>
-<p>Push images có tag latest đó lên GCR của bạn</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker push gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.0</code></pre></div>
-<p>(ảnh)<br />
-<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gcr-images-private.jpg" alt="" /></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker tag helloapp:latest gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:latest</code></pre></div>
+<p>Push images có tag <code>latest</code> đó lên GCR của bạn</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker push gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:latest</code></pre></div>
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gcr-images-private.jpg" alt="" /></p>
 
 <p>file <code>hello-app.yaml</code> bao gồm k8s Service và Deployment resources</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./hello-app.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: v1
+</span><span style="color:#e6db74">kind: Service
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: hello
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  ports:
+</span><span style="color:#e6db74">  - port: 80
+</span><span style="color:#e6db74">    targetPort: 8888
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    app: hello
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">---
+</span><span style="color:#e6db74">apiVersion: apps/v1
+</span><span style="color:#e6db74">kind: Deployment
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: hello
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    matchLabels:
+</span><span style="color:#e6db74">      app: hello
+</span><span style="color:#e6db74">  replicas: 1
+</span><span style="color:#e6db74">  template:
+</span><span style="color:#e6db74">    metadata:
+</span><span style="color:#e6db74">      labels:
+</span><span style="color:#e6db74">        app: hello
+</span><span style="color:#e6db74">    spec:
+</span><span style="color:#e6db74">      containers:
+</span><span style="color:#e6db74">      - name: hello
+</span><span style="color:#e6db74">        image: gcr.io/${PROJECT_ID}/helloapp:latest
+</span><span style="color:#e6db74">        ports:
+</span><span style="color:#e6db74">        - containerPort: 8888
+</span><span style="color:#e6db74">EOF</span></code></pre></div>
+<p>file <code>hello-ingress.yaml</code> chỉ có Ingress giúp route traffic từ 1 domain cụ thể vào service của Hello App</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./hello-ingress.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: extensions/v1beta1
+</span><span style="color:#e6db74">kind: Ingress
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: hello-ingress
+</span><span style="color:#e6db74">  annotations:
+</span><span style="color:#e6db74">    kubernetes.io/ingress.class: &#34;nginx&#34;
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  rules:
+</span><span style="color:#e6db74">  - host: ${SUBDOMAIN}
+</span><span style="color:#e6db74">    http:
+</span><span style="color:#e6db74">      paths:
+</span><span style="color:#e6db74">      - path: /
+</span><span style="color:#e6db74">        backend:
+</span><span style="color:#e6db74">          serviceName: hello
+</span><span style="color:#e6db74">          servicePort: 80
+</span><span style="color:#e6db74">  - host: &#34;*.${SUBDOMAIN}&#34;
+</span><span style="color:#e6db74">    http:
+</span><span style="color:#e6db74">      paths:
+</span><span style="color:#e6db74">      - path: /
+</span><span style="color:#e6db74">        backend:
+</span><span style="color:#e6db74">          serviceName: hello
+</span><span style="color:#e6db74">          servicePort: 80
+</span><span style="color:#e6db74">EOF</span></code></pre></div>
+<p>Từ CloudShell bạn hãy push 2 file <code>hello-app.yaml</code> và <code>hello-ingress.yaml</code> lên project <code>flux-get-started</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd ~/flux-get-started
+git add hello-app.yaml hello-ingress.yaml
+git commit <span style="color:#e6db74">&#34;Commit yaml files&#34;</span>
+git push origin master</code></pre></div>
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/flux-get-started-repo.jpg" alt="" /></p>
+
+<h2 id="2-install-flux">2. Install Flux</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e"># Add the Flux repo:</span>
+helm repo add fluxcd https://charts.fluxcd.io
+<span style="color:#75715e"># Trong Cluster tạo namespace `flux`:</span> 
+kubectl create namespace flux
+<span style="color:#75715e"># Tạo Secret trong k8s Cluster bằng personal access token đã tạo ở step 1:</span> 
+kubectl create secret generic flux-git-auth --namespace flux --from-literal<span style="color:#f92672">=</span>GIT_AUTHUSER<span style="color:#f92672">=</span>flux --from-literal<span style="color:#f92672">=</span>GIT_AUTHKEY<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>PERSONAL_ACCESS_TOKEN<span style="color:#e6db74">}</span></code></pre></div>
+<p>Install flux, chú ý sửa link đến Gitlab Server của bạn:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm upgrade -i flux fluxcd/flux <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--set git.url<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;https://$(GIT_AUTHUSER):$(GIT_AUTHKEY)@gitlab.your-subdomain.your-domain.net/flux/flux-get-started.git&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--set env.secretName<span style="color:#f92672">=</span>flux-git-auth <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--namespace flux</code></pre></div>
+<h2 id="3-test">3. Test</h2>
+
+<p>Sau khi install flux thành công, bạn sẽ nhận ra là có 1 pod và 1 svc và 1 ingress được tạo ra, đó chính là các resource để trên GitOps repository của bạn</p>
+
+<pre><code>k get pods,svc -A
+NAMESPACE       NAME                                                    READY   STATUS      RESTARTS   AGE
+default         hello-54d49c4bb5-hm9z6                                  1/1     Running     0          36s
+flux            flux-7b88d998fd-zclth                                   1/1     Running     0          60s
+flux            flux-memcached-64f7865494-xq46b                         1/1     Running     0          60s
+
+NAMESPACE       NAME                                      TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)                                   AGE                                 140m
+default         hello                                     ClusterIP      10.68.71.230    &lt;none&gt;         80/TCP                                    79s
+default         kubernetes                                ClusterIP      10.68.0.1       &lt;none&gt;         443/TCP                                   151m
+flux            flux                                      ClusterIP      10.68.188.216   &lt;none&gt;         3030/TCP                                  103s
+flux            flux-memcached                            ClusterIP      10.68.74.32     &lt;none&gt;         11211/TCP                                 103s
+</code></pre>
+
+<p>Giờ truy cập vào website sẽ thấy app của bạn đã được apply tự động<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd.jpg" alt="" /></p>
+
+<h3 id="3-1-flux-tự-động-scan-gitops-repository-để-update-application">3.1. Flux tự động scan GitOps Repository để update application</h3>
+
+<p>Giờ hãy thử thay đổi file yaml để xem Flux có tự động phản ánh những thay đổi đó vào Kubernetes cho bạn ko</p>
+
+<p>Trước tiên hãy sửa <code>version = 2</code> trong file <code>main.go</code>, rồi build lại 1 Docker images với tag <code>:0.2.0</code> và push lên GCR</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">nano main.go
+<span style="color:#75715e"># change `version = 2`</span>
+
+<span style="color:#75715e"># Build lại Docker images và đánh tag 0.2.0</span>
+docker image build -t helloapp:0.2.0 .
+
+<span style="color:#75715e"># tag cho images trên GCR là 0.2.0</span>
+docker tag helloapp:0.2.0 gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.0
+
+<span style="color:#75715e"># Push images mới với tag :0.2.0 lên GCR</span>
+docker push gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.0</code></pre></div>
+<p>Sau đó bạn sẽ sửa image trong file <code>hello-app.yaml</code> thành dùng image tag <code>:0.2.0</code>:</p>
+
+<pre><code>~~~
+image: gcr.io/YOUR_PROJECT_ID/helloapp:0.2.0
+~~~
+</code></pre>
+
+<p>rồi commit và push thay đổi trên lên GitOps repository của bạn:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add hello-app.yaml
+git commit -m <span style="color:#e6db74">&#34;change to using image :0.2.0&#34;</span>
+git push origin master</code></pre></div>
+<p>Vài phút sau bạn sẽ thấy 1 pod mới của hello app được tạo lên, pod cũ bị xóa đi</p>
+
+<pre><code>k get pods -A
+NAMESPACE       NAME                                                    READY   STATUS      RESTARTS   AGE
+default         hello-5856bc89cd-rdrdd                                  1/1     Running     0          37s
+</code></pre>
+
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd-tag-2.jpg" alt="" /></p>
+
+<h3 id="3-2-flux-tự-động-scan-registry-để-update-application">3.2. Flux tự động scan Registry để update application</h3>
+
+<p>Trước hết để làm điều này thì cần phải add annotation vào Deployment đã</p>
+
+<p>Sửa file <code>hello-app.yaml</code> add thêm dòng sau vào</p>
+
+<pre><code>  annotations:
+    flux.weave.works/automated: &quot;true&quot;
+    flux.weave.works/tag.chart-image: semver:~0.2
+</code></pre>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./hello-app.yaml <span style="color:#e6db74">&lt;&lt;EOF
 </span><span style="color:#e6db74">apiVersion: v1
 </span><span style="color:#e6db74">kind: Service
@@ -427,129 +559,35 @@ golang              1.11-alpine         e116d2efa2ab        9 months ago        
 </span><span style="color:#e6db74">        ports:
 </span><span style="color:#e6db74">        - containerPort: 8888
 </span><span style="color:#e6db74">EOF</span></code></pre></div>
-<p>file <code>hello-ingress.yaml</code> chỉ có Ingress giúp route traffic từ 1 domain cụ thể vào service của Hello App</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./hello-ingress.yaml <span style="color:#e6db74">&lt;&lt;EOF
-</span><span style="color:#e6db74">apiVersion: extensions/v1beta1
-</span><span style="color:#e6db74">kind: Ingress
-</span><span style="color:#e6db74">metadata:
-</span><span style="color:#e6db74">  name: hello-ingress
-</span><span style="color:#e6db74">  annotations:
-</span><span style="color:#e6db74">    kubernetes.io/ingress.class: &#34;nginx&#34;
-</span><span style="color:#e6db74">spec:
-</span><span style="color:#e6db74">  rules:
-</span><span style="color:#e6db74">  - host: ${SUBDOMAIN}
-</span><span style="color:#e6db74">    http:
-</span><span style="color:#e6db74">      paths:
-</span><span style="color:#e6db74">      - path: /
-</span><span style="color:#e6db74">        backend:
-</span><span style="color:#e6db74">          serviceName: hello
-</span><span style="color:#e6db74">          servicePort: 80
-</span><span style="color:#e6db74">  - host: &#34;*.${SUBDOMAIN}&#34;
-</span><span style="color:#e6db74">    http:
-</span><span style="color:#e6db74">      paths:
-</span><span style="color:#e6db74">      - path: /
-</span><span style="color:#e6db74">        backend:
-</span><span style="color:#e6db74">          serviceName: hello
-</span><span style="color:#e6db74">          servicePort: 80
-</span><span style="color:#e6db74">EOF</span></code></pre></div>
-<p>Từ CloudShell bạn hãy push 2 file <code>hello-app.yaml</code> và <code>hello-ingress.yaml</code> lên project <code>flux-get-started</code></p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd ~/flux-get-started
-git add hello-app.yaml hello-ingress.yaml
-git commit <span style="color:#e6db74">&#34;Commit yaml files&#34;</span>
-git push origin master
-<span style="color:#75715e"># Nếu cần nhập user/password thì hãy nhập user flux và password là personal access token nhé</span></code></pre></div>
-<p>(ảnh)<br />
-<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/flux-get-started-repo.jpg" alt="" /></p>
-
-<h2 id="2-install-flux">2. Install Flux</h2>
-
-<p>Add the Flux repo:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm repo add fluxcd https://charts.fluxcd.io</code></pre></div>
-<p>Trong Cluster tạo namespace <code>flux</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create namespace flux</code></pre></div>
-<p>Tạo Secret trong k8s Cluster bằng personal access token đã tạo ở step 1:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create secret generic flux-git-auth --namespace flux --from-literal<span style="color:#f92672">=</span>GIT_AUTHUSER<span style="color:#f92672">=</span>flux --from-literal<span style="color:#f92672">=</span>GIT_AUTHKEY<span style="color:#f92672">=</span>3KzPQxrkoc6amdQKxAhw</code></pre></div>
-<p>Install flux, chú ý sửa link đến Gitlab Server của bạn:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm upgrade -i flux fluxcd/flux <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>--set git.url<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;https://$(GIT_AUTHUSER):$(GIT_AUTHKEY)@gitlab.your-subdomain.your-domain.net/flux/flux-get-started.git&#39;</span> <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>--set env.secretName<span style="color:#f92672">=</span>flux-git-auth <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>--namespace flux</code></pre></div>
-<h2 id="3-test">3. Test</h2>
-
-<p>Sau khi install flux thành công, bạn sẽ nhận ra là có 1 pod và 1 svc và 1 ingress được tạo ra, đó chính là các resource để trên GitOps repository của bạn</p>
-
-<pre><code>k get pods,svc -A
-NAMESPACE       NAME                                                    READY   STATUS      RESTARTS   AGE
-default         hello-54d49c4bb5-hm9z6                                  1/1     Running     0          36s
-flux            flux-7b88d998fd-zclth                                   1/1     Running     0          60s
-flux            flux-memcached-64f7865494-xq46b                         1/1     Running     0          60s
-
-NAMESPACE       NAME                                      TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)                                   AGE                                 140m
-default         hello                                     ClusterIP      10.68.71.230    &lt;none&gt;         80/TCP                                    79s
-default         kubernetes                                ClusterIP      10.68.0.1       &lt;none&gt;         443/TCP                                   151m
-flux            flux                                      ClusterIP      10.68.188.216   &lt;none&gt;         3030/TCP                                  103s
-flux            flux-memcached                            ClusterIP      10.68.74.32     &lt;none&gt;         11211/TCP                                 103s
-</code></pre>
-
-<p>Giờ truy cập vào website sẽ thấy app của bạn đã được apply tự động<br />
-(ảnh)<br />
-<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd.jpg" alt="" /></p>
-
-<p>Giờ hãy thử thay đổi file yaml để xem Flux có tự động phản ánh những thay đổi đó vào Kubernetes cho bạn ko</p>
-
-<p>Trước tiên hãy sửa <code>version = 2</code> trong file <code>main.go</code>, rồi build lại 1 Docker images với tag <code>:0.2.1</code> và push lên GCR</p>
-
-<p>Giờ bạn sẽ sửa image trong file <code>hello-app.yaml</code> thành dùng image tag <code>:0.2.1</code>:</p>
-
-<pre><code>~~~
-image: gcr.io/YOUR_PROJECT_ID/helloapp:0.2.1
-~~~
-</code></pre>
-
 <p>rồi commit và push thay đổi trên lên GitOps repository của bạn:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add hello-app.yaml
-git commit -m <span style="color:#e6db74">&#34;change to using image :0.2.1&#34;</span>
+git commit -m <span style="color:#e6db74">&#34;add annotation using semver&#34;</span>
 git push origin master</code></pre></div>
-<p>Vài phút sau bạn sẽ thấy 1 pod mới của hello app được tạo lên, pod cũ bị xóa đi</p>
-
-<pre><code>k get pods -A
-NAMESPACE       NAME                                                    READY   STATUS      RESTARTS   AGE
-default         hello-5856bc89cd-rdrdd                                  1/1     Running     0          37s
-</code></pre>
-
-<p>(ảnh)<br />
+<p>Giờ bạn thấy app của bạn chưa có gì thay đổi, vẫn là app version cũ nhé
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd-tag-2.jpg" alt="" /></p>
 
-<p>Giờ test trường hợp build 1 Docker images mới, tag là <code>:0.2.2</code> rồi push lên GCR, thì app có thay đổi ko?</p>
-
-<ul>
-<li>sửa <code>version = 2.2</code> trong file <code>main.go</code>, rồi build lại 1 Docker images với tag <code>:0.2.2</code> và push lên GCR</li>
-</ul>
+<p>Giả sử vì 1 lý do gì đó, bạn cần upgrade version của app lên <code>0.2.2</code>,<br />
+sửa <code>version = 2.2</code> trong file <code>main.go</code>, rồi build lại 1 Docker images với tag <code>:0.2.2</code> và push lên GCR</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">nano main.go
 <span style="color:#75715e"># change version to `2.2`</span>
 
 <span style="color:#75715e"># Build lại Docker images và đánh tag 2.2</span>
-docker image build -t helloapp:2.2 .
+docker image build -t helloapp:0.2.2 .
 
-<span style="color:#75715e"># tag cho images trên GCR là 2</span>
-docker tag helloapp:2.2 gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.2
+<span style="color:#75715e"># tag cho images trên GCR là 0.2.2</span>
+docker tag helloapp:0.2.2 gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.2
 
-<span style="color:#75715e"># Push images mới với tag :2 lên GCR</span>
+<span style="color:#75715e"># Push images mới với tag :0.2.2 lên GCR</span>
 docker push gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.2</code></pre></div>
-<p>Sau vài phút, bạn sẽ thấy 1 pod mới của hello app được tạo lên, pod cũ bị xóa đi<br />
+<p>Gần như ngay lập tức, bạn sẽ thấy 1 pod mới của Hello App được tạo lên, pod cũ bị xóa đi, webapp cũng thay đổi giao diện tương ứng<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd-tag-2.2.jpg" alt="" /></p>
 
-<p>Đấy là nhờ các annotation trong file <code>hello-app.yaml</code>, nó giúp Flux tự động apply.<br />
+<p>Đấy là nhờ các annotation trong file <code>hello-app.yaml</code>, nó giúp Flux tự động apply changes.<br />
 Mỗi khi có image mới với tag bắt đầu bằng <code>0.2.*</code> thì app sẽ được update tự động</p>
 
-<pre><code>  annotations:
-    flux.weave.works/automated: &quot;true&quot;
-    flux.weave.works/tag.chart-image: semver:~0.2
-</code></pre>
+<p>Rất thú vị và dễ hiểu phải ko, hãy thử áp dụng Flux xem sao nhé</p>
 
-<p>Rất thụ vị và dễ hiểu phải ko, hãy thử áp dụng Flux xem sao nhé</p>
-
-<p>Done!</p>
+<p>Done! 🎉🎉</p>
 
 <h1 id="references">REFERENCES</h1>
 
