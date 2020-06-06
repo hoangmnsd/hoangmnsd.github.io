@@ -85,7 +85,7 @@ Setup 1 project sample để có thể sử dụng Gitlab CI, push Docker image 
 
   <div class='container list-container'>
   <ul class='list taxonomy-cloud'><li>
-        <a href='/tags/ansible/' style='font-size:1.1666666666666667em'>Ansible</a>
+        <a href='/tags/ansible/' style='font-size:1.1666666666666667em'>ansible</a>
       </li><li>
         <a href='/tags/apigateway/' style='font-size:1em'>APIGateway</a>
       </li><li>
@@ -274,13 +274,13 @@ Setup 1 project sample để có thể sử dụng Gitlab CI, push Docker image 
 <ul>
 <li><a href="#1-chuẩn-bị-biến-môi-trường-trong-cloudshell">1. Chuẩn bị biến môi trường trong CloudShell</a></li>
 <li><a href="#2-tạo-project-trên-gitlab-để-test">2. Tạo project trên Gitlab để test</a></li>
-<li><a href="#2-tạo-service-account">2. Tạo service account</a></li>
-<li><a href="#2-add-variable-vào-gitlab-project">2. Add variable vào Gitlab project</a></li>
-<li><a href="#2-get-runner-registration-token">2. Get <code>runner registration token</code></a></li>
-<li><a href="#3-install-gitlab-runner-helm-chart">3. Install Gitlab Runner Helm Chart</a></li>
-<li><a href="#4-tạo-sample-app-helloapp-và-config-gitlab-ci-yml">4. tạo sample app <code>helloapp</code> và config <code>.gitlab-ci.yml</code></a></li>
-<li><a href="#2-push-local-project-lên-gitlab-server">2. Push local project lên Gitlab Server</a></li>
-<li><a href="#2-kết-quả">2. Kết quả</a></li>
+<li><a href="#3-tạo-service-account">3. Tạo service account</a></li>
+<li><a href="#4-add-variable-vào-gitlab-project">4. Add variable vào Gitlab project</a></li>
+<li><a href="#5-get-runner-registration-token">5. Get <code>runner registration token</code></a></li>
+<li><a href="#6-install-gitlab-runner-helm-chart">6. Install Gitlab Runner Helm Chart</a></li>
+<li><a href="#7-tạo-sample-app-helloapp-và-config-gitlab-ci-yml">7. tạo sample app <code>helloapp</code> và config <code>.gitlab-ci.yml</code></a></li>
+<li><a href="#8-push-local-project-lên-gitlab-server">8. Push local project lên Gitlab Server</a></li>
+<li><a href="#9-kết-quả">9. Kết quả</a></li>
 </ul></li>
 <li><a href="#references">REFERENCES</a></li>
 </ul>
@@ -315,8 +315,9 @@ trong đó thì Gitlab server là Gitlab tự dựng (Gitlab self-hosted) trên 
 
 <h1 id="cách-làm">Cách làm</h1>
 
-<p>Để có thể sử dụng Gitlab CI thì bạn cần setup <strong>Gitlab Runner</strong> (Đây là thứ dùng để chạy test/build/deploy source code cho bạn)
-Và bạn nên setup nó riêng biệt với Gitlab Server nhé. (kiểu như Gitlab Runner sẽ chạy trong 1 namespace riêng, hay cluster riêng chẳng hạn), bài này mình dựng Gitlab Runner trong 1 namespace riêng là <code>gitlab-runner</code></p>
+<p>Để có thể sử dụng Gitlab CI thì bạn cần setup <strong>Gitlab Runner</strong> (Đây là thứ dùng để chạy test/build/deploy source code cho bạn)</p>
+
+<p>Và bạn nên setup nó riêng biệt với Gitlab Server nhé. (kiểu như Gitlab Runner sẽ chạy trong 1 namespace riêng, hay cluster riêng chẳng hạn), bài này mình dựng Gitlab Runner trong 1 namespace riêng là <code>gitlab-runner</code>.</p>
 
 <h2 id="1-chuẩn-bị-biến-môi-trường-trong-cloudshell">1. Chuẩn bị biến môi trường trong CloudShell</h2>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export GITLAB_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://gitlab.your-subdomain.your-domain.net/&#34;</span>
@@ -328,12 +329,15 @@ gcloud config set compute/zone asia-northeast1-a</code></pre></div>
 <p>Ở đây mình sẽ tạo 1 project rỗng tên là <code>gitlabci-demo</code>:<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-demo-prj.jpg" alt="" /></p>
 
-<h2 id="2-tạo-service-account">2. Tạo service account</h2>
+<h2 id="3-tạo-service-account">3. Tạo service account</h2>
 
 <p>Tiếp theo vào Google Cloud Console, tạo service account <code>gitlab-ci</code>, lấy file json key, <strong>save lại đâu đó bí mật nhé</strong>:<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-ci-service-account.jpg" alt="" /></p>
 
-<h2 id="2-add-variable-vào-gitlab-project">2. Add variable vào Gitlab project</h2>
+<p>file json key của bạn nhận được có dạng như này:<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-gcloud-sakey.jpg" alt="" /></p>
+
+<h2 id="4-add-variable-vào-gitlab-project">4. Add variable vào Gitlab project</h2>
 
 <p>Quay lại Gitlab project <code>gitlabci-demo</code>, add thêm variable <code>GCLOUD_SERVICE_KEY</code>, value sẽ là nội dung của file json key đã lấy dc ở step trên, như hình sau:<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-add-variable.jpg" alt="" /></p>
@@ -342,14 +346,14 @@ gcloud config set compute/zone asia-northeast1-a</code></pre></div>
 Chúng ta có kết quả sau khi add 3 variable như sau:<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-add-3-variable.jpg" alt="" /></p>
 
-<h2 id="2-get-runner-registration-token">2. Get <code>runner registration token</code></h2>
+<h2 id="5-get-runner-registration-token">5. Get <code>runner registration token</code></h2>
 
 <p>Tiếp theo lấy <code>runner registration token</code> để sau này install Gitlab Runner, vào phần này để lấy:<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-runner-registration-token.jpg" alt="" /></p>
 
 <p>trong CloudShell hãy export token đó vào biến <code>RUNNER_REG_TOKEN</code> như sau:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export RUNNER_REG_TOKEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;_MBMCAYPWyeao5hf_2iH&#34;</span></code></pre></div>
-<h2 id="3-install-gitlab-runner-helm-chart">3. Install Gitlab Runner Helm Chart</h2>
+<h2 id="6-install-gitlab-runner-helm-chart">6. Install Gitlab Runner Helm Chart</h2>
 
 <p>Trong Cloudshell, Tạo file <code>gitlab-runner-values.yaml</code>:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./gitlab-runner-values.yaml <span style="color:#e6db74">&lt;&lt;EOF
@@ -451,7 +455,7 @@ NAME                                               READY   STATUS    RESTARTS   
 pod/gitlab-runner-gitlab-runner-5876c44c67-q5bs5   1/1     Running   0          66s
 </code></pre>
 
-<h2 id="4-tạo-sample-app-helloapp-và-config-gitlab-ci-yml">4. tạo sample app <code>helloapp</code> và config <code>.gitlab-ci.yml</code></h2>
+<h2 id="7-tạo-sample-app-helloapp-và-config-gitlab-ci-yml">7. tạo sample app <code>helloapp</code> và config <code>.gitlab-ci.yml</code></h2>
 
 <p>Đầu tiên clone project rỗng <code>gitlabci-demo</code> mà chúng ta đã tạo ban đầu về CloudShell:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git clone https://gitlab.your-subdomain.your-domain.net/root/gitlabci-demo.git
@@ -517,7 +521,7 @@ publish:
 
 <p><strong>giải thích</strong>: ở đây mình chỉ tạo 1 step <code>publish</code>, step bao gồm build Docker image, tagging và push image đó lên GCR</p>
 
-<h2 id="2-push-local-project-lên-gitlab-server">2. Push local project lên Gitlab Server</h2>
+<h2 id="8-push-local-project-lên-gitlab-server">8. Push local project lên Gitlab Server</h2>
 
 <p>Giờ push tất cả những file đã tạo thêm lên Gitlab Server:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add .
@@ -525,12 +529,14 @@ git commit -m <span style="color:#e6db74">&#34;push app&#34;</span>
 git push origin master</code></pre></div>
 <p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-demo-prj-pushed.jpg" alt="" /></p>
 
-<h2 id="2-kết-quả">2. Kết quả</h2>
+<h2 id="9-kết-quả">9. Kết quả</h2>
 
 <p>kết quả như sau, Gitlab sẽ detect được project của bạn có <code>.gitlab-ci.yml</code> nên nó sẽ trigger Gitlab Runner thực hiện các step trong file <code>.gitlab-ci.yml</code> đó.<br />
 Bạn có thể check kết quả khi vào các màn hình sau:<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-result-1.jpg" alt="" /><br />
-<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-result-2.jpg" alt="" /><br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-result-2.jpg" alt="" /></p>
+
+<p>Vào Google Container Registry Service sẽ thấy image <code>helloapp</code> đã được push lên như sau:<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-result-3.jpg" alt="" /></p>
 
 <p>DONE! 🎉🎉</p>
