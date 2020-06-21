@@ -91,7 +91,7 @@ Setup 1 project sample để có thể sử dụng Gitlab CI, push Docker image 
       </li><li>
         <a href='/tags/aws/' style='font-size:1.6666666666666665em'>AWS</a>
       </li><li>
-        <a href='/tags/blog/' style='font-size:1.1666666666666667em'>blog</a>
+        <a href='/tags/blog/' style='font-size:1.1666666666666667em'>Blog</a>
       </li><li>
         <a href='/tags/cd/' style='font-size:1.0833333333333333em'>CD</a>
       </li><li>
@@ -281,6 +281,7 @@ Setup 1 project sample để có thể sử dụng Gitlab CI, push Docker image 
 <li><a href="#7-tạo-sample-app-helloapp-và-config-gitlab-ci-yml">7. tạo sample app <code>helloapp</code> và config <code>.gitlab-ci.yml</code></a></li>
 <li><a href="#8-push-local-project-lên-gitlab-server">8. Push local project lên Gitlab Server</a></li>
 <li><a href="#9-kết-quả">9. Kết quả</a></li>
+<li><a href="#10-bonus-tùy-biến-thêm-với-file-gitlab-ci-yml">10. (Bonus) Tùy biến thêm với file <code>.gitlab-ci.yml</code></a></li>
 </ul></li>
 <li><a href="#references">REFERENCES</a></li>
 </ul>
@@ -544,6 +545,51 @@ Bạn có thể check kết quả khi vào các màn hình sau:<br />
 <p>DONE! 🎉🎉</p>
 
 <p>Kết hợp với các bài về CD trước thì bạn đã có 1 flow CI/CD hoàn chỉnh rồi 😍</p>
+
+<h2 id="10-bonus-tùy-biến-thêm-với-file-gitlab-ci-yml">10. (Bonus) Tùy biến thêm với file <code>.gitlab-ci.yml</code></h2>
+
+<pre><code>image: docker:latest
+
+services:
+  - docker:18.09.7-dind
+
+variables:
+  DOCKER_HOST: tcp://127.0.0.1:2375
+  DOCKER_DRIVER: overlay
+  DOCKER_API_VERSION: &quot;1.39&quot;
+  TEST_IMAGE: gcr.io/$GCLOUD_PROJECT_ID/$IMAGE_NAME:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA
+  RELEASE_IMAGE: gcr.io/$GCLOUD_PROJECT_ID/$IMAGE_NAME:latest-$CI_COMMIT_SHORT_SHA
+
+stages:
+- build
+# - test
+- release
+
+before_script:
+  # Login to Google Cloud Registry
+  - echo $GCLOUD_SERVICE_KEY | docker login -u _json_key --password-stdin https://gcr.io
+
+build:
+  stage: build
+  script:
+    - docker build -t $TEST_IMAGE .
+    - docker push $TEST_IMAGE
+    
+# test:
+#   stage: test
+#   script:
+#     - docker pull $TEST_IMAGE
+#     - docker run $TEST_IMAGE npm test
+
+release:
+  stage: release
+  script:
+    - docker pull $TEST_IMAGE
+    - docker tag $TEST_IMAGE $RELEASE_IMAGE
+    - docker push $RELEASE_IMAGE
+  only:
+    - master
+</code></pre>
 
 <h1 id="references">REFERENCES</h1>
 
