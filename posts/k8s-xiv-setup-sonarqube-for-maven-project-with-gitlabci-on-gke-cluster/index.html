@@ -2,17 +2,19 @@
 <html lang='en'><head>
   <meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<meta name='description' content='Giới thiệu Tưởng tượng rằng bạn đã tạo GKE Cluster, dựng Gitlab Runner, Gitlab self-hosted.
-Bạn đã có 1 java project build bằng Maven trên Gitlab. Bạn đang sử dụng Gitlab CI để tạo pipeline.
-Bài này hướng dẫn cách setup 1 server Sonarqube để scan quality code cho 1 project sử dụng Maven (ngôn ngữ là Java Spring Boots).
-Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn mỗi khi có thay đổi sẽ'>
+<meta name='description' content='Giới thiệu Tưởng tượng rằng bạn đã có:
+- GKE Cluster, - dựng Gitlab Runner, - Gitlab self-hosted (hoặc dùng gitlab.com).
+- 1 java project (dùng Maven) trên Gitlab. - Bạn muốn sử dụng Gitlab CI để tạo pipeline.
+Bài này hướng dẫn cách setup 1 server Sonarqube để scan quality code cho 1 Java (Spring) project.
+Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn mỗi khi có 1 commit trên Gitlab sẽ:'>
 <meta name='theme-color' content='#ffcd00'>
 
 <meta property='og:title' content='K8S 14: Setup Sonarqube for Maven Project With Gitlab-CI on GKE Cluster • hoangmnsd'>
-<meta property='og:description' content='Giới thiệu Tưởng tượng rằng bạn đã tạo GKE Cluster, dựng Gitlab Runner, Gitlab self-hosted.
-Bạn đã có 1 java project build bằng Maven trên Gitlab. Bạn đang sử dụng Gitlab CI để tạo pipeline.
-Bài này hướng dẫn cách setup 1 server Sonarqube để scan quality code cho 1 project sử dụng Maven (ngôn ngữ là Java Spring Boots).
-Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn mỗi khi có thay đổi sẽ'>
+<meta property='og:description' content='Giới thiệu Tưởng tượng rằng bạn đã có:
+- GKE Cluster, - dựng Gitlab Runner, - Gitlab self-hosted (hoặc dùng gitlab.com).
+- 1 java project (dùng Maven) trên Gitlab. - Bạn muốn sử dụng Gitlab CI để tạo pipeline.
+Bài này hướng dẫn cách setup 1 server Sonarqube để scan quality code cho 1 Java (Spring) project.
+Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn mỗi khi có 1 commit trên Gitlab sẽ:'>
 <meta property='og:url' content='https://hoangmnsd.github.io/posts/k8s-xiv-setup-sonarqube-for-maven-project-with-gitlabci-on-gke-cluster/'>
 <meta property='og:site_name' content='Hoang'>
 <meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/7a4fb984a45dfe1129362728655c0b75?s=256'><meta property='article:author' content='https://facebook.com/lehoangofficial'><meta property='article:section' content='posts'><meta property='article:tag' content='sonarqube'><meta property='article:tag' content='gitlab'><meta property='article:tag' content='CI'><meta property='article:tag' content='kubernetes'><meta property='article:published_time' content='2020-08-08T01:18:27&#43;07:00'/><meta property='article:modified_time' content='2020-08-08T01:18:27&#43;07:00'/><meta name='twitter:card' content='summary'>
@@ -87,9 +89,9 @@ Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn 
       </li><li>
         <a href='/tags/apigateway/' style='font-size:1em'>APIGateway</a>
       </li><li>
-        <a href='/tags/aws/' style='font-size:1.6153846153846154em'>AWS</a>
+        <a href='/tags/aws/' style='font-size:1.6153846153846154em'>aws</a>
       </li><li>
-        <a href='/tags/blog/' style='font-size:1.1538461538461537em'>Blog</a>
+        <a href='/tags/blog/' style='font-size:1.1538461538461537em'>blog</a>
       </li><li>
         <a href='/tags/cd/' style='font-size:1.0769230769230769em'>CD</a>
       </li><li>
@@ -250,7 +252,7 @@ Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn 
   <polyline points="12 6 12 12 15 15"/>
   
 </svg>
-12 mins read
+13 mins read
 </span>
 
 
@@ -279,8 +281,11 @@ Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn 
 <ul>
 <li><a href="#test-springapp-có-hoạt-động-đúng-ko">Test SpringApp có hoạt động đúng ko?</a></li>
 </ul></li>
-<li><a href="#setup-gitlab-runner">Setup Gitlab Runner</a></li>
+<li><a href="#4-setup-gitlab-runner">4. Setup Gitlab Runner</a></li>
+<li><a href="#5-generate-a-token-of-sonarqube">5. Generate a token of Sonarqube</a></li>
+<li><a href="#6-create-empty-project-on-gitlab-and-push-source-from-local">6. Create empty project on Gitlab and push source from local</a></li>
 </ul></li>
+<li><a href="#references">REFERENCES</a></li>
 </ul>
 </nav>
 </details>
@@ -291,19 +296,24 @@ Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn 
 
 <h1 id="giới-thiệu">Giới thiệu</h1>
 
-<p>Tưởng tượng rằng bạn đã tạo GKE Cluster, dựng Gitlab Runner, Gitlab self-hosted.<br />
-Bạn đã có 1 java project build bằng Maven trên Gitlab. Bạn đang sử dụng Gitlab CI để tạo pipeline.<br />
-Bài này hướng dẫn cách setup 1 server Sonarqube để <strong>scan quality code</strong> cho 1 project sử dụng Maven (ngôn ngữ là Java Spring Boots).<br />
-Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn mỗi khi có thay đổi sẽ<br />
-trigger Gitlab Runner thực hiện scan quality code bằng Sonarqube,<br />
-sau đó build artifacts (tạo file .jar, .war),<br />
-build Docker images<br />
-và publish Docker images đó lên Registry của bạn (có thể là Dockerhub hoặc GCR, etc&hellip;)</p>
+<p>Tưởng tượng rằng bạn đã có:<br />
+- GKE Cluster,
+- dựng Gitlab Runner,
+- Gitlab self-hosted (hoặc dùng gitlab.com).<br />
+- 1 java project (dùng Maven) trên Gitlab.
+- Bạn muốn sử dụng Gitlab CI để tạo pipeline.</p>
+
+<p>Bài này hướng dẫn cách setup 1 server Sonarqube để <strong>scan quality code</strong> cho 1 Java (Spring) project.</p>
+
+<p>Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn mỗi khi có 1 commit trên Gitlab sẽ:<br />
+- trigger Gitlab Runner thực hiện scan quality code bằng Sonarqube,<br />
+- sau đó build artifacts (tạo file .jar, .war),<br />
+- rồi build Docker images,<br />
+- và publish Docker images đó lên Registry của bạn (có thể là Dockerhub hoặc GCR, etc&hellip;)</p>
 
 <h1 id="yêu-cầu">Yêu cầu</h1>
 
-<p>Đã hoàn thành bài <code>K8S 9</code> này để setup domain với nginx, external-dns, cert-manager:<br />
-<code>K8S 9: Setup External DNS + Cert Manager + Nginx Ingress Controller Wilcard</code><br />
+<p>Đã hoàn thành bài <code>K8S 9</code> này để setup domain với nginx, external-dns, cert-manager:
 <a href="https://hoangmnsd.github.io/posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/" target="_blank">https://hoangmnsd.github.io/posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/</a></p>
 
 <h1 id="cách-làm">Cách làm</h1>
@@ -320,7 +330,7 @@ export CLUSTER_NAME<span style="color:#f92672">=</span><span style="color:#e6db7
 gcloud config set project <span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>
 gcloud config set compute/region asia-northeast1
 gcloud config set compute/zone asia-northeast1-a
-<span style="color:#75715e"># Ở đây chúng ta sử dụng lại TLS secret mà đã dc issue thành công ở bài K8S 9</span>
+<span style="color:#75715e"># Ở đây chúng ta sử dụng lại TLS secret mà đã dc issue thành công ở bài `K8S 9`</span>
 export TLS_SECRET_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;echo-tls-secret-prod&#34;</span></code></pre></div>
 <h2 id="2-install-kubed-để-sync-secret-sang-các-namespace-cần-thiết">2. Install <code>kubed</code> để sync secret sang các namespace cần thiết</h2>
 
@@ -629,7 +639,7 @@ câu lệnh sau sẽ sử dụng 2 biến môi trường đã setup bên trên l
 </span><span style="color:#e6db74">  secrets: []
 </span><span style="color:#e6db74">  configmaps: []
 </span><span style="color:#e6db74">EOF</span></code></pre></div>
-<p>install helm chart, tên chart là <code>sonar</code>, vào namespace <code>sonarqube</code>:</p>
+<p>install helm chart, mình sẽ đặt tên chart là <code>sonar</code>, cài vào namespace <code>sonarqube</code>:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm repo add oteemocharts https://oteemo.github.io/charts
 helm install --name sonar oteemocharts/sonarqube --namespace sonarqube --values sonarqube-values.yaml</code></pre></div>
 <p>Giả sử nếu bạn muốn upgrade helm chart trên:</p>
@@ -659,7 +669,12 @@ ingress.extensions/sonar-sonarqube   sonarqube.your-subdomain.your-domain.net   
 
 <h2 id="3-setup-maven-project-using-spring-boots-vào-cluster">3. Setup Maven project using Spring Boots vào cluster</h2>
 
-<p>Tạo namespace cho app:</p>
+<p>Giờ mình sẽ tạo 1 app microservices gồm 2 services:
+- spring app
+- postgres</p>
+
+<p>Bắt đầu nào!
+Tạo namespace cho app:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create ns spring-app</code></pre></div>
 <p>Đánh label <code>app=kubed</code> cho namespace <code>spring-app</code>:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl label namespace spring-app app<span style="color:#f92672">=</span>kubed</code></pre></div>
@@ -667,15 +682,16 @@ ingress.extensions/sonar-sonarqube   sonarqube.your-subdomain.your-domain.net   
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl annotate secret <span style="color:#e6db74">${</span>TLS_SECRET_NAME<span style="color:#e6db74">}</span> -n default kubed.appscode.com/sync<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;app=kubed&#34;</span></code></pre></div>
 <p>Annotate domain sẽ dùng cho SpringApp vào Ingress nginx đã tạo:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl annotate service nginx-ingress-controller <span style="color:#e6db74">&#34;external-dns.alpha.kubernetes.io/hostname=</span><span style="color:#e6db74">${</span>SPRINGAPP_SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.,</span><span style="color:#e6db74">${</span>SONAR_SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.,</span><span style="color:#e6db74">${</span>SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span> -n nginx-ingress --overwrite</code></pre></div>
-<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/clouddns-setup-springapp-domain-sample.jpg" alt="" /></p>
+<p>Trên Cloud DNS sẽ thấy hiện ra A record mới cho <code>springapp.your-subdomain.your-domain.net</code>, confirm rằng nó dùng chung 1 IP với <code>SPRINGAPP_SUBDOMAIN</code> và <code>SUBDOMAIN</code> là ok!<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/clouddns-setup-springapp-domain-sample.jpg" alt="" /></p>
 
 <p>clone project sau về từ Github:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git clone https://github.com/hoangmnsd/spring-maven-postgres-docker
 cd spring-maven-postgres-docker
 <span style="color:#75715e"># tạo folder resource-manifest chứa k8s template</span>
 mkdir resource-manifest &amp; cd resource-manifest</code></pre></div>
-<p>tạo file <code>docker_postgres-deployment.yaml</code>:<br />
-Chú ý file này mình sử dụng image <code>image: hoangmnsd/docker_postgres</code> là image trên DockerHub của mình, các bạn nên tham khảo bài <code>K8S 4</code> này để tự tạo image riêng của các bạn:<br />
+<p>###1 tạo file <code>docker_postgres-deployment.yaml</code>:<br />
+<strong>Chú ý</strong> file này mình sử dụng image <code>image: hoangmnsd/docker_postgres</code> là image trên DockerHub của mình, các bạn nên tham khảo bài <code>K8S 4</code> này để tự tạo image riêng của các bạn:<br />
 <a href="https://hoangmnsd.github.io/posts/k8s-iv-app-micro-services-on-aws-w-eksctl/" target="_blank">https://hoangmnsd.github.io/posts/k8s-iv-app-micro-services-on-aws-w-eksctl/</a></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_postgres-deployment.yaml <span style="color:#e6db74">&lt;&lt;EOF
 </span><span style="color:#e6db74">apiVersion: apps/v1
@@ -714,8 +730,8 @@ Chú ý file này mình sử dụng image <code>image: hoangmnsd/docker_postgres
 </span><span style="color:#e6db74">          ports:
 </span><span style="color:#e6db74">            - containerPort: 5432
 </span><span style="color:#e6db74">EOF</span></code></pre></div>
-<p>tạo file <code>docker_postgres-service.yaml</code>:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_postgres-deployment.yaml <span style="color:#e6db74">&lt;&lt;EOF
+<p>###2 tạo file <code>docker_postgres-service.yaml</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_postgres-service.yaml <span style="color:#e6db74">&lt;&lt;EOF
 </span><span style="color:#e6db74">apiVersion: v1
 </span><span style="color:#e6db74">kind: Service
 </span><span style="color:#e6db74">metadata:
@@ -728,7 +744,7 @@ Chú ý file này mình sử dụng image <code>image: hoangmnsd/docker_postgres
 </span><span style="color:#e6db74">  selector:
 </span><span style="color:#e6db74">    app: docker-postgres
 </span><span style="color:#e6db74">EOF</span></code></pre></div>
-<p>tạo file <code>docker_postgres-service.yaml</code>:<br />
+<p>###3 tạo file <code>docker_spring-boot-containers-deployment.yaml</code>:<br />
 Chú ý file này mình sử dụng image <code>image: hoangmnsd/docker_spring-boot-containers</code> là image trên DockerHub của mình, các bạn nên tham khảo bài <code>K8S 4</code> này để tự tạo image riêng của các bạn:<br />
 <a href="https://hoangmnsd.github.io/posts/k8s-iv-app-micro-services-on-aws-w-eksctl/" target="_blank">https://hoangmnsd.github.io/posts/k8s-iv-app-micro-services-on-aws-w-eksctl/</a></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_spring-boot-containers-deployment.yaml <span style="color:#e6db74">&lt;&lt;EOF
@@ -761,7 +777,7 @@ Chú ý file này mình sử dụng image <code>image: hoangmnsd/docker_spring-b
 </span><span style="color:#e6db74">          ports:
 </span><span style="color:#e6db74">            - containerPort: 12345
 </span><span style="color:#e6db74">EOF</span></code></pre></div>
-<p>tạo file <code>docker_postgres-service.yaml</code>:</p>
+<p>###4 tạo file <code>docker_spring-boot-containers-service.yaml</code>:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_spring-boot-containers-service.yaml <span style="color:#e6db74">&lt;&lt;EOF
 </span><span style="color:#e6db74">apiVersion: v1
 </span><span style="color:#e6db74">kind: Service
@@ -775,7 +791,7 @@ Chú ý file này mình sử dụng image <code>image: hoangmnsd/docker_spring-b
 </span><span style="color:#e6db74">  selector:
 </span><span style="color:#e6db74">    app: docker-spring-boot-containers
 </span><span style="color:#e6db74">EOF</span></code></pre></div>
-<p>tạo file <code>docker_spring-boot-containers-ingress.yaml</code>:<br />
+<p>###5 tạo file <code>docker_spring-boot-containers-ingress.yaml</code>:<br />
 File này sẽ sử dụng ${SPRINGAPP_SUBDOMAIN} và ${TLS_SECRET_NAME}</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_spring-boot-containers-ingress.yaml <span style="color:#e6db74">&lt;&lt;EOF
 </span><span style="color:#e6db74">apiVersion: extensions/v1beta1
@@ -798,7 +814,8 @@ File này sẽ sử dụng ${SPRINGAPP_SUBDOMAIN} và ${TLS_SECRET_NAME}</p>
 </span><span style="color:#e6db74">          serviceName: docker-spring-boot-containers
 </span><span style="color:#e6db74">          servicePort: 12345
 </span><span style="color:#e6db74">EOF</span></code></pre></div>
-<p>Giờ sẽ apply để tạo các k8s resource của SpringApp trên:</p>
+<p>Vừa rồi chúng ta đã tạo xong 5 K8S template cần thiết,<br />
+Giờ sẽ apply để tạo các k8s resource của SpringApp trên:</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -n spring-app -f docker_postgres-deployment.yaml 
 kubectl apply -n spring-app -f docker_postgres-service.yaml
 kubectl apply -n spring-app -f docker_spring-boot-containers-deployment.yaml
@@ -821,7 +838,7 @@ ingress.extensions/spring-app-ingress   springapp.your-subdomain.your-domain.net
 
 <h3 id="test-springapp-có-hoạt-động-đúng-ko">Test SpringApp có hoạt động đúng ko?</h3>
 
-<p>Using Postman, send POST request to <code>https://springapp.your-subdomain.your-domain.net/v1/product</code> with body:</p>
+<p>Sử dụng Postman, gửi POST request đến <code>https://springapp.your-subdomain.your-domain.net/v1/product</code> với body:</p>
 
 <pre><code>{&quot;name&quot;:&quot;product001&quot;}
 </code></pre>
@@ -852,11 +869,107 @@ ingress.extensions/spring-app-ingress   springapp.your-subdomain.your-domain.net
 <p>(ảnh)<br />
 <img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/k8s-spring-postgres-get-req.jpg" alt="" /></p>
 
-<h2 id="setup-gitlab-runner">Setup Gitlab Runner</h2>
+<h2 id="4-setup-gitlab-runner">4. Setup Gitlab Runner</h2>
 
 <p>Làm theo bài này, để tạo ra được Gitlab Runner thôi nhé:<br />
 <a href="https://hoangmnsd.github.io/posts/k8s-xiii-using-gitlab-ci-push-docker-image-to-gcr-on-gke-cluster/" target="_blank">https://hoangmnsd.github.io/posts/k8s-xiii-using-gitlab-ci-push-docker-image-to-gcr-on-gke-cluster/</a><br />
 Chú ý là <code>GITLAB_URL</code> thì để là <strong>gitlab.com</strong>, cho đỡ tốn tiền, vì dựng cả Gitlab self-hosted sẽ tốn nhiều k8s resource</p>
+
+<h2 id="5-generate-a-token-of-sonarqube">5. Generate a token of Sonarqube</h2>
+
+<p>Login vào Sonarqube, tạo token của User như ảnh sau là ok:<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/sonarqube-generate-token.jpg" alt="" /></p>
+
+<p>giả sử bạn đã copy được sonar-token như sau: <code>fd059f3efd39debc0b205d4cae22c57d00be42d5</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export SONAR_TOKEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;fd059f3efd39debc0b205d4cae22c57d00be42d5&#34;</span></code></pre></div>
+<h2 id="6-create-empty-project-on-gitlab-and-push-source-from-local">6. Create empty project on Gitlab and push source from local</h2>
+
+<p>Login vào gitlab.com, tạo 1 project rỗng tên là <code>spring-maven-postgres-docker-k8s</code>:<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-com-empty-prj-spring-maven-postgres-docker-k8s.jpg" alt="" /></p>
+
+<p>Còn nhớ ở bước 3, chúng ta đã clone 1 project <code>spring-maven-postgres-docker</code> từ Github về CloudShell,<br />
+giờ sẽ push nội dung trong project đó lên project của Gitlab nhé:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd spring-maven-postgres-docker
+git remote origin set-url https://gitlab.com/&lt;GITLAB-USER&gt;/spring-maven-postgres-docker-k8s.git
+git add .
+git commit -m <span style="color:#e6db74">&#34;add files&#34;</span>
+git push origin master</code></pre></div>
+<p>Tạo file <code>gitlab-ci.yml</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd spring-maven-postgres-docker
+cat &gt; ./gitlab-ci.yml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">image: docker:latest
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">services:
+</span><span style="color:#e6db74">  - docker:18.09.7-dind
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">variables:
+</span><span style="color:#e6db74">  # DOCKER_HOST: tcp://127.0.0.1:2375 # When using Gitlab self-hosted on K8s
+</span><span style="color:#e6db74">  DOCKER_HOST: tcp://docker:2375/ # When using Gitlab.com
+</span><span style="color:#e6db74">  DOCKER_DRIVER: overlay
+</span><span style="color:#e6db74">  DOCKER_API_VERSION: &#34;1.39&#34;
+</span><span style="color:#e6db74">  SONAR_URL: &#34;${SONAR_SUBDOMAIN}&#34;
+</span><span style="color:#e6db74">  SONAR_TOKEN: &#34;${SONAR_TOKEN}&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">stages:
+</span><span style="color:#e6db74">  - test
+</span><span style="color:#e6db74">  - build
+</span><span style="color:#e6db74">  - publish
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">sonarqube_master_job:
+</span><span style="color:#e6db74">  stage: test
+</span><span style="color:#e6db74">  only:
+</span><span style="color:#e6db74">    - master
+</span><span style="color:#e6db74">  image: maven:3.3.9-jdk-8-alpine
+</span><span style="color:#e6db74">  script:
+</span><span style="color:#e6db74">    # - mvn --batch-mode verify sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_TOKEN 
+</span><span style="color:#e6db74">    - mvn clean package sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_TOKEN 
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">build_artifacts: 
+</span><span style="color:#e6db74">  stage: build
+</span><span style="color:#e6db74">  only:
+</span><span style="color:#e6db74">    - master
+</span><span style="color:#e6db74">  image: maven:3.3.9-jdk-8-alpine
+</span><span style="color:#e6db74">  script:
+</span><span style="color:#e6db74">    - mvn clean package
+</span><span style="color:#e6db74">  artifacts:
+</span><span style="color:#e6db74">    paths:
+</span><span style="color:#e6db74">      - target/*.jar
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">publish_docker_images:
+</span><span style="color:#e6db74">  stage: publish
+</span><span style="color:#e6db74">  only:
+</span><span style="color:#e6db74">    - master
+</span><span style="color:#e6db74">  # before_script:
+</span><span style="color:#e6db74">    # # Login to Google Cloud Registry
+</span><span style="color:#e6db74">    # - echo $GCLOUD_SERVICE_KEY | docker login -u _json_key --password-stdin https://gcr.io
+</span><span style="color:#e6db74">  script:
+</span><span style="color:#e6db74">    # # Build docker images from `Dockerfile` and artifact of above steps `build-artifacts`
+</span><span style="color:#e6db74">    - docker build -t springapp .
+</span><span style="color:#e6db74">    # - docker tag $IMAGE_NAME &#34;gcr.io/$GCLOUD_PROJECT_ID/$IMAGE_NAME&#34;
+</span><span style="color:#e6db74">    # - docker push &#34;gcr.io/$GCLOUD_PROJECT_ID/$IMAGE_NAME:latest&#34;
+</span><span style="color:#e6db74">EOF</span></code></pre></div>
+<p>push thay đổi lên Gitlab và check xem pipeline của Gitlab CI có hoạt động tốt không nào.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add .
+git commit -m <span style="color:#e6db74">&#34;update gitlab-ci&#34;</span>
+git push origin master</code></pre></div>
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-com-not-empty-prj-spring-maven-postgres-docker-k8s.jpg" alt="" /></p>
+
+<p>Như hình sau là OK, cả 3 stage đều passed
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-pipeline-spring-prj.jpg" alt="" /></p>
+
+<p>có thể ấn vào xem log từng job:<br />
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-pipeline-job-spring-prj.jpg" alt="" /></p>
+
+<p>job sonarqube chạy ok và log ra như này:
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-pipeline-job-sonar-spring-prj.jpg" alt="" /></p>
+
+<p>Vậy là xong, có thể còn nhiều cách sáng tạo và kết hợp khác nhau, nhưng tóm lại cách setup và sử dụng Sonarqube cho project của bạn cũng ko khó khăn lắm đâu, chúc bạn thành công ^^</p>
+
+<h1 id="references">REFERENCES</h1>
+
+<p><a href="https://medium.com/@speedforcerun/sonarqube-with-gitlab-ci-setup-stepbystep-java-maven-version-7e131dce0bb1" target="_blank">https://medium.com/@speedforcerun/sonarqube-with-gitlab-ci-setup-stepbystep-java-maven-version-7e131dce0bb1</a><br />
+<a href="https://stackoverflow.com/questions/48323223/sonarqube-autorun-with-gitlab" target="_blank">https://stackoverflow.com/questions/48323223/sonarqube-autorun-with-gitlab</a><br />
+<a href="https://github.com/Oteemo/charts/tree/master/charts/sonarqube" target="_blank">https://github.com/Oteemo/charts/tree/master/charts/sonarqube</a></p>
 
 </div>
 
