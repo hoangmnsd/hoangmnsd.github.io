@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Yêu cầu đã tạo GKE Cluster, đã mua 1 domain riêng, kiểu `your-domain.net`, đã setup service CloudDNS trong GCP console, để sử dụng dc `your-domain.net`'>
+<meta name='theme-color' content='#ffcd00'>
+
+<meta property='og:title' content='K8S 9: Setup External DNS &#43; Cert Manager &#43; Nginx Ingress Controller Wilcard • hoangmnsd'>
+<meta property='og:description' content='Yêu cầu đã tạo GKE Cluster, đã mua 1 domain riêng, kiểu `your-domain.net`, đã setup service CloudDNS trong GCP console, để sử dụng dc `your-domain.net`'>
+<meta property='og:url' content='https://hoangmnsd.github.io/posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/'>
+<meta property='og:site_name' content='Hoang'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/7a4fb984a45dfe1129362728655c0b75?s=256'><meta property='article:section' content='posts'><meta property='article:tag' content='Kubernetes'><meta property='article:tag' content='GKE'><meta property='article:tag' content='Nginx'><meta property='article:tag' content='Cert-manager'><meta property='article:tag' content='ExternalDNS'><meta property='article:published_time' content='2019-12-23T14:02:41&#43;09:00'/><meta property='article:modified_time' content='2019-12-23T14:02:41&#43;09:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.85.0" />
+
+  <title>K8S 9: Setup External DNS &#43; Cert Manager &#43; Nginx Ingress Controller Wilcard • hoangmnsd</title>
+  <link rel='canonical' href='https://hoangmnsd.github.io/posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/'>
+  
+  
+  <link rel='icon' href='/favicon.ico'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#ffcd00;}
+</style>
+
+  
+
+</head>
+<body class='page type-posts has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/logo.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Hoang
+      </a>
+    </h2>
+    <div class='desc'>
+    Learn something new everyday 😋
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-sidebar_menu sep-after'><nav id='sidebar-menu' class='menu sidebar-menu' aria-label='Sidebar Menu'>
+    <div class='container'>
+      <ul><li class='item'>
+  <a href='/'>Home</a></li><li class='item'>
+  <a href='/posts/'>Posts</a></li></ul>
+    </div>
+  </nav>
+
+</section><section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/aci/' style='font-size:1.0625em'>ACI</a>
+      </li><li>
+        <a href='/tags/ajax/' style='font-size:1em'>Ajax</a>
+      </li><li>
+        <a href='/tags/aks/' style='font-size:1em'>AKS</a>
+      </li><li>
+        <a href='/tags/ansible/' style='font-size:1.1875em'>Ansible</a>
+      </li><li>
+        <a href='/tags/apigateway/' style='font-size:1.0625em'>APIGateway</a>
+      </li><li>
+        <a href='/tags/argocd/' style='font-size:1em'>Argocd</a>
+      </li><li>
+        <a href='/tags/aws/' style='font-size:1.75em'>AWS</a>
+      </li><li>
+        <a href='/tags/azure/' style='font-size:1.6875em'>Azure</a>
+      </li><li>
+        <a href='/tags/bayes/' style='font-size:1em'>Bayes</a>
+      </li><li>
+        <a href='/tags/blog/' style='font-size:1.125em'>Blog</a>
+      </li><li>
+        <a href='/tags/cert-manager/' style='font-size:1em'>Cert-manager</a>
+      </li><li>
+        <a href='/tags/chatgpt/' style='font-size:1em'>ChatGPT</a>
+      </li><li>
+        <a href='/tags/ci/cd/' style='font-size:1.1875em'>CI/CD</a>
+      </li><li>
+        <a href='/tags/circleci/' style='font-size:1em'>CircleCI</a>
+      </li><li>
+        <a href='/tags/cnab/' style='font-size:1em'>CNAB</a>
+      </li><li>
+        <a href='/tags/cognito/' style='font-size:1.0625em'>Cognito</a>
+      </li><li>
+        <a href='/tags/discord/slack/' style='font-size:1em'>Discord/Slack</a>
+      </li><li>
+        <a href='/tags/docker/' style='font-size:1.125em'>Docker</a>
+      </li><li>
+        <a href='/tags/docker-compose/' style='font-size:1.0625em'>Docker-compose</a>
+      </li><li>
+        <a href='/tags/efk/' style='font-size:1.0625em'>EFK</a>
+      </li><li>
+        <a href='/tags/eks/' style='font-size:1em'>EKS</a>
+      </li><li>
+        <a href='/tags/eksctl/' style='font-size:1.0625em'>eksctl</a>
+      </li><li>
+        <a href='/tags/elasticsearch/' style='font-size:1.0625em'>ElasticSearch</a>
+      </li><li>
+        <a href='/tags/externaldns/' style='font-size:1em'>ExternalDNS</a>
+      </li><li>
+        <a href='/tags/fluentd/' style='font-size:1.0625em'>Fluentd</a>
+      </li><li>
+        <a href='/tags/flux/' style='font-size:1em'>Flux</a>
+      </li><li>
+        <a href='/tags/football/' style='font-size:1em'>Football</a>
+      </li><li>
+        <a href='/tags/gatsbyjs/' style='font-size:1.125em'>GatsbyJS</a>
+      </li><li>
+        <a href='/tags/gcp/' style='font-size:1.0625em'>GCP</a>
+      </li><li>
+        <a href='/tags/geography/' style='font-size:1em'>Geography</a>
+      </li><li>
+        <a href='/tags/git/' style='font-size:1.0625em'>Git</a>
+      </li><li>
+        <a href='/tags/github/' style='font-size:1em'>Github</a>
+      </li><li>
+        <a href='/tags/gitlab/' style='font-size:1.25em'>Gitlab</a>
+      </li><li>
+        <a href='/tags/gke/' style='font-size:1.125em'>GKE</a>
+      </li><li>
+        <a href='/tags/helm/' style='font-size:1em'>Helm</a>
+      </li><li>
+        <a href='/tags/homeassistant/' style='font-size:1.4375em'>HomeAssistant</a>
+      </li><li>
+        <a href='/tags/hugo/' style='font-size:1em'>Hugo</a>
+      </li><li>
+        <a href='/tags/iot/' style='font-size:1em'>IoT</a>
+      </li><li>
+        <a href='/tags/iptables/' style='font-size:1em'>Iptables</a>
+      </li><li>
+        <a href='/tags/jquery/' style='font-size:1em'>Jquery</a>
+      </li><li>
+        <a href='/tags/js/' style='font-size:1em'>Js</a>
+      </li><li>
+        <a href='/tags/keel/' style='font-size:1em'>Keel</a>
+      </li><li>
+        <a href='/tags/kibana/' style='font-size:1.0625em'>Kibana</a>
+      </li><li>
+        <a href='/tags/kubectl/' style='font-size:1em'>kubectl</a>
+      </li><li>
+        <a href='/tags/kubernetes/' style='font-size:2em'>Kubernetes</a>
+      </li><li>
+        <a href='/tags/lambda/' style='font-size:1.1875em'>Lambda</a>
+      </li><li>
+        <a href='/tags/letsecrypt/' style='font-size:1em'>Letsecrypt</a>
+      </li><li>
+        <a href='/tags/letsencrypt/' style='font-size:1em'>Letsencrypt</a>
+      </li><li>
+        <a href='/tags/locust/' style='font-size:1em'>Locust</a>
+      </li><li>
+        <a href='/tags/nginx/' style='font-size:1.0625em'>Nginx</a>
+      </li><li>
+        <a href='/tags/notes/' style='font-size:1.9375em'>Notes</a>
+      </li><li>
+        <a href='/tags/openldap/' style='font-size:1em'>OpenLDAP</a>
+      </li><li>
+        <a href='/tags/openssl/' style='font-size:1em'>OpenSSL</a>
+      </li><li>
+        <a href='/tags/oraclecloud/' style='font-size:1.0625em'>OracleCloud</a>
+      </li><li>
+        <a href='/tags/packer/' style='font-size:1em'>Packer</a>
+      </li><li>
+        <a href='/tags/postgresql/' style='font-size:1em'>Postgresql</a>
+      </li><li>
+        <a href='/tags/proxy/' style='font-size:1em'>Proxy</a>
+      </li><li>
+        <a href='/tags/python/' style='font-size:1.25em'>Python</a>
+      </li><li>
+        <a href='/tags/raspberrypi/' style='font-size:1.1875em'>RaspberryPi</a>
+      </li><li>
+        <a href='/tags/reactjs/' style='font-size:1em'>ReactJS</a>
+      </li><li>
+        <a href='/tags/selenium/' style='font-size:1em'>Selenium</a>
+      </li><li>
+        <a href='/tags/sonarqube/' style='font-size:1em'>Sonarqube</a>
+      </li><li>
+        <a href='/tags/synapse/' style='font-size:1.0625em'>Synapse</a>
+      </li><li>
+        <a href='/tags/telegram/' style='font-size:1.0625em'>Telegram</a>
+      </li><li>
+        <a href='/tags/test/' style='font-size:1em'>Test</a>
+      </li><li>
+        <a href='/tags/ubuntu/' style='font-size:1.0625em'>Ubuntu</a>
+      </li><li>
+        <a href='/tags/windows/' style='font-size:1.0625em'>Windows</a>
+      </li><li>
+        <a href='/tags/wsl/' style='font-size:1em'>WSL</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='/posts/'>Posts</a>
+      </li><li class='item'>
+        <a href='/about/'>About</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/posts/'>Posts</a></li><li><span>K8S 9: Setup External DNS &#43; Cert Manager &#43; Nginx Ingress Controller Wilcard</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Hoang</p><p class='desc site-desc'>Learn something new everyday 😋</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>K8S 9: Setup External DNS &#43; Cert Manager &#43; Nginx Ingress Controller Wilcard</h1>
+      
+<p class='desc'>Yêu cầu đã tạo GKE Cluster, đã mua 1 domain riêng, kiểu `your-domain.net`, đã setup service CloudDNS trong GCP console, để sử dụng dc `your-domain.net`</p>
+
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2019-12-23T14:02:41&#43;09:00'>2019, Dec 23</time>
+</span>
+
+  <span class='byline'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M21,21V20c0-2.76-4-5-9-5s-9,2.24-9,5v1" />
+<path d="M16,6.37A4,4,0,1,1,12.63,3,4,4,0,0,1,16,6.37Z" />
+</svg>
+<span class='screen-reader-text'> by </span><a href='/authors/hoangmnsd'>hoangmnsd</a></span>
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+7 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+<details class='container entry-toc'>
+  <summary class='title'>
+    <span>Table of Contents</span>
+  </summary>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#yêu-cầu">Yêu Cầu</a></li>
+    <li><a href="#cách-làm">Cách Làm</a>
+      <ul>
+        <li><a href="#0-setup-environment-variables">0. Setup environment variables</a></li>
+        <li><a href="#1-install-helm-2">1. Install Helm 2</a></li>
+        <li><a href="#2-install-nginx-ingress-controller">2. Install Nginx Ingress Controller</a></li>
+        <li><a href="#3-install-external-dns">3. Install External DNS</a></li>
+        <li><a href="#4-setup-sample-app-echo-app">4. Setup sample app (Echo App)</a></li>
+        <li><a href="#5-create-ingress">5. Create Ingress</a></li>
+        <li><a href="#6-install-cert-manager">6. Install Cert Manager</a></li>
+        <li><a href="#7-create-ingress-with-tls">7. Create Ingress with TLS</a></li>
+        <li><a href="#8-clean-up">8. Clean up</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+</details>
+
+
+  <div class='container entry-content'>
+  <h1 id="yêu-cầu">Yêu Cầu</h1>
+<ul>
+<li>Đã tạo GKE Cluster</li>
+<li>Đã mua 1 domain riêng, kiểu <code>your-domain.net</code></li>
+<li>Đã setup service CloudDNS trong GCP console, để sử dụng dc <code>your-domain.net</code>:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/clouddns-setup-on-gcp.jpg" alt=""></li>
+</ul>
+<h1 id="cách-làm">Cách Làm</h1>
+<h2 id="0-setup-environment-variables">0. Setup environment variables</h2>
+<p>Các biến này sẽ dùng xuyên suốt trong bài:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export PROJECT_ID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-project-id&#34;</span>
+export DOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-domain.net&#34;</span>
+export SUBDOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-subdomain.your-domain.net&#34;</span>
+export YOUR_EMAIL_ADDRESS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-mail-address&#34;</span>
+<span style="color:#75715e"># Cloud DNS service account nên là unique để tránh lỗi khi issue Certificate, nên mình cho thêm hậu tố `date` vào như sau:   </span>
+export CLOUD_DNS_SA<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;certmng-cdns-</span><span style="color:#66d9ef">$(</span>date +%d%m%Y-%H<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</code></pre></div><h2 id="1-install-helm-2">1. Install Helm 2</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">mkdir ~/environment
+cd ~/environment
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get &gt; get_helm.sh
+chmod +x get_helm.sh
+./get_helm.sh
+
+cat <span style="color:#e6db74">&lt;&lt;EoF &gt; ~/environment/rbac.yaml
+</span><span style="color:#e6db74">---
+</span><span style="color:#e6db74">apiVersion: v1
+</span><span style="color:#e6db74">kind: ServiceAccount
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: tiller
+</span><span style="color:#e6db74">  namespace: kube-system
+</span><span style="color:#e6db74">---
+</span><span style="color:#e6db74">apiVersion: rbac.authorization.k8s.io/v1beta1
+</span><span style="color:#e6db74">kind: ClusterRoleBinding
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: tiller
+</span><span style="color:#e6db74">roleRef:
+</span><span style="color:#e6db74">  apiGroup: rbac.authorization.k8s.io
+</span><span style="color:#e6db74">  kind: ClusterRole
+</span><span style="color:#e6db74">  name: cluster-admin
+</span><span style="color:#e6db74">subjects:
+</span><span style="color:#e6db74">  - kind: ServiceAccount
+</span><span style="color:#e6db74">    name: tiller
+</span><span style="color:#e6db74">    namespace: kube-system
+</span><span style="color:#e6db74">EoF</span>
+</code></pre></div><p>Sau mỗi lần xóa đi tạo lại cluster, bạn đều cần làm bước sau để install Tiller (còn gọi là helm server-side) lên cluster</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -f ~/environment/rbac.yaml
+helm init --service-account tiller
+</code></pre></div><p>check version:</p>
+<pre><code>helm version
+Client: &amp;version.Version{SemVer:&quot;v2.16.1&quot;, GitCommit:&quot;bbdfe5e7803a12bbdf97e94cd847859890cf4050&quot;, GitTreeState:&quot;clean&quot;}
+Server: &amp;version.Version{SemVer:&quot;v2.16.1&quot;, GitCommit:&quot;bbdfe5e7803a12bbdf97e94cd847859890cf4050&quot;, GitTreeState:&quot;clean&quot;}
+</code></pre><h2 id="2-install-nginx-ingress-controller">2. Install Nginx Ingress Controller</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm install -n nginx-ingress stable/nginx-ingress --namespace nginx-ingress
+</code></pre></div><pre><code>k get pods -A
+NAMESPACE     NAME                                                       READY   STATUS    RESTARTS   AGE
+nginx-ingress   nginx-ingress-controller-5cbd846c5f-nmhwz                     1/1     Running   0          20s
+nginx-ingress   nginx-ingress-default-backend-576b86996d-5c4dh                1/1     Running   0          20s
+</code></pre><h2 id="3-install-external-dns">3. Install External DNS</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./externaldns-values.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">rbac:
+</span><span style="color:#e6db74">  create: true
+</span><span style="color:#e6db74">provider: google
+</span><span style="color:#e6db74">interval: &#34;1m&#34;
+</span><span style="color:#e6db74">policy: sync # or upsert-only
+</span><span style="color:#e6db74">domainFilters: [ &#39;${DOMAIN}&#39; ]
+</span><span style="color:#e6db74">source: ingress
+</span><span style="color:#e6db74">registry: txt
+</span><span style="color:#e6db74">txt-owner-id: my-identifier
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>install by helm:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm install -n external-dns stable/external-dns -f externaldns-values.yaml --namespace nginx-ingress
+</code></pre></div><p>check:</p>
+<pre><code>k get pods -A
+NAMESPACE      NAME                                                        READY   STATUS    RESTARTS   AGE
+nginx-ingress        external-dns-6df4c8c96d-cwvl2                               1/1     Running   0          47s
+</code></pre><p>Nếu bạn dự định dùng link &ldquo;your-subdomain.your-domain.net&rdquo; và wildcard cho &ldquo;*.your-subdomain.your-domain.net&rdquo; thì cần annotate nó vào service ingress-controller như sau:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl annotate service nginx-ingress-controller <span style="color:#e6db74">&#34;external-dns.alpha.kubernetes.io/hostname=</span><span style="color:#e6db74">${</span>SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.,*.</span><span style="color:#e6db74">${</span>SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span> -n nginx-ingress --overwrite
+</code></pre></div><p>Sau khi annotate thì bạn sẽ thấy trên CloudDNS tự động xuất hiện các A record và TXT record của domain (ảnh):<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/externaldns-annotate.jpg" alt=""></p>
+<h2 id="4-setup-sample-app-echo-app">4. Setup sample app (Echo App)</h2>
+<p>Tạo 1 web app đơn giản để test việc access vào domain:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./echo-app.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: v1
+</span><span style="color:#e6db74">kind: Service
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: echo
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  ports:
+</span><span style="color:#e6db74">  - port: 80
+</span><span style="color:#e6db74">    targetPort: 5678
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    app: echo
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">---
+</span><span style="color:#e6db74">apiVersion: apps/v1
+</span><span style="color:#e6db74">kind: Deployment
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: echo
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    matchLabels:
+</span><span style="color:#e6db74">      app: echo
+</span><span style="color:#e6db74">  replicas: 1
+</span><span style="color:#e6db74">  template:
+</span><span style="color:#e6db74">    metadata:
+</span><span style="color:#e6db74">      labels:
+</span><span style="color:#e6db74">        app: echo
+</span><span style="color:#e6db74">    spec:
+</span><span style="color:#e6db74">      containers:
+</span><span style="color:#e6db74">      - name: echo
+</span><span style="color:#e6db74">        image: hashicorp/http-echo
+</span><span style="color:#e6db74">        args:
+</span><span style="color:#e6db74">        - &#34;-text=Echo!&#34;
+</span><span style="color:#e6db74">        ports:
+</span><span style="color:#e6db74">        - containerPort: 5678
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>apply để install app:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">k apply -f echo-app.yaml
+</code></pre></div><p>check:</p>
+<pre><code>k get pods,svc -A
+NAMESPACE     NAME                                                       READY   STATUS    RESTARTS   AGE
+default       echo-84bb76dddf-pgtdl                                      1/1     Running   0          11s
+
+NAMESPACE       NAME                                    TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                      AGE
+default         service/echo                            ClusterIP      10.68.64.124    &lt;none&gt;           80/TCP                       24s
+</code></pre><h2 id="5-create-ingress">5. Create Ingress</h2>
+<p>Ingress sẽ route traffic từ 1 domain cụ thể vào service của Echo App</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./echo-ingress.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: extensions/v1beta1
+</span><span style="color:#e6db74">kind: Ingress
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: echo-ingress
+</span><span style="color:#e6db74">  annotations:
+</span><span style="color:#e6db74">    kubernetes.io/ingress.class: &#34;nginx&#34;
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  rules:
+</span><span style="color:#e6db74">  - host: ${SUBDOMAIN}
+</span><span style="color:#e6db74">    http:
+</span><span style="color:#e6db74">      paths:
+</span><span style="color:#e6db74">      - path: /
+</span><span style="color:#e6db74">        backend:
+</span><span style="color:#e6db74">          serviceName: echo
+</span><span style="color:#e6db74">          servicePort: 80
+</span><span style="color:#e6db74">  - host: &#34;*.${SUBDOMAIN}&#34;
+</span><span style="color:#e6db74">    http:
+</span><span style="color:#e6db74">      paths:
+</span><span style="color:#e6db74">      - path: /
+</span><span style="color:#e6db74">        backend:
+</span><span style="color:#e6db74">          serviceName: echo
+</span><span style="color:#e6db74">          servicePort: 80
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>apply ingress:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">k apply -f echo-ingress.yaml
+</code></pre></div><p>check trên browser (vào link sau <code>your-subdomain.your-domain.net</code>), hiển thị như sau là ok (ảnh):<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/domain-not-secure-http.jpg" alt=""></p>
+<p>🎉 Như vậy web đã có HTTP, để có HTTPS thì cần dùng Cert Manager, các bước tiếp theo sẽ setup HTTPS</p>
+<h2 id="6-install-cert-manager">6. Install Cert Manager</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply --validate<span style="color:#f92672">=</span>false -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.12/deploy/manifests/00-crds.yaml
+kubectl create namespace cert-manager
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm install <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -n cert-manager <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --namespace cert-manager <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --version v0.12.0 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  jetstack/cert-manager
+</code></pre></div><p>check:</p>
+<pre><code>kubectl get pods --namespace cert-manager
+NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager-5fd56d487b-j862g              1/1     Running   0          2m5s
+cert-manager-cainjector-6bdbb96457-9scgc   1/1     Running   0          2m5s
+cert-manager-webhook-6f78788cd-x2rrs       1/1     Running   0          2m5s
+</code></pre><p>Tạo key của Service Account với quyền &ldquo;DNS Admin&rdquo;:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud config set project <span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>
+gcloud config set compute/region asia-northeast1
+gcloud config set compute/zone asia-northeast1-a
+</code></pre></div><p>Tạo service account:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud iam service-accounts create <span style="color:#e6db74">${</span>CLOUD_DNS_SA<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --display-name <span style="color:#e6db74">&#34;Service Account to support ACME DNS-01 challenge.&#34;</span>
+</code></pre></div><p>Tạo service account Key:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud iam service-accounts keys create --iam-account <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  <span style="color:#e6db74">${</span>CLOUD_DNS_SA<span style="color:#e6db74">}</span>@<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>.iam.gserviceaccount.com /tmp/cloud-dns-key.json
+</code></pre></div><p>Binding cái role DNS Admin vào Service account đó:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud projects add-iam-policy-binding --role roles/dns.admin <span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --member<span style="color:#f92672">=</span>serviceAccount:<span style="color:#e6db74">${</span>CLOUD_DNS_SA<span style="color:#e6db74">}</span>@<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>.iam.gserviceaccount.com
+</code></pre></div><p>Tạo secret dùng để issue Certificate:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create secret generic clouddns-service-account --from-file<span style="color:#f92672">=</span>service-account-key.json<span style="color:#f92672">=</span>/tmp/cloud-dns-key.json --namespace<span style="color:#f92672">=</span>cert-manager
+</code></pre></div><p>check:</p>
+<pre><code>kubectl describe secret clouddns-service-account -n cert-manager
+Name:         clouddns-service-account
+Namespace:    cert-manager
+Labels:       &lt;none&gt;
+Annotations:  &lt;none&gt;
+
+Type:  Opaque
+
+Data
+====
+service-account-key.json:  2335 bytes
+</code></pre><p>tạo ClusterIssuer staging</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./staging-issuer.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: cert-manager.io/v1alpha2
+</span><span style="color:#e6db74">kind: ClusterIssuer
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: letsencrypt-staging
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  acme:
+</span><span style="color:#e6db74">    # The ACME server URL
+</span><span style="color:#e6db74">    server: https://acme-staging-v02.api.letsencrypt.org/directory
+</span><span style="color:#e6db74">    # Email address used for ACME registration
+</span><span style="color:#e6db74">    email: ${YOUR_EMAIL_ADDRESS}
+</span><span style="color:#e6db74">    # Name of a secret used to store the ACME account private key
+</span><span style="color:#e6db74">    privateKeySecretRef:
+</span><span style="color:#e6db74">      name: letsencrypt-staging
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">    # ACME DNS-01 provider configurations
+</span><span style="color:#e6db74">    solvers:
+</span><span style="color:#e6db74">    - dns01:
+</span><span style="color:#e6db74">        clouddns:
+</span><span style="color:#e6db74">          # The Google Cloud project in which to update the DNS zone
+</span><span style="color:#e6db74">          project: ${PROJECT_ID}
+</span><span style="color:#e6db74">          # A secretKeyRef to a google cloud json service account
+</span><span style="color:#e6db74">          serviceAccountSecretRef:
+</span><span style="color:#e6db74">            name: clouddns-service-account
+</span><span style="color:#e6db74">            key: service-account-key.json
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>apply issuer:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -f staging-issuer.yaml
+</code></pre></div><p>tạo ClusterIssuer production:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./production-issuer.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: cert-manager.io/v1alpha2
+</span><span style="color:#e6db74">kind: ClusterIssuer
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: letsencrypt-prod
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  acme:
+</span><span style="color:#e6db74">    # The ACME server URL
+</span><span style="color:#e6db74">    server: https://acme-v02.api.letsencrypt.org/directory
+</span><span style="color:#e6db74">    # Email address used for ACME registration
+</span><span style="color:#e6db74">    email: ${YOUR_EMAIL_ADDRESS}
+</span><span style="color:#e6db74">    # Name of a secret used to store the ACME account private key
+</span><span style="color:#e6db74">    privateKeySecretRef:
+</span><span style="color:#e6db74">      name: letsencrypt-prod
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">    # ACME DNS-01 provider configurations
+</span><span style="color:#e6db74">    solvers:
+</span><span style="color:#e6db74">    - dns01:
+</span><span style="color:#e6db74">        clouddns:
+</span><span style="color:#e6db74">          # The Google Cloud project in which to update the DNS zone
+</span><span style="color:#e6db74">          project: ${PROJECT_ID}
+</span><span style="color:#e6db74">          # A secretKeyRef to a google cloud json service account
+</span><span style="color:#e6db74">          serviceAccountSecretRef:
+</span><span style="color:#e6db74">            name: clouddns-service-account
+</span><span style="color:#e6db74">            key: service-account-key.json
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>apply issuer:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -f production-issuer.yaml
+</code></pre></div><p>check:</p>
+<pre><code>k get clusterissuer -A
+NAME                  READY   AGE
+letsencrypt-prod      True    20s
+letsencrypt-staging   True    99s
+</code></pre><p>Issue staging Certificate cho domain:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./echo-certificate-staging.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: cert-manager.io/v1alpha2
+</span><span style="color:#e6db74">kind: Certificate
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: echo-tls-cert-staging
+</span><span style="color:#e6db74">  namespace: default
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  secretName: echo-tls-secret-staging
+</span><span style="color:#e6db74">  issuerRef:
+</span><span style="color:#e6db74">    name: letsencrypt-staging
+</span><span style="color:#e6db74">    kind: ClusterIssuer
+</span><span style="color:#e6db74">  commonName: ${SUBDOMAIN}
+</span><span style="color:#e6db74">  dnsNames:
+</span><span style="color:#e6db74">    - ${SUBDOMAIN}
+</span><span style="color:#e6db74">    - &#34;*.${SUBDOMAIN}&#34;
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>apply để issue certificate:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">k apply -f echo-certificate-staging.yaml
+</code></pre></div><p>Quá trình issue certificate phải chờ khoảng 5 phút thì mới Issued thành công được, vì Issue cho wildcard mất thời gian</p>
+<p>Nếu thành công sẽ hiện như sau:</p>
+<pre><code>k describe cert echo-tls-cert-staging
+Status:
+  Conditions:
+    Last Transition Time:  2019-12-14T14:54:05Z
+    Message:               Certificate is up to date and has not expired
+    Reason:                Ready
+    Status:                True
+    Type:                  Ready
+  Not After:               2020-03-13T13:54:05Z
+Events:
+  Type    Reason     Age    From          Message
+  ----    ------     ----   ----          -------
+  Normal  GeneratedKey  5m25s  cert-manager  Generated a new private key
+  Normal  Requested     5m25s  cert-manager  Created new CertificateRequest resource &quot;echo-tls-cert-staging-2906129357&quot;
+  Normal  Issued        61s    cert-manager  Certificate issued successfully
+</code></pre><p>Khi đã confirm thành công thì có thể làm bước sau (Chú ý là phải confirm chắc chắn là staging Certificate <code>echo-tls-cert-staging</code> đã đc issue thành công thì mới làm tiếp production Certificate, bởi vì letsencrypt production Certificate rất hạn chế số lần issue, làm đi làm lại với 1 subdomain có thể bị lỗi ko thể làm lại)</p>
+<p>Issue production Certificate cho domain:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./echo-certificate-prod.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: cert-manager.io/v1alpha2
+</span><span style="color:#e6db74">kind: Certificate
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: echo-tls-cert-prod
+</span><span style="color:#e6db74">  namespace: default
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  secretName: echo-tls-secret-prod
+</span><span style="color:#e6db74">  issuerRef:
+</span><span style="color:#e6db74">    name: letsencrypt-prod
+</span><span style="color:#e6db74">    kind: ClusterIssuer
+</span><span style="color:#e6db74">  commonName: ${SUBDOMAIN}
+</span><span style="color:#e6db74">  dnsNames:
+</span><span style="color:#e6db74">    - ${SUBDOMAIN}
+</span><span style="color:#e6db74">    - &#34;*.${SUBDOMAIN}&#34;
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>apply để issue certificate:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">k apply -f echo-certificate-prod.yaml
+</code></pre></div><p>check :</p>
+<pre><code>k describe cert echo-tls-cert-prod	
+Status:	
+  Conditions:	
+    Last Transition Time:  2019-12-14T14:54:05Z	
+    Message:               Certificate is up to date and has not expired	
+    Reason:                Ready	
+    Status:                True	
+    Type:                  Ready	
+  Not After:               2020-03-13T13:54:05Z	
+Events:	
+  Type    Reason     Age    From          Message	
+  ----    ------     ----   ----          -------	
+  Normal  GeneratedKey  4m18s  cert-manager  Generated a new private key
+  Normal  Requested     4m18s  cert-manager  Created new CertificateRequest resource &quot;echo-tls-cert-prod-2591535419&quot;
+  Normal  Issued        5s     cert-manager  Certificate issued successfully	
+
+</code></pre><h2 id="7-create-ingress-with-tls">7. Create Ingress with TLS</h2>
+<p>TLS ở đây sẽ sử dụng Certificate mà chúng ta đã issue thành công ở bước trước, để secure cho app của mình:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./echo-ingress-prod.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: extensions/v1beta1
+</span><span style="color:#e6db74">kind: Ingress
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: echo-ingress
+</span><span style="color:#e6db74">  annotations:
+</span><span style="color:#e6db74">    kubernetes.io/ingress.class: &#34;nginx&#34;
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  tls:
+</span><span style="color:#e6db74">  - hosts:
+</span><span style="color:#e6db74">    - ${SUBDOMAIN}
+</span><span style="color:#e6db74">    - &#34;*.${SUBDOMAIN}&#34;
+</span><span style="color:#e6db74">    secretName: echo-tls-secret-prod
+</span><span style="color:#e6db74">  rules:
+</span><span style="color:#e6db74">  - host: ${SUBDOMAIN}
+</span><span style="color:#e6db74">    http:
+</span><span style="color:#e6db74">      paths:
+</span><span style="color:#e6db74">      - path: /
+</span><span style="color:#e6db74">        backend:
+</span><span style="color:#e6db74">          serviceName: echo
+</span><span style="color:#e6db74">          servicePort: 80
+</span><span style="color:#e6db74">  - host: &#34;*.${SUBDOMAIN}&#34;
+</span><span style="color:#e6db74">    http:
+</span><span style="color:#e6db74">      paths:
+</span><span style="color:#e6db74">      - path: /
+</span><span style="color:#e6db74">        backend:
+</span><span style="color:#e6db74">          serviceName: echo
+</span><span style="color:#e6db74">          servicePort: 80
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>apply ingress:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">k apply -f echo-ingress-prod.yaml
+</code></pre></div><p>Check trên browser (vào link <code>your-subdomain.your-domain.net</code>), confirm có HTTPS và <strong>Certificate Valid</strong> như hình sau là OK:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/echo-ingress-tls.jpg" alt=""></p>
+<p>Check wildcard hoạt động OK bằng cách thêm 1 prefix bất kỳ (ví dụ như <code>test</code>) vào link trên để thành như sau: <code>test.your-subdomain.your-domain.net</code>, nếu vẫn có HTTPS và <strong>Certificate Valid</strong> thì có nghĩa là wildcard đã hoạt động thành công:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/echo-ingress-tls-wildcard.jpg" alt=""></p>
+<h2 id="8-clean-up">8. Clean up</h2>
+<ul>
+<li>Chắc chắn rằng bạn đã xóa Cluster, VPC</li>
+<li>Vào Service Cloud DNS, xóa các record được sinh ra bởi ExternalDNS<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cleanup-cloud-dns-k8s-ix.jpg" alt=""></li>
+<li>Vào IAM - IAM xóa member <code>certmng-cdns-*</code> mà bạn đã tạo<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cleanup-iam-k8s-ix.jpg" alt=""></li>
+<li>Vào IAM - Service Account xóa service account <code>certmng-cdns-*</code> mà bạn đã tạo<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cleanup-iam-sa-k8s-ix.jpg" alt=""></li>
+</ul>
+<p>Done!</p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='categories'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M22,19a2,2,0,0,1-2,2H4a2,2,0,0,1-2-2V5A2,2,0,0,1,4,3H9l2,3h9a2,2,0,0,1,2,2Z" />
+</svg>
+<span class='screen-reader-text'>Categories: </span><a class='category' href='/categories/tech-tutorials/'>Tech-Tutorials</a></div>
+<div class='tags'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z" />
+<line x1="7" y1="7" x2="7" y2="7" />
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/kubernetes/'>Kubernetes</a>, <a class='tag' href='/tags/gke/'>GKE</a>, <a class='tag' href='/tags/nginx/'>Nginx</a>, <a class='tag' href='/tags/cert-manager/'>Cert-manager</a>, <a class='tag' href='/tags/externaldns/'>ExternalDNS</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/posts/k8s-viii-setup-advanced-efk-stack-on-gcp/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>K8S 8: Setup Advanced EFK Stack on GCP cluster (ElasticSearch, Fluentd, Kibana)</a>
+    </div><div class='next-entry sep-before'>
+      <a href='/posts/k8s-x-setup-gitlab-on-gke-cluster/'>
+        <span class='screen-reader-text'>Next post: </span>K8S 10: Setup Gitlab Self Hosted on GKE Cluster<span aria-hidden='true'>Next <svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="4" y1="12" x2="20" y2="12" />
+<polyline points="14 6 20 12 14 18" />
+</svg>
+</span>
+      </a>
+    </div></div>
+</nav>
+
+
+<section id='comments' class='comments'>
+  <div class='container sep-before'>
+    <div class='comments-area'><div id='submission-success' class='comment-submission-feedback'>
+  <h4>Thank You!</h4>
+  <span>Your comment has been submitted. It will appear on this page shortly!</span>
+  <a href='#comments' class='button'>OK</a>
+</div>
+
+<div id='submission-failure' class='comment-submission-feedback'>
+  <h4>Yikes, Sorry!</h4>
+  <span>Error occured. Couldn&#39;t submit your comment. Please try again. Thank You!</span>
+  <a href='#comments' class='button'>OK</a>
+</div>
+
+
+
+
+<div id='respond' class='comment-respond'>
+  <h4 class='comment-reply-title'>Leave a comment<small>
+      <a rel='nofollow' id='cancel-comment-reply-link' href='#respond' class='button' style='display:none' aria-label='Cancel comment'>Cancel</a>
+    </small>
+  </h4>
+  <form action='http://132.145.71.114:8121/v2/entry/hoangmnsd/hoangmnsd/master/comments' method='post' id='comment-form' class='comment-form'>
+    <input type='hidden' name='options[postId]' value='eb824c9e0e73d1cce33f641bad16ade1'>
+    <input type='hidden' name='options[redirect]' value='https://hoangmnsd.github.io/posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/#submission-success'>
+    <input type='hidden' name='options[redirectError]' value='https://hoangmnsd.github.io/posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/#submission-failure'>
+
+    <input type='address' name='fields[honeypot]' style='display:none'>
+    <input type='hidden' name='fields[permalink]' value='/posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/'>
+    <input type='hidden' name='fields[parent_id]' value=''><input type='hidden' name='options[reCaptcha][siteKey]' value='6LfVBkIbAAAAAMtm5T8t2odg9MK_V4QmMH8igQf3'>
+      <input type='hidden' name='options[reCaptcha][secret]' value='voMPlsRRZcYpYg8FtEjNp61ZsDHFwt8sPUCm7t9p/gZ4OPlXwrdglRdZo1FcOAbY77CTjARHyyYYJSGiAFE1mQdmZDGz9Cnj9yhBzCpmfx0N/lzTlwxI/cACLS/ySlYYmhb6Rp7SuR7kIWpZN/XGuWzJFJCJ4jmtEbhRlkXubbupTDPbQ4e//H1Pv4rRQ7O65Bf/177T15v869Y59txPSgSwtGebU13WDNUxFEPw0xIuyeje6/1ioYU&#43;iZD/5jRQMYJNDgBC4v&#43;954PRzfOipLTYlVg2ncOa0WK&#43;OKxr4PybFtKRRTsPjSNHMdch9pBu5QECf5WG826pRH54r9/N0Q=='><div>
+      <label for='comment'>Comment*</label>
+      <textarea id='comment' name='fields[content]' required rows='3'></textarea>
+    </div>
+    <div>
+      <label for='name'>Name*</label>
+      <input id='name' name='fields[author]' type='text' required>
+    </div>
+    <div>
+      <label for='email'>Email*</label>
+      <input id='email' name='fields[email]' type='email' required>
+    </div>
+    <div>
+      <label for='url'>Website</label>
+      <input id='url' name='fields[site]' type='url'>
+    </div><div class='g-recaptcha' data-sitekey='6LfVBkIbAAAAAMtm5T8t2odg9MK_V4QmMH8igQf3' data-callback="enableSubmitComment"></div>
+
+      <script type="text/javascript">
+        function enableSubmitComment(){
+          document.getElementById("submitComment").disabled = false;
+        }
+      </script>
+
+      <script async src='https://www.google.com/recaptcha/api.js'></script><div>
+      <button type='submit' id="submitComment" disabled>Comment!</button>
+    </div>
+  </form>
+</div>
+
+</div>
+  </div>
+</section>
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/hoangmnsd' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='mailto:hoangmnsd@gmail.com' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Contact via Email</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+<polyline points="22,6 12,13 2,6" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2019-2023 hoangmsnd </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+

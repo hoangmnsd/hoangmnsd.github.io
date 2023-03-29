@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Bài này hướng dẫn cách setup 1 server Sonarqube để **scan quality code** cho 1 Java (Spring) project. '>
+<meta name='theme-color' content='#ffcd00'>
+
+<meta property='og:title' content='K8S 14: (on GKE Cluster) Setup Sonarqube for Maven Project With GitlabCI • hoangmnsd'>
+<meta property='og:description' content='Bài này hướng dẫn cách setup 1 server Sonarqube để **scan quality code** cho 1 Java (Spring) project. '>
+<meta property='og:url' content='https://hoangmnsd.github.io/posts/k8s-xiv-on-gke-cluster-setup-sonarqube-for-maven-project-with-gitlabci/'>
+<meta property='og:site_name' content='Hoang'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/7a4fb984a45dfe1129362728655c0b75?s=256'><meta property='article:section' content='posts'><meta property='article:tag' content='Sonarqube'><meta property='article:tag' content='Gitlab'><meta property='article:tag' content='CI/CD'><meta property='article:tag' content='Kubernetes'><meta property='article:published_time' content='2020-08-08T01:18:27&#43;07:00'/><meta property='article:modified_time' content='2020-08-08T01:18:27&#43;07:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.85.0" />
+
+  <title>K8S 14: (on GKE Cluster) Setup Sonarqube for Maven Project With GitlabCI • hoangmnsd</title>
+  <link rel='canonical' href='https://hoangmnsd.github.io/posts/k8s-xiv-on-gke-cluster-setup-sonarqube-for-maven-project-with-gitlabci/'>
+  
+  
+  <link rel='icon' href='/favicon.ico'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#ffcd00;}
+</style>
+
+  
+
+</head>
+<body class='page type-posts has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/logo.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Hoang
+      </a>
+    </h2>
+    <div class='desc'>
+    Learn something new everyday 😋
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-sidebar_menu sep-after'><nav id='sidebar-menu' class='menu sidebar-menu' aria-label='Sidebar Menu'>
+    <div class='container'>
+      <ul><li class='item'>
+  <a href='/'>Home</a></li><li class='item'>
+  <a href='/posts/'>Posts</a></li></ul>
+    </div>
+  </nav>
+
+</section><section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/aci/' style='font-size:1.0625em'>ACI</a>
+      </li><li>
+        <a href='/tags/ajax/' style='font-size:1em'>Ajax</a>
+      </li><li>
+        <a href='/tags/aks/' style='font-size:1em'>AKS</a>
+      </li><li>
+        <a href='/tags/ansible/' style='font-size:1.1875em'>Ansible</a>
+      </li><li>
+        <a href='/tags/apigateway/' style='font-size:1.0625em'>APIGateway</a>
+      </li><li>
+        <a href='/tags/argocd/' style='font-size:1em'>Argocd</a>
+      </li><li>
+        <a href='/tags/aws/' style='font-size:1.75em'>AWS</a>
+      </li><li>
+        <a href='/tags/azure/' style='font-size:1.6875em'>Azure</a>
+      </li><li>
+        <a href='/tags/bayes/' style='font-size:1em'>Bayes</a>
+      </li><li>
+        <a href='/tags/blog/' style='font-size:1.125em'>Blog</a>
+      </li><li>
+        <a href='/tags/cert-manager/' style='font-size:1em'>Cert-manager</a>
+      </li><li>
+        <a href='/tags/chatgpt/' style='font-size:1em'>ChatGPT</a>
+      </li><li>
+        <a href='/tags/ci/cd/' style='font-size:1.1875em'>CI/CD</a>
+      </li><li>
+        <a href='/tags/circleci/' style='font-size:1em'>CircleCI</a>
+      </li><li>
+        <a href='/tags/cnab/' style='font-size:1em'>CNAB</a>
+      </li><li>
+        <a href='/tags/cognito/' style='font-size:1.0625em'>Cognito</a>
+      </li><li>
+        <a href='/tags/discord/slack/' style='font-size:1em'>Discord/Slack</a>
+      </li><li>
+        <a href='/tags/docker/' style='font-size:1.125em'>Docker</a>
+      </li><li>
+        <a href='/tags/docker-compose/' style='font-size:1.0625em'>Docker-compose</a>
+      </li><li>
+        <a href='/tags/efk/' style='font-size:1.0625em'>EFK</a>
+      </li><li>
+        <a href='/tags/eks/' style='font-size:1em'>EKS</a>
+      </li><li>
+        <a href='/tags/eksctl/' style='font-size:1.0625em'>eksctl</a>
+      </li><li>
+        <a href='/tags/elasticsearch/' style='font-size:1.0625em'>ElasticSearch</a>
+      </li><li>
+        <a href='/tags/externaldns/' style='font-size:1em'>ExternalDNS</a>
+      </li><li>
+        <a href='/tags/fluentd/' style='font-size:1.0625em'>Fluentd</a>
+      </li><li>
+        <a href='/tags/flux/' style='font-size:1em'>Flux</a>
+      </li><li>
+        <a href='/tags/football/' style='font-size:1em'>Football</a>
+      </li><li>
+        <a href='/tags/gatsbyjs/' style='font-size:1.125em'>GatsbyJS</a>
+      </li><li>
+        <a href='/tags/gcp/' style='font-size:1.0625em'>GCP</a>
+      </li><li>
+        <a href='/tags/geography/' style='font-size:1em'>Geography</a>
+      </li><li>
+        <a href='/tags/git/' style='font-size:1.0625em'>Git</a>
+      </li><li>
+        <a href='/tags/github/' style='font-size:1em'>Github</a>
+      </li><li>
+        <a href='/tags/gitlab/' style='font-size:1.25em'>Gitlab</a>
+      </li><li>
+        <a href='/tags/gke/' style='font-size:1.125em'>GKE</a>
+      </li><li>
+        <a href='/tags/helm/' style='font-size:1em'>Helm</a>
+      </li><li>
+        <a href='/tags/homeassistant/' style='font-size:1.4375em'>HomeAssistant</a>
+      </li><li>
+        <a href='/tags/hugo/' style='font-size:1em'>Hugo</a>
+      </li><li>
+        <a href='/tags/iot/' style='font-size:1em'>IoT</a>
+      </li><li>
+        <a href='/tags/iptables/' style='font-size:1em'>Iptables</a>
+      </li><li>
+        <a href='/tags/jquery/' style='font-size:1em'>Jquery</a>
+      </li><li>
+        <a href='/tags/js/' style='font-size:1em'>Js</a>
+      </li><li>
+        <a href='/tags/keel/' style='font-size:1em'>Keel</a>
+      </li><li>
+        <a href='/tags/kibana/' style='font-size:1.0625em'>Kibana</a>
+      </li><li>
+        <a href='/tags/kubectl/' style='font-size:1em'>kubectl</a>
+      </li><li>
+        <a href='/tags/kubernetes/' style='font-size:2em'>Kubernetes</a>
+      </li><li>
+        <a href='/tags/lambda/' style='font-size:1.1875em'>Lambda</a>
+      </li><li>
+        <a href='/tags/letsecrypt/' style='font-size:1em'>Letsecrypt</a>
+      </li><li>
+        <a href='/tags/letsencrypt/' style='font-size:1em'>Letsencrypt</a>
+      </li><li>
+        <a href='/tags/locust/' style='font-size:1em'>Locust</a>
+      </li><li>
+        <a href='/tags/nginx/' style='font-size:1.0625em'>Nginx</a>
+      </li><li>
+        <a href='/tags/notes/' style='font-size:1.9375em'>Notes</a>
+      </li><li>
+        <a href='/tags/openldap/' style='font-size:1em'>OpenLDAP</a>
+      </li><li>
+        <a href='/tags/openssl/' style='font-size:1em'>OpenSSL</a>
+      </li><li>
+        <a href='/tags/oraclecloud/' style='font-size:1.0625em'>OracleCloud</a>
+      </li><li>
+        <a href='/tags/packer/' style='font-size:1em'>Packer</a>
+      </li><li>
+        <a href='/tags/postgresql/' style='font-size:1em'>Postgresql</a>
+      </li><li>
+        <a href='/tags/proxy/' style='font-size:1em'>Proxy</a>
+      </li><li>
+        <a href='/tags/python/' style='font-size:1.25em'>Python</a>
+      </li><li>
+        <a href='/tags/raspberrypi/' style='font-size:1.1875em'>RaspberryPi</a>
+      </li><li>
+        <a href='/tags/reactjs/' style='font-size:1em'>ReactJS</a>
+      </li><li>
+        <a href='/tags/selenium/' style='font-size:1em'>Selenium</a>
+      </li><li>
+        <a href='/tags/sonarqube/' style='font-size:1em'>Sonarqube</a>
+      </li><li>
+        <a href='/tags/synapse/' style='font-size:1.0625em'>Synapse</a>
+      </li><li>
+        <a href='/tags/telegram/' style='font-size:1.0625em'>Telegram</a>
+      </li><li>
+        <a href='/tags/test/' style='font-size:1em'>Test</a>
+      </li><li>
+        <a href='/tags/ubuntu/' style='font-size:1.0625em'>Ubuntu</a>
+      </li><li>
+        <a href='/tags/windows/' style='font-size:1.0625em'>Windows</a>
+      </li><li>
+        <a href='/tags/wsl/' style='font-size:1em'>WSL</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='/posts/'>Posts</a>
+      </li><li class='item'>
+        <a href='/about/'>About</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/posts/'>Posts</a></li><li><span>K8S 14: (on GKE Cluster) Setup Sonarqube for Maven Project With GitlabCI</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Hoang</p><p class='desc site-desc'>Learn something new everyday 😋</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>K8S 14: (on GKE Cluster) Setup Sonarqube for Maven Project With GitlabCI</h1>
+      
+<p class='desc'>Bài này hướng dẫn cách setup 1 server Sonarqube để **scan quality code** cho 1 Java (Spring) project. </p>
+
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2020-08-08T01:18:27&#43;07:00'>2020, Aug 08</time>
+</span>
+
+  <span class='byline'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M21,21V20c0-2.76-4-5-9-5s-9,2.24-9,5v1" />
+<path d="M16,6.37A4,4,0,1,1,12.63,3,4,4,0,0,1,16,6.37Z" />
+</svg>
+<span class='screen-reader-text'> by </span><a href='/authors/hoangmnsd'>hoangmnsd</a></span>
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+13 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+<details class='container entry-toc'>
+  <summary class='title'>
+    <span>Table of Contents</span>
+  </summary>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#giới-thiệu">Giới thiệu</a></li>
+    <li><a href="#yêu-cầu">Yêu cầu</a></li>
+    <li><a href="#cách-làm">Cách làm</a>
+      <ul>
+        <li><a href="#1-chuẩn-bị-biến-môi-trường-namespace-và-secrets">1. Chuẩn bị biến môi trường, namespace và secrets</a></li>
+        <li><a href="#2-install-kubed-để-sync-secret-sang-các-namespace-cần-thiết">2. Install <code>kubed</code> để sync secret sang các namespace cần thiết</a></li>
+        <li><a href="#2-setup-sonarqube-helm-chart">2. Setup Sonarqube Helm chart</a></li>
+        <li><a href="#3-setup-maven-project-using-spring-boots-vào-cluster">3. Setup Maven project using Spring Boots vào cluster</a>
+          <ul>
+            <li><a href="#test-springapp-có-hoạt-động-đúng-ko">Test SpringApp có hoạt động đúng ko?</a></li>
+          </ul>
+        </li>
+        <li><a href="#4-setup-gitlab-runner">4. Setup Gitlab Runner</a></li>
+        <li><a href="#5-generate-a-token-of-sonarqube">5. Generate a token of Sonarqube</a></li>
+        <li><a href="#6-create-empty-project-on-gitlab-and-push-source-from-local">6. Create empty project on Gitlab and push source from local</a></li>
+      </ul>
+    </li>
+    <li><a href="#references">REFERENCES</a></li>
+  </ul>
+</nav>
+</details>
+
+
+  <div class='container entry-content'>
+  <h1 id="giới-thiệu">Giới thiệu</h1>
+<p>Tưởng tượng rằng bạn đã có:</p>
+<ul>
+<li>GKE Cluster,</li>
+<li>dựng Gitlab Runner,</li>
+<li>Gitlab self-hosted (hoặc dùng gitlab.com).</li>
+<li>1 java project (dùng Maven) trên Gitlab.</li>
+<li>Bạn muốn sử dụng Gitlab CI để tạo pipeline.</li>
+</ul>
+<p>Bài này hướng dẫn cách setup 1 server Sonarqube để <strong>scan quality code</strong> cho 1 Java (Spring) project.</p>
+<p>Kết thúc bài này sẽ có 1 flow kiểu như sau, project Java của bạn mỗi khi có 1 commit trên Gitlab sẽ:</p>
+<ul>
+<li>trigger Gitlab Runner thực hiện scan quality code bằng Sonarqube,</li>
+<li>sau đó build artifacts (tạo file .jar, .war),</li>
+<li>rồi build Docker images,</li>
+<li>và publish Docker images đó lên Registry của bạn (có thể là Dockerhub hoặc GCR, etc&hellip;)</li>
+</ul>
+<h1 id="yêu-cầu">Yêu cầu</h1>
+<p>Đã hoàn thành bài <code>K8S 9</code> này để setup domain với nginx, external-dns, cert-manager:<br>
+<a href="../../posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/">K8S 9</a></p>
+<h1 id="cách-làm">Cách làm</h1>
+<p>Workspace chúng ta vẫn sẽ là GCP CloudShell</p>
+<h2 id="1-chuẩn-bị-biến-môi-trường-namespace-và-secrets">1. Chuẩn bị biến môi trường, namespace và secrets</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export PROJECT_ID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-project-id&#34;</span>
+export DOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-domain.net&#34;</span>
+export SUBDOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-subdomain.your-domain.net&#34;</span>
+export SONAR_SUBDOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;sonarqube.your-subdomain.your-domain.net&#34;</span>
+export SPRINGAPP_SUBDOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;springapp.your-subdomain.your-domain.net&#34;</span>
+export CLUSTER_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-cluster-name&#34;</span>
+gcloud config set project <span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>
+gcloud config set compute/region asia-northeast1
+gcloud config set compute/zone asia-northeast1-a
+<span style="color:#75715e"># Ở đây chúng ta sử dụng lại TLS secret mà đã dc issue thành công ở bài `K8S 9`</span>
+export TLS_SECRET_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;echo-tls-secret-prod&#34;</span>
+</code></pre></div><h2 id="2-install-kubed-để-sync-secret-sang-các-namespace-cần-thiết">2. Install <code>kubed</code> để sync secret sang các namespace cần thiết</h2>
+<p>(Nếu bạn đã làm bước này thì có thể bỏ qua):</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm repo add appscode https://charts.appscode.com/stable/
+helm repo update
+helm install -n kubed appscode/kubed --version 0.12.0 --namespace kube-system --wait --set config.clusterName<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CLUSTER_NAME<span style="color:#e6db74">}</span>
+</code></pre></div><h2 id="2-setup-sonarqube-helm-chart">2. Setup Sonarqube Helm chart</h2>
+<p>Tạo namespace dành cho sonarqube:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create namespace sonarqube
+</code></pre></div><p>Đánh label <code>app=kubed</code> cho namespace <code>sonarqube</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl label namespace sonarqube app<span style="color:#f92672">=</span>kubed
+</code></pre></div><p>Annotate để secret mình muốn sẽ sync sang các namespace có label <code>app=kubed</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl annotate secret <span style="color:#e6db74">${</span>TLS_SECRET_NAME<span style="color:#e6db74">}</span> -n default kubed.appscode.com/sync<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;app=kubed&#34;</span>
+</code></pre></div><p>Annotate domain sẽ dùng cho sonarqube vào Ingress nginx đã tạo:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl annotate service nginx-ingress-controller <span style="color:#e6db74">&#34;external-dns.alpha.kubernetes.io/hostname=</span><span style="color:#e6db74">${</span>SONAR_SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.,</span><span style="color:#e6db74">${</span>SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span> -n nginx-ingress --overwrite
+</code></pre></div><p>Sau khi annotate thành công bạn vào CloudDNS sẽ thấy domain của sonarqube đã được tạo ra, nó sẽ có chung IP v4 address với <code>your-subdomain.net</code> như ảnh sau:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/clouddns-setup-sonarqube-domain-sample.jpg" alt=""></p>
+<p>Còn khi vào cluster get thông tin các service ra bạn sẽ thấy IP v4 address đó chính là IP của Nginx-ingress-controller type LoadBalancer:</p>
+<pre><code>k get svc -A
+NAMESPACE       NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+cert-manager    cert-manager                    ClusterIP      10.68.114.39    &lt;none&gt;        9402/TCP                     12h
+cert-manager    cert-manager-webhook            ClusterIP      10.68.119.213   &lt;none&gt;        443/TCP                      12h
+default         echo                            ClusterIP      10.68.181.83    &lt;none&gt;        80/TCP                       10h
+default         kubernetes                      ClusterIP      10.68.0.1       &lt;none&gt;        443/TCP                      12h
+kube-system     default-http-backend            NodePort       10.68.107.169   &lt;none&gt;        80:31554/TCP                 12h
+kube-system     kube-dns                        ClusterIP      10.68.0.10      &lt;none&gt;        53/UDP,53/TCP                12h
+kube-system     kubed                           ClusterIP      10.68.111.17    &lt;none&gt;        443/TCP                      12h
+kube-system     metrics-server                  ClusterIP      10.68.47.251    &lt;none&gt;        443/TCP                      12h
+kube-system     tiller-deploy                   ClusterIP      10.68.181.222   &lt;none&gt;        44134/TCP                    12h
+nginx-ingress   external-dns                    ClusterIP      10.68.239.9     &lt;none&gt;        7979/TCP                     12h
+nginx-ingress   nginx-ingress-controller        LoadBalancer   10.68.8.115     34.11.12.50   80:31291/TCP,443:31035/TCP   12h
+nginx-ingress   nginx-ingress-default-backend   ClusterIP      10.68.72.132    &lt;none&gt;        80/TCP                       12h
+sonarqube       sonar-postgresql                ClusterIP      10.68.24.201    &lt;none&gt;        5432/TCP                     48m
+sonarqube       sonar-postgresql-headless       ClusterIP      None            &lt;none&gt;        5432/TCP                     48m
+sonarqube       sonar-sonarqube                 ClusterIP      10.68.78.189    &lt;none&gt;        9000/TCP                     48m
+</code></pre><p><em>Mình mô tả kỹ như vầy để bạn hiểu rằng nếu bạn thấy domain cho sonarqube của bạn mà ko dùng chung 1 IP với nginx và subdomain thì có nghĩa bạn đang setting sai nha</em></p>
+<p>Tạo file <code>sonarqube-values.yaml</code>:<br>
+câu lệnh sau sẽ sử dụng 2 biến môi trường đã setup bên trên là ${TLS_SECRET_NAME} và ${SONAR_SUBDOMAIN}:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./sonarqube-values.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74"># Default values for sonarqube.
+</span><span style="color:#e6db74"># This is a YAML-formatted file.
+</span><span style="color:#e6db74"># Declare variables to be passed into your templates.
+</span><span style="color:#e6db74">replicaCount: 1
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"> # This will use the default deployment strategy unless it is overriden
+</span><span style="color:#e6db74">deploymentStrategy: {}
+</span><span style="color:#e6db74"># Uncomment this to scheduler pods on priority
+</span><span style="color:#e6db74"># priorityClassName: &#34;high-priority&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">image:
+</span><span style="color:#e6db74">  repository: sonarqube
+</span><span style="color:#e6db74">  tag: 8.2-community
+</span><span style="color:#e6db74">  # If using a private repository, the name of the imagePullSecret to use
+</span><span style="color:#e6db74">  # pullSecret: my-repo-secret
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Set security context for sonarqube pod
+</span><span style="color:#e6db74">securityContext:
+</span><span style="color:#e6db74">  fsGroup: 999
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Settings to configure elasticsearch host requirements
+</span><span style="color:#e6db74">elasticsearch:
+</span><span style="color:#e6db74">  configureNode: true
+</span><span style="color:#e6db74">  bootstrapChecks: true
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">service:
+</span><span style="color:#e6db74">  type: ClusterIP
+</span><span style="color:#e6db74">  externalPort: 9000
+</span><span style="color:#e6db74">  internalPort: 9000
+</span><span style="color:#e6db74">  labels:
+</span><span style="color:#e6db74">  annotations: {}
+</span><span style="color:#e6db74">  # May be used in example for internal load balancing in GCP:
+</span><span style="color:#e6db74">  # cloud.google.com/load-balancer-type: Internal
+</span><span style="color:#e6db74">  # loadBalancerSourceRanges:
+</span><span style="color:#e6db74">  #   - 0.0.0.0/0
+</span><span style="color:#e6db74">  # loadBalancerIP: 1.2.3.4
+</span><span style="color:#e6db74">ingress:
+</span><span style="color:#e6db74">  enabled: true
+</span><span style="color:#e6db74">  # Used to create an Ingress record.
+</span><span style="color:#e6db74">  hosts:
+</span><span style="color:#e6db74">    - name: ${SONAR_SUBDOMAIN}
+</span><span style="color:#e6db74">      # Different clouds or configurations might need /* as the default path
+</span><span style="color:#e6db74">      path: /
+</span><span style="color:#e6db74">      # For additional control over serviceName and servicePort
+</span><span style="color:#e6db74">      serviceName: sonar-sonarqube
+</span><span style="color:#e6db74">      servicePort: 9000
+</span><span style="color:#e6db74">  annotations:
+</span><span style="color:#e6db74">    kubernetes.io/ingress.class: nginx
+</span><span style="color:#e6db74">  # kubernetes.io/tls-acme: &#34;true&#34;
+</span><span style="color:#e6db74">  # This property allows for reports up to a certain size to be uploaded to SonarQube
+</span><span style="color:#e6db74">  # nginx.ingress.kubernetes.io/proxy-body-size: &#34;8m&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Additional labels for Ingress manifest file
+</span><span style="color:#e6db74">  # labels:
+</span><span style="color:#e6db74">  #  traffic-type: external
+</span><span style="color:#e6db74">  #  traffic-type: internal
+</span><span style="color:#e6db74">  tls: 
+</span><span style="color:#e6db74">  # Secrets must be manually created in the namespace.
+</span><span style="color:#e6db74">  - secretName: ${TLS_SECRET_NAME}
+</span><span style="color:#e6db74">    hosts:
+</span><span style="color:#e6db74">      - ${SONAR_SUBDOMAIN}
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Affinity for pod assignment
+</span><span style="color:#e6db74"># Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+</span><span style="color:#e6db74">affinity: {}
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Tolerations for pod assignment
+</span><span style="color:#e6db74"># Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+</span><span style="color:#e6db74">tolerations: []
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Node labels for pod assignment
+</span><span style="color:#e6db74"># Ref: https://kubernetes.io/docs/user-guide/node-selection/
+</span><span style="color:#e6db74">nodeSelector: {}
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># hostAliases allows the modification of the hosts file inside a container
+</span><span style="color:#e6db74">hostAliases: []
+</span><span style="color:#e6db74"># - ip: &#34;192.168.1.10&#34;
+</span><span style="color:#e6db74">#   hostnames:
+</span><span style="color:#e6db74">#   - &#34;example.com&#34;
+</span><span style="color:#e6db74">#   - &#34;www.example.com&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">readinessProbe:
+</span><span style="color:#e6db74">  initialDelaySeconds: 60
+</span><span style="color:#e6db74">  periodSeconds: 30
+</span><span style="color:#e6db74">  failureThreshold: 6
+</span><span style="color:#e6db74">  # If an ingress *path* other than the root (/) is defined, it should be reflected here
+</span><span style="color:#e6db74">  # A trailing &#34;/&#34; must be included
+</span><span style="color:#e6db74">  sonarWebContext: /
+</span><span style="color:#e6db74">  # sonarWebContext: /sonarqube/
+</span><span style="color:#e6db74">livenessProbe:
+</span><span style="color:#e6db74">  initialDelaySeconds: 60
+</span><span style="color:#e6db74">  periodSeconds: 30
+</span><span style="color:#e6db74">  # If an ingress *path* other than the root (/) is defined, it should be reflected here
+</span><span style="color:#e6db74">  # A trailing &#34;/&#34; must be included
+</span><span style="color:#e6db74">  sonarWebContext: /
+</span><span style="color:#e6db74">  # sonarWebContext: /sonarqube/
+</span><span style="color:#e6db74">  # If an ingress *path* is defined, it should be reflected here
+</span><span style="color:#e6db74">  # sonar.web.context: /sonarqube
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">## Provide a secret containing one or more certificate files in the keys that will be added to cacerts
+</span><span style="color:#e6db74">## The cacerts file will be set via SONARQUBE_WEB_JVM_OPTS
+</span><span style="color:#e6db74">##
+</span><span style="color:#e6db74"># caCerts:
+</span><span style="color:#e6db74">#   secret: my-secret
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">## Values to add to SONARQUBE_WEB_JVM_OPTS
+</span><span style="color:#e6db74">##
+</span><span style="color:#e6db74"># jvmOpts: &#34;-Djava.net.preferIPv4Stack=true&#34;
+</span><span style="color:#e6db74">jvmOpts: &#34;&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">## Environment variables to attach to the pods
+</span><span style="color:#e6db74">##
+</span><span style="color:#e6db74"># env:
+</span><span style="color:#e6db74">#   - name: VARIABLE
+</span><span style="color:#e6db74">#     value: my-value
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Set annotations for pods
+</span><span style="color:#e6db74">annotations: {}
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">resources: {}
+</span><span style="color:#e6db74"># We usually recommend not to specify default resources and to leave this as a conscious
+</span><span style="color:#e6db74"># choice for the user. This also increases chances charts run on environments with little
+</span><span style="color:#e6db74"># resources, such as Minikube. If you do want to specify resources, uncomment the following
+</span><span style="color:#e6db74"># lines, adjust them as necessary, and remove the curly braces after &#39;resources:&#39;.
+</span><span style="color:#e6db74"># limits:
+</span><span style="color:#e6db74">#  cpu: 100m
+</span><span style="color:#e6db74">#  memory: 128Mi
+</span><span style="color:#e6db74"># requests:
+</span><span style="color:#e6db74">#  cpu: 100m
+</span><span style="color:#e6db74">#  memory: 128Mi
+</span><span style="color:#e6db74">persistence:
+</span><span style="color:#e6db74">  enabled: false
+</span><span style="color:#e6db74">  ## Set annotations on pvc
+</span><span style="color:#e6db74">  annotations: {}
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  ## Specify an existing volume claim instead of creating a new one.
+</span><span style="color:#e6db74">  ## When using this option all following options like storageClass, accessMode and size are ignored.
+</span><span style="color:#e6db74">  # existingClaim:
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  ## If defined, storageClassName: &lt;storageClass&gt;
+</span><span style="color:#e6db74">  ## If set to &#34;-&#34;, storageClassName: &#34;&#34;, which disables dynamic provisioning
+</span><span style="color:#e6db74">  ## If undefined (the default) or set to null, no storageClassName spec is
+</span><span style="color:#e6db74">  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+</span><span style="color:#e6db74">  ##   GKE, AWS &amp; OpenStack)
+</span><span style="color:#e6db74">  ##
+</span><span style="color:#e6db74">  storageClass:
+</span><span style="color:#e6db74">  accessMode: ReadWriteOnce
+</span><span style="color:#e6db74">  size: 10Gi
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  ## Specify extra volumes. Refer to &#34;.spec.volumes&#34; specification : https://kubernetes.io/fr/docs/concepts/storage/volumes/
+</span><span style="color:#e6db74">  volumes: []
+</span><span style="color:#e6db74">  ## Specify extra mounts. Refer to &#34;.spec.containers.volumeMounts&#34; specification : https://kubernetes.io/fr/docs/concepts/storage/volumes/
+</span><span style="color:#e6db74">  mounts: []
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># In case you want to specify different resources for emptyDir than {}
+</span><span style="color:#e6db74">emptyDir: {}
+</span><span style="color:#e6db74">  # Example of resouces that might be used:
+</span><span style="color:#e6db74">  # medium: Memory
+</span><span style="color:#e6db74">  # sizeLimit: 16Mi
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># List of plugins to install.
+</span><span style="color:#e6db74"># For example:
+</span><span style="color:#e6db74"># plugins:
+</span><span style="color:#e6db74">#  install:
+</span><span style="color:#e6db74">#    - &#34;https://github.com/AmadeusITGroup/sonar-stash/releases/download/1.3.0/sonar-stash-plugin-1.3.0.jar&#34;
+</span><span style="color:#e6db74">#    - &#34;https://github.com/SonarSource/sonar-ldap/releases/download/2.2-RC3/sonar-ldap-plugin-2.2.0.601.jar&#34;
+</span><span style="color:#e6db74">plugins:
+</span><span style="color:#e6db74">  install: []
+</span><span style="color:#e6db74">  lib: []
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  # For use behind a corporate proxy when downloading plugins
+</span><span style="color:#e6db74">  # httpProxy: &#34;&#34;
+</span><span style="color:#e6db74">  # httpsProxy: &#34;&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  # initContainerImage: rjkernick/alpine-wget:latest
+</span><span style="color:#e6db74">  # initSysctlContainerImage: busybox:1.31
+</span><span style="color:#e6db74">  # initCertsContainerImage: adoptopenjdk/openjdk11:alpine
+</span><span style="color:#e6db74">  # initTestContainerImage: dduportal/bats:0.4.0
+</span><span style="color:#e6db74">  # deleteDefaultPlugins: true
+</span><span style="color:#e6db74">  resources: {}
+</span><span style="color:#e6db74">  # We allow the plugins init container to have a separate resources declaration because
+</span><span style="color:#e6db74">  # the initContainer does not take as much resources.
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># A custom sonar.properties file can be provided via dictionary.
+</span><span style="color:#e6db74"># For example:
+</span><span style="color:#e6db74"># sonarProperties:
+</span><span style="color:#e6db74">#   sonar.forceAuthentication: true
+</span><span style="color:#e6db74">#   sonar.security.realm: LDAP
+</span><span style="color:#e6db74">#   ldap.url: ldaps://organization.com
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Additional sonar properties to load from a secret with a key &#34;secret.properties&#34; (must be a string)
+</span><span style="color:#e6db74"># sonarSecretProperties:
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Kubernetes secret that contains the encryption key for the sonarqube instance.
+</span><span style="color:#e6db74"># The secret must contain the key &#39;sonar-secret.txt&#39;.
+</span><span style="color:#e6db74"># The &#39;sonar.secretKeyPath&#39; property will be set automatically.
+</span><span style="color:#e6db74"># sonarSecretKey: &#34;settings-encryption-secret&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">## JDBC Database Type; by default postgresql. To use a different Database type, adjust
+</span><span style="color:#e6db74">jdbcDatabaseType: postgresql
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">## Override JDBC URL
+</span><span style="color:#e6db74"># jdbcUrlOverride: &#34;jdbc:postgresql://myPostgress/myDatabase;socketTimeout=1500&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">## Configuration values for postgresql dependency
+</span><span style="color:#e6db74">## ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
+</span><span style="color:#e6db74">postgresql:
+</span><span style="color:#e6db74">  # Enable to deploy the PostgreSQL chart
+</span><span style="color:#e6db74">  enabled: true
+</span><span style="color:#e6db74">  # To use an external PostgreSQL instance, set enabled to false and uncomment
+</span><span style="color:#e6db74">  # the line below:
+</span><span style="color:#e6db74">  # postgresqlServer: &#34;&#34;
+</span><span style="color:#e6db74">  # To use an external secret for the password for an external PostgreSQL
+</span><span style="color:#e6db74">  # instance, set enabled to false and provide the name of the secret on the
+</span><span style="color:#e6db74">  # line below:
+</span><span style="color:#e6db74">  # existingSecret: &#34;&#34;
+</span><span style="color:#e6db74">  postgresqlUsername: &#34;sonarUser&#34;
+</span><span style="color:#e6db74">  postgresqlPassword: &#34;sonarPass&#34;
+</span><span style="color:#e6db74">  postgresqlDatabase: &#34;sonarDB&#34;
+</span><span style="color:#e6db74">  # Specify the TCP port that PostgreSQL should use
+</span><span style="color:#e6db74">  service:
+</span><span style="color:#e6db74">    port: 5432
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># Additional labels to add to the pods:
+</span><span style="color:#e6db74"># podLabels:
+</span><span style="color:#e6db74">#   key: value
+</span><span style="color:#e6db74">podLabels: {}
+</span><span style="color:#e6db74"># For compatibility with 8.0 replace by &#34;/opt/sq&#34;
+</span><span style="color:#e6db74"># For compatibility with 8.2, leave the default. They changed it back to /opt/sonarqube
+</span><span style="color:#e6db74">sonarqubeFolder: /opt/sonarqube
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">enableTests: true
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">serviceAccount:
+</span><span style="color:#e6db74">  create: false
+</span><span style="color:#e6db74">  # name:
+</span><span style="color:#e6db74">  ## Annotations for the Service Account
+</span><span style="color:#e6db74">  annotations: {}
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"># extraConfig is used to load Environment Variables from secrets and configmaps
+</span><span style="color:#e6db74"># which may have been written by other tools, such as external orchestrators.
+</span><span style="color:#e6db74">#
+</span><span style="color:#e6db74"># These Secrets/ ConfigMaps are expecetd to contain Key/ Value pairs, such as:
+</span><span style="color:#e6db74">#
+</span><span style="color:#e6db74"># apiVersion: v1
+</span><span style="color:#e6db74"># kind: ConfigMap
+</span><span style="color:#e6db74"># metadata:
+</span><span style="color:#e6db74">#   name: external-sonarqube-opts
+</span><span style="color:#e6db74"># data:
+</span><span style="color:#e6db74">#   SONARQUBE_JDBC_USERNAME: foo
+</span><span style="color:#e6db74">#   SONARQUBE_JDBC_URL: jdbc:postgresql://db.example.com:5432/sonar
+</span><span style="color:#e6db74">#
+</span><span style="color:#e6db74"># These vars can then be injected into the environment by uncommenting the following:
+</span><span style="color:#e6db74">#
+</span><span style="color:#e6db74"># extraConfig:
+</span><span style="color:#e6db74">#   configmaps:
+</span><span style="color:#e6db74">#     - external-sonarqube-opts
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">extraConfig:
+</span><span style="color:#e6db74">  secrets: []
+</span><span style="color:#e6db74">  configmaps: []
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>install helm chart, mình sẽ đặt tên chart là <code>sonar</code>, cài vào namespace <code>sonarqube</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm repo add oteemocharts https://oteemo.github.io/charts
+helm install --name sonar oteemocharts/sonarqube --namespace sonarqube --values sonarqube-values.yaml
+</code></pre></div><p>Giả sử nếu bạn muốn upgrade helm chart trên:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm upgrade sonar oteemocharts/sonarqube --namespace sonarqube -f sonarqube-values.yaml
+</code></pre></div><p>Nếu muốn delete chart trên:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm delete --purge sonar
+</code></pre></div><p>logs:</p>
+<pre><code>k get pods,svc,ing -n sonarqube
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/sonar-postgresql-0                 1/1     Running   0          6m36s
+pod/sonar-sonarqube-6cf557759c-6zlqf   1/1     Running   0          47h
+
+NAME                                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+service/sonar-postgresql            ClusterIP   10.68.81.62    &lt;none&gt;        5432/TCP   2d18h
+service/sonar-postgresql-headless   ClusterIP   None           &lt;none&gt;        5432/TCP   2d18h
+service/sonar-sonarqube             ClusterIP   10.68.76.133   &lt;none&gt;        9000/TCP   2d18h
+
+NAME                                 HOSTS                               ADDRESS     PORTS     AGE
+ingress.extensions/sonar-sonarqube   sonarqube.your-subdomain.your-domain.net   10.0.16.6   80, 443   2d18h
+</code></pre><p>Vào link <code>sonarqube.your-subdomain.your-domain.net</code> sẽ thấy có HTTPS do mình sử dụng TLS đã đc issue thành công từ trước:<br>
+Đăng nhập vào Sonarqube với account default là <code>admin/admin</code> rồi đổi pass cho Admin nhé</p>
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/sonarqube-https.jpg" alt=""></p>
+<h2 id="3-setup-maven-project-using-spring-boots-vào-cluster">3. Setup Maven project using Spring Boots vào cluster</h2>
+<p>Giờ mình sẽ tạo 1 app microservices gồm 2 services:</p>
+<ul>
+<li>spring app,</li>
+<li>postgres</li>
+</ul>
+<p>Bắt đầu nào!<br>
+Tạo namespace cho app:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create ns spring-app
+</code></pre></div><p>Đánh label <code>app=kubed</code> cho namespace <code>spring-app</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl label namespace spring-app app<span style="color:#f92672">=</span>kubed
+</code></pre></div><p>Annotate để secret mình muốn sẽ sync sang các namespace có label <code>app=kubed</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl annotate secret <span style="color:#e6db74">${</span>TLS_SECRET_NAME<span style="color:#e6db74">}</span> -n default kubed.appscode.com/sync<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;app=kubed&#34;</span>
+</code></pre></div><p>Annotate domain sẽ dùng cho SpringApp vào Ingress nginx đã tạo:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl annotate service nginx-ingress-controller <span style="color:#e6db74">&#34;external-dns.alpha.kubernetes.io/hostname=</span><span style="color:#e6db74">${</span>SPRINGAPP_SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.,</span><span style="color:#e6db74">${</span>SONAR_SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.,</span><span style="color:#e6db74">${</span>SUBDOMAIN<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span> -n nginx-ingress --overwrite
+</code></pre></div><p>Trên Cloud DNS sẽ thấy hiện ra A record mới cho <code>springapp.your-subdomain.your-domain.net</code>,<br>
+confirm rằng nó dùng chung 1 IP với <code>$SPRINGAPP_SUBDOMAIN</code> và <code>$SUBDOMAIN</code> là ok!<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/clouddns-setup-springapp-domain-sample.jpg" alt=""></p>
+<p>clone project sau về từ Github:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git clone https://github.com/hoangmnsd/spring-maven-postgres-docker
+cd spring-maven-postgres-docker
+<span style="color:#75715e"># tạo folder resource-manifest chứa k8s template</span>
+mkdir -p resource-manifest <span style="color:#f92672">&amp;&amp;</span> cd resource-manifest
+</code></pre></div><p>###1 tạo file <code>docker_postgres-deployment.yaml</code>:<br>
+<strong>Chú ý</strong> file này mình sử dụng image <code>image: hoangmnsd/docker_postgres</code> là image trên DockerHub của mình, các bạn nên tham khảo bài <code>K8S 4</code> này để tự tạo image riêng của các bạn:<br>
+<a href="../../posts/k8s-iv-app-micro-services-on-aws-w-eksctl/">K8S 4</a></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_postgres-deployment.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: apps/v1
+</span><span style="color:#e6db74">kind: Deployment
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: docker-postgres
+</span><span style="color:#e6db74">  labels:
+</span><span style="color:#e6db74">    app: docker-postgres
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">     matchLabels:
+</span><span style="color:#e6db74">       app: docker-postgres
+</span><span style="color:#e6db74">  replicas: 1
+</span><span style="color:#e6db74">  minReadySeconds: 15
+</span><span style="color:#e6db74">  strategy:
+</span><span style="color:#e6db74">    type: RollingUpdate
+</span><span style="color:#e6db74">    rollingUpdate:
+</span><span style="color:#e6db74">      maxUnavailable: 1
+</span><span style="color:#e6db74">      maxSurge: 1
+</span><span style="color:#e6db74">  template:
+</span><span style="color:#e6db74">    metadata:
+</span><span style="color:#e6db74">      labels:
+</span><span style="color:#e6db74">        app: docker-postgres
+</span><span style="color:#e6db74">    spec:
+</span><span style="color:#e6db74">      containers:
+</span><span style="color:#e6db74">        - image: hoangmnsd/docker_postgres
+</span><span style="color:#e6db74">          env:
+</span><span style="color:#e6db74">          - name: POSTGRES_USER
+</span><span style="color:#e6db74">            value: dbuser
+</span><span style="color:#e6db74">          - name: POSTGRES_PASSWORD
+</span><span style="color:#e6db74">            value: password
+</span><span style="color:#e6db74">          - name: POSTGRES_DB
+</span><span style="color:#e6db74">            value: store
+</span><span style="color:#e6db74">          imagePullPolicy: Always
+</span><span style="color:#e6db74">          name: docker-postgres
+</span><span style="color:#e6db74">          ports:
+</span><span style="color:#e6db74">            - containerPort: 5432
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>###2 tạo file <code>docker_postgres-service.yaml</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_postgres-service.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: v1
+</span><span style="color:#e6db74">kind: Service
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: docker-postgres
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  ports:
+</span><span style="color:#e6db74">    - port: 5432
+</span><span style="color:#e6db74">      protocol: TCP
+</span><span style="color:#e6db74">      targetPort: 5432
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    app: docker-postgres
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>###3 tạo file <code>docker_spring-boot-containers-deployment.yaml</code>:<br>
+Chú ý file này mình sử dụng image <code>image: hoangmnsd/docker_spring-boot-containers</code> là image trên DockerHub của mình, các bạn nên tham khảo bài <code>K8S 4</code> này để tự tạo image riêng của các bạn:<br>
+<a href="../../posts/k8s-iv-app-micro-services-on-aws-w-eksctl/">K8S 4</a></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_spring-boot-containers-deployment.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: apps/v1
+</span><span style="color:#e6db74">kind: Deployment
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: docker-spring-boot-containers
+</span><span style="color:#e6db74">  labels:
+</span><span style="color:#e6db74">    app: docker-spring-boot-containers
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    matchLabels:
+</span><span style="color:#e6db74">      app: docker-spring-boot-containers
+</span><span style="color:#e6db74">  replicas: 1
+</span><span style="color:#e6db74">  minReadySeconds: 15
+</span><span style="color:#e6db74">  strategy:
+</span><span style="color:#e6db74">    type: RollingUpdate
+</span><span style="color:#e6db74">    rollingUpdate:
+</span><span style="color:#e6db74">      maxUnavailable: 1
+</span><span style="color:#e6db74">      maxSurge: 1
+</span><span style="color:#e6db74">  template:
+</span><span style="color:#e6db74">    metadata:
+</span><span style="color:#e6db74">      labels:
+</span><span style="color:#e6db74">        app: docker-spring-boot-containers
+</span><span style="color:#e6db74">    spec:
+</span><span style="color:#e6db74">      containers:
+</span><span style="color:#e6db74">        - image: hoangmnsd/docker_spring-boot-containers
+</span><span style="color:#e6db74">          imagePullPolicy: Always
+</span><span style="color:#e6db74">          name: docker-spring-boot-containers
+</span><span style="color:#e6db74">          ports:
+</span><span style="color:#e6db74">            - containerPort: 12345
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>###4 tạo file <code>docker_spring-boot-containers-service.yaml</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_spring-boot-containers-service.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: v1
+</span><span style="color:#e6db74">kind: Service
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: docker-spring-boot-containers
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  ports:
+</span><span style="color:#e6db74">  - port: 80
+</span><span style="color:#e6db74">    protocol: TCP
+</span><span style="color:#e6db74">    targetPort: 12345
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    app: docker-spring-boot-containers
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>###5 tạo file <code>docker_spring-boot-containers-ingress.yaml</code>:<br>
+File này sẽ sử dụng ${SPRINGAPP_SUBDOMAIN} và ${TLS_SECRET_NAME}</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./docker_spring-boot-containers-ingress.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: extensions/v1beta1
+</span><span style="color:#e6db74">kind: Ingress
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: spring-app-ingress
+</span><span style="color:#e6db74">  annotations:
+</span><span style="color:#e6db74">    kubernetes.io/ingress.class: &#34;nginx&#34;
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  tls:
+</span><span style="color:#e6db74">  - hosts:
+</span><span style="color:#e6db74">    - ${SPRINGAPP_SUBDOMAIN}
+</span><span style="color:#e6db74">    secretName: ${TLS_SECRET_NAME}
+</span><span style="color:#e6db74">  rules:
+</span><span style="color:#e6db74">  - host: ${SPRINGAPP_SUBDOMAIN}
+</span><span style="color:#e6db74">    http:
+</span><span style="color:#e6db74">      paths:
+</span><span style="color:#e6db74">      - path: /
+</span><span style="color:#e6db74">        backend:
+</span><span style="color:#e6db74">          serviceName: docker-spring-boot-containers
+</span><span style="color:#e6db74">          servicePort: 12345
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>Vừa rồi chúng ta đã tạo xong 5 K8S template cần thiết,<br>
+Giờ sẽ apply để tạo các k8s resource của SpringApp trên:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl apply -n spring-app -f docker_postgres-deployment.yaml 
+kubectl apply -n spring-app -f docker_postgres-service.yaml
+kubectl apply -n spring-app -f docker_spring-boot-containers-deployment.yaml
+kubectl apply -n spring-app -f docker_spring-boot-containers-service.yaml
+kubectl apply -n spring-app -f docker_spring-boot-containers-ingress.yaml
+</code></pre></div><p>Bạn sẽ thấy trong namespace <code>spring-app</code> đã tạo ra các resource sau:</p>
+<pre><code>k get pods,svc,ing -n spring-app
+NAME                                                 READY   STATUS    RESTARTS   AGE
+pod/docker-postgres-cddbcc96f-84smg                  1/1     Running   0          2d
+pod/docker-spring-boot-containers-6fbcdb989c-cjj5b   1/1     Running   0          2d
+
+NAME                                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/docker-postgres                 ClusterIP   10.68.68.157    &lt;none&gt;        5432/TCP   3d4h
+service/docker-spring-boot-containers   ClusterIP   10.68.242.118   &lt;none&gt;        80/TCP     3d6h
+
+NAME                                    HOSTS                               ADDRESS     PORTS     AGE
+ingress.extensions/spring-app-ingress   springapp.your-subdomain.your-domain.net   10.0.16.6   80, 443   3d4h
+</code></pre><h3 id="test-springapp-có-hoạt-động-đúng-ko">Test SpringApp có hoạt động đúng ko?</h3>
+<p>Sử dụng Postman, gửi POST request đến <code>https://springapp.your-subdomain.your-domain.net/v1/product</code> với body:</p>
+<pre><code>{&quot;name&quot;:&quot;product001&quot;}
+</code></pre><p>Chú ý là body của request cần set là <code>raw</code> và <code>JSON</code>: (ảnh)<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/postman-setting-request-body.jpg" alt=""></p>
+<p>if <code>success</code>, Postman sẽ trả về response dạng này:</p>
+<pre><code>{
+    &quot;product&quot;: {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;product001&quot;,
+        &quot;new&quot;: false
+    },
+    &quot;result&quot;: {
+        &quot;success&quot;: true,
+        &quot;message&quot;: &quot;Success&quot;
+    }
+}
+</code></pre><p>In Browser, check this link <code>https://springapp.your-subdomain.your-domain.net/v1/product/product001</code></p>
+<p>if <code>success</code> browser sẽ trả về chuỗi này:<br>
+<code>{&quot;product&quot;:{&quot;id&quot;:1,&quot;name&quot;:&quot;product001&quot;,&quot;new&quot;:false},&quot;result&quot;:{&quot;success&quot;:true,&quot;message&quot;:&quot;Success&quot;}}</code></p>
+<p>(ảnh)<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/k8s-spring-postgres-get-req.jpg" alt=""></p>
+<h2 id="4-setup-gitlab-runner">4. Setup Gitlab Runner</h2>
+<p>Làm theo bài này, để tạo ra được Gitlab Runner thôi nhé:<br>
+<a href="../../posts/k8s-xiii-using-gitlab-ci-push-docker-image-to-gcr-on-gke/">K8S 13</a></p>
+<p>Chú ý là <code>GITLAB_URL</code> thì để là <strong>gitlab.com</strong>, cho đỡ tốn tiền, vì dựng cả Gitlab self-hosted sẽ tốn nhiều k8s resource</p>
+<h2 id="5-generate-a-token-of-sonarqube">5. Generate a token of Sonarqube</h2>
+<p>Login vào Sonarqube, tạo token của User như ảnh sau là ok:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/sonarqube-generate-token.jpg" alt=""></p>
+<p>giả sử bạn đã copy được sonar-token như sau: <code>fd059f3efd39debc0b205d4cae22c57d00be42d5</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export SONAR_TOKEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;fd059f3efd39debc0b205d4cae22c57d00be42d5&#34;</span>
+</code></pre></div><h2 id="6-create-empty-project-on-gitlab-and-push-source-from-local">6. Create empty project on Gitlab and push source from local</h2>
+<p>Login vào gitlab.com, tạo 1 project rỗng tên là <code>spring-maven-postgres-docker-k8s</code>:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-com-empty-prj-spring-maven-postgres-docker-k8s.jpg" alt=""></p>
+<p>Còn nhớ ở bước 3, chúng ta đã clone 1 project <code>spring-maven-postgres-docker</code> từ Github về CloudShell,<br>
+giờ sẽ push nội dung trong project đó lên project của Gitlab nhé:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd spring-maven-postgres-docker
+<span style="color:#75715e"># thay &lt;GITLAB-USER&gt; bằng user của bạn</span>
+git remote origin set-url https://gitlab.com/&lt;GITLAB-USER&gt;/spring-maven-postgres-docker-k8s.git
+git add .
+git commit -m <span style="color:#e6db74">&#34;add files&#34;</span>
+git push origin master
+</code></pre></div><p>Tạo file <code>gitlab-ci.yml</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd spring-maven-postgres-docker
+cat &gt; ./gitlab-ci.yml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">image: docker:latest
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">services:
+</span><span style="color:#e6db74">  - docker:18.09.7-dind
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">variables:
+</span><span style="color:#e6db74">  # DOCKER_HOST: tcp://127.0.0.1:2375 # When using Gitlab self-hosted on K8s
+</span><span style="color:#e6db74">  DOCKER_HOST: tcp://docker:2375/ # When using Gitlab.com
+</span><span style="color:#e6db74">  DOCKER_DRIVER: overlay
+</span><span style="color:#e6db74">  DOCKER_API_VERSION: &#34;1.39&#34;
+</span><span style="color:#e6db74">  SONAR_URL: &#34;${SONAR_SUBDOMAIN}&#34;
+</span><span style="color:#e6db74">  SONAR_TOKEN: &#34;${SONAR_TOKEN}&#34;
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">stages:
+</span><span style="color:#e6db74">  - test
+</span><span style="color:#e6db74">  - build
+</span><span style="color:#e6db74">  - publish
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">sonarqube_master_job:
+</span><span style="color:#e6db74">  stage: test
+</span><span style="color:#e6db74">  only:
+</span><span style="color:#e6db74">    - master
+</span><span style="color:#e6db74">  image: maven:3.3.9-jdk-8-alpine
+</span><span style="color:#e6db74">  script:
+</span><span style="color:#e6db74">    # - mvn --batch-mode verify sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_TOKEN 
+</span><span style="color:#e6db74">    - mvn clean package sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_TOKEN 
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">build_artifacts: 
+</span><span style="color:#e6db74">  stage: build
+</span><span style="color:#e6db74">  only:
+</span><span style="color:#e6db74">    - master
+</span><span style="color:#e6db74">  image: maven:3.3.9-jdk-8-alpine
+</span><span style="color:#e6db74">  script:
+</span><span style="color:#e6db74">    - mvn clean package
+</span><span style="color:#e6db74">  artifacts:
+</span><span style="color:#e6db74">    paths:
+</span><span style="color:#e6db74">      - target/*.jar
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">publish_docker_images:
+</span><span style="color:#e6db74">  stage: publish
+</span><span style="color:#e6db74">  only:
+</span><span style="color:#e6db74">    - master
+</span><span style="color:#e6db74">  # before_script:
+</span><span style="color:#e6db74">    # # Login to Google Cloud Registry
+</span><span style="color:#e6db74">    # - echo $GCLOUD_SERVICE_KEY | docker login -u _json_key --password-stdin https://gcr.io
+</span><span style="color:#e6db74">  script:
+</span><span style="color:#e6db74">    # # Build docker images from `Dockerfile` and artifact of above steps `build-artifacts`
+</span><span style="color:#e6db74">    - docker build -t springapp .
+</span><span style="color:#e6db74">    # - docker tag $IMAGE_NAME &#34;gcr.io/$GCLOUD_PROJECT_ID/$IMAGE_NAME&#34;
+</span><span style="color:#e6db74">    # - docker push &#34;gcr.io/$GCLOUD_PROJECT_ID/$IMAGE_NAME:latest&#34;
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>push thay đổi lên Gitlab và check xem pipeline của Gitlab CI có hoạt động tốt không nào.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add .
+git commit -m <span style="color:#e6db74">&#34;update gitlab-ci&#34;</span>
+git push origin master
+</code></pre></div><p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-com-not-empty-prj-spring-maven-postgres-docker-k8s.jpg" alt=""></p>
+<p>Như hình sau là OK, cả 3 stage đều passed
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-pipeline-spring-prj.jpg" alt=""></p>
+<p>có thể ấn vào xem log từng job:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-pipeline-job-spring-prj.jpg" alt=""></p>
+<p>job sonarqube chạy ok và log ra như này:
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlabci-pipeline-job-sonar-spring-prj.jpg" alt=""></p>
+<p>Vậy là xong, có thể còn nhiều cách sáng tạo và kết hợp khác nhau, nhưng tóm lại cách setup và sử dụng Sonarqube cho project của bạn cũng ko khó khăn lắm đâu, chúc bạn thành công ^^</p>
+<h1 id="references">REFERENCES</h1>
+<p><a href="https://medium.com/@speedforcerun/sonarqube-with-gitlab-ci-setup-stepbystep-java-maven-version-7e131dce0bb1">https://medium.com/@speedforcerun/sonarqube-with-gitlab-ci-setup-stepbystep-java-maven-version-7e131dce0bb1</a><br>
+<a href="https://stackoverflow.com/questions/48323223/sonarqube-autorun-with-gitlab">https://stackoverflow.com/questions/48323223/sonarqube-autorun-with-gitlab</a><br>
+<a href="https://github.com/Oteemo/charts/tree/master/charts/sonarqube">https://github.com/Oteemo/charts/tree/master/charts/sonarqube</a></p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='categories'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M22,19a2,2,0,0,1-2,2H4a2,2,0,0,1-2-2V5A2,2,0,0,1,4,3H9l2,3h9a2,2,0,0,1,2,2Z" />
+</svg>
+<span class='screen-reader-text'>Categories: </span><a class='category' href='/categories/tech-tutorials/'>Tech-Tutorials</a></div>
+<div class='tags'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z" />
+<line x1="7" y1="7" x2="7" y2="7" />
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/sonarqube/'>Sonarqube</a>, <a class='tag' href='/tags/gitlab/'>Gitlab</a>, <a class='tag' href='/tags/ci/cd/'>CI/CD</a>, <a class='tag' href='/tags/kubernetes/'>Kubernetes</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/posts/k8s-xiii-using-gitlab-ci-push-docker-image-to-gcr-on-gke/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>K8S 13: Using Gitlab CI on GKE Cluster - Push Docker Image to GCR for Continuous Integration (CI)</a>
+    </div><div class='next-entry sep-before'>
+      <a href='/posts/encrypt-azure-setup-auto-stop-start-virtual-machines/'>
+        <span class='screen-reader-text'>Next post: </span>Azure: Setup Auto Stop/Start on schedule for Virtual Machines<span aria-hidden='true'>Next <svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="4" y1="12" x2="20" y2="12" />
+<polyline points="14 6 20 12 14 18" />
+</svg>
+</span>
+      </a>
+    </div></div>
+</nav>
+
+
+<section id='comments' class='comments'>
+  <div class='container sep-before'>
+    <div class='comments-area'><div id='submission-success' class='comment-submission-feedback'>
+  <h4>Thank You!</h4>
+  <span>Your comment has been submitted. It will appear on this page shortly!</span>
+  <a href='#comments' class='button'>OK</a>
+</div>
+
+<div id='submission-failure' class='comment-submission-feedback'>
+  <h4>Yikes, Sorry!</h4>
+  <span>Error occured. Couldn&#39;t submit your comment. Please try again. Thank You!</span>
+  <a href='#comments' class='button'>OK</a>
+</div>
+
+
+
+
+<div id='respond' class='comment-respond'>
+  <h4 class='comment-reply-title'>Leave a comment<small>
+      <a rel='nofollow' id='cancel-comment-reply-link' href='#respond' class='button' style='display:none' aria-label='Cancel comment'>Cancel</a>
+    </small>
+  </h4>
+  <form action='http://132.145.71.114:8121/v2/entry/hoangmnsd/hoangmnsd/master/comments' method='post' id='comment-form' class='comment-form'>
+    <input type='hidden' name='options[postId]' value='2873308bf02959ea017c923152d65fcb'>
+    <input type='hidden' name='options[redirect]' value='https://hoangmnsd.github.io/posts/k8s-xiv-on-gke-cluster-setup-sonarqube-for-maven-project-with-gitlabci/#submission-success'>
+    <input type='hidden' name='options[redirectError]' value='https://hoangmnsd.github.io/posts/k8s-xiv-on-gke-cluster-setup-sonarqube-for-maven-project-with-gitlabci/#submission-failure'>
+
+    <input type='address' name='fields[honeypot]' style='display:none'>
+    <input type='hidden' name='fields[permalink]' value='/posts/k8s-xiv-on-gke-cluster-setup-sonarqube-for-maven-project-with-gitlabci/'>
+    <input type='hidden' name='fields[parent_id]' value=''><input type='hidden' name='options[reCaptcha][siteKey]' value='6LfVBkIbAAAAAMtm5T8t2odg9MK_V4QmMH8igQf3'>
+      <input type='hidden' name='options[reCaptcha][secret]' value='voMPlsRRZcYpYg8FtEjNp61ZsDHFwt8sPUCm7t9p/gZ4OPlXwrdglRdZo1FcOAbY77CTjARHyyYYJSGiAFE1mQdmZDGz9Cnj9yhBzCpmfx0N/lzTlwxI/cACLS/ySlYYmhb6Rp7SuR7kIWpZN/XGuWzJFJCJ4jmtEbhRlkXubbupTDPbQ4e//H1Pv4rRQ7O65Bf/177T15v869Y59txPSgSwtGebU13WDNUxFEPw0xIuyeje6/1ioYU&#43;iZD/5jRQMYJNDgBC4v&#43;954PRzfOipLTYlVg2ncOa0WK&#43;OKxr4PybFtKRRTsPjSNHMdch9pBu5QECf5WG826pRH54r9/N0Q=='><div>
+      <label for='comment'>Comment*</label>
+      <textarea id='comment' name='fields[content]' required rows='3'></textarea>
+    </div>
+    <div>
+      <label for='name'>Name*</label>
+      <input id='name' name='fields[author]' type='text' required>
+    </div>
+    <div>
+      <label for='email'>Email*</label>
+      <input id='email' name='fields[email]' type='email' required>
+    </div>
+    <div>
+      <label for='url'>Website</label>
+      <input id='url' name='fields[site]' type='url'>
+    </div><div class='g-recaptcha' data-sitekey='6LfVBkIbAAAAAMtm5T8t2odg9MK_V4QmMH8igQf3' data-callback="enableSubmitComment"></div>
+
+      <script type="text/javascript">
+        function enableSubmitComment(){
+          document.getElementById("submitComment").disabled = false;
+        }
+      </script>
+
+      <script async src='https://www.google.com/recaptcha/api.js'></script><div>
+      <button type='submit' id="submitComment" disabled>Comment!</button>
+    </div>
+  </form>
+</div>
+
+</div>
+  </div>
+</section>
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/hoangmnsd' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='mailto:hoangmnsd@gmail.com' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Contact via Email</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+<polyline points="22,6 12,13 2,6" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2019-2023 hoangmsnd </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+
