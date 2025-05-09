@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Lần mò về GitOps thì thấy đây là 1 khái niệm rất hay và thú vị. '>
+<meta name='theme-color' content='#ffcd00'>
+
+<meta property='og:title' content='K8S 12: GitOps - Using Flux with private Gitlab server and GCR for Continuous Deployment (CD) on GKE Cluster • hoangmnsd'>
+<meta property='og:description' content='Lần mò về GitOps thì thấy đây là 1 khái niệm rất hay và thú vị. '>
+<meta property='og:url' content='https://hoangmnsd.github.io/bk/k8s-xii-gitops-using-flux-with-private-gitlab-server-with-gcr-for-cd/'>
+<meta property='og:site_name' content='Hoang'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/7a4fb984a45dfe1129362728655c0b75?s=256'><meta property='article:section' content='bk'><meta property='article:published_time' content='2020-05-22T22:55:35&#43;07:00'/><meta property='article:modified_time' content='2020-05-22T22:55:35&#43;07:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.85.0" />
+
+  <title>K8S 12: GitOps - Using Flux with private Gitlab server and GCR for Continuous Deployment (CD) on GKE Cluster • hoangmnsd</title>
+  <link rel='canonical' href='https://hoangmnsd.github.io/bk/k8s-xii-gitops-using-flux-with-private-gitlab-server-with-gcr-for-cd/'>
+  
+  
+  <link rel='icon' href='/favicon.ico'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#ffcd00;}
+</style>
+
+  
+
+</head>
+<body class='page type-bk has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/logo.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Hoang
+      </a>
+    </h2>
+    <div class='desc'>
+    Learn something new everyday 😋
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-sidebar_menu sep-after'><nav id='sidebar-menu' class='menu sidebar-menu' aria-label='Sidebar Menu'>
+    <div class='container'>
+      <ul><li class='item'>
+  <a href='/'>Home</a></li><li class='item'>
+  <a href='/posts/'>Posts</a></li></ul>
+    </div>
+  </nav>
+
+</section><section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/aci/' style='font-size:1.04em'>ACI</a>
+      </li><li>
+        <a href='/tags/agent/' style='font-size:1em'>Agent</a>
+      </li><li>
+        <a href='/tags/ai/' style='font-size:1.16em'>AI</a>
+      </li><li>
+        <a href='/tags/aisearch/' style='font-size:1em'>AISearch</a>
+      </li><li>
+        <a href='/tags/ajax/' style='font-size:1em'>Ajax</a>
+      </li><li>
+        <a href='/tags/aks/' style='font-size:1.12em'>AKS</a>
+      </li><li>
+        <a href='/tags/alexa/' style='font-size:1em'>Alexa</a>
+      </li><li>
+        <a href='/tags/algorithm/' style='font-size:1em'>Algorithm</a>
+      </li><li>
+        <a href='/tags/ansible/' style='font-size:1.12em'>Ansible</a>
+      </li><li>
+        <a href='/tags/apigateway/' style='font-size:1.04em'>APIGateway</a>
+      </li><li>
+        <a href='/tags/apim/' style='font-size:1em'>APIM</a>
+      </li><li>
+        <a href='/tags/argocd/' style='font-size:1em'>Argocd</a>
+      </li><li>
+        <a href='/tags/astronomy/' style='font-size:1em'>Astronomy</a>
+      </li><li>
+        <a href='/tags/aws/' style='font-size:1.76em'>AWS</a>
+      </li><li>
+        <a href='/tags/azure/' style='font-size:2em'>Azure</a>
+      </li><li>
+        <a href='/tags/azureappservice/' style='font-size:1em'>AzureAppService</a>
+      </li><li>
+        <a href='/tags/azurebot/' style='font-size:1em'>AzureBot</a>
+      </li><li>
+        <a href='/tags/azurefunction/' style='font-size:1em'>AzureFunction</a>
+      </li><li>
+        <a href='/tags/blog/' style='font-size:1.08em'>Blog</a>
+      </li><li>
+        <a href='/tags/budget/' style='font-size:1em'>Budget</a>
+      </li><li>
+        <a href='/tags/cassandra/' style='font-size:1em'>Cassandra</a>
+      </li><li>
+        <a href='/tags/certmanager/' style='font-size:1.04em'>CertManager</a>
+      </li><li>
+        <a href='/tags/chatgpt/' style='font-size:1em'>ChatGPT</a>
+      </li><li>
+        <a href='/tags/ci/cd/' style='font-size:1.12em'>CI/CD</a>
+      </li><li>
+        <a href='/tags/circleci/' style='font-size:1em'>CircleCI</a>
+      </li><li>
+        <a href='/tags/cloudflare/' style='font-size:1em'>Cloudflare</a>
+      </li><li>
+        <a href='/tags/cnab/' style='font-size:1em'>CNAB</a>
+      </li><li>
+        <a href='/tags/cognito/' style='font-size:1.04em'>Cognito</a>
+      </li><li>
+        <a href='/tags/contentsafetystudio/' style='font-size:1em'>ContentSafetyStudio</a>
+      </li><li>
+        <a href='/tags/ddos/' style='font-size:1em'>DDOS</a>
+      </li><li>
+        <a href='/tags/design-pattern/' style='font-size:1em'>Design-Pattern</a>
+      </li><li>
+        <a href='/tags/discord/slack/' style='font-size:1em'>Discord/Slack</a>
+      </li><li>
+        <a href='/tags/dns/' style='font-size:1em'>DNS</a>
+      </li><li>
+        <a href='/tags/docker/' style='font-size:1.2em'>Docker</a>
+      </li><li>
+        <a href='/tags/docker-compose/' style='font-size:1.08em'>Docker-compose</a>
+      </li><li>
+        <a href='/tags/efk/' style='font-size:1.04em'>EFK</a>
+      </li><li>
+        <a href='/tags/eks/' style='font-size:1em'>EKS</a>
+      </li><li>
+        <a href='/tags/eksctl/' style='font-size:1.04em'>eksctl</a>
+      </li><li>
+        <a href='/tags/elasticsearch/' style='font-size:1.08em'>ElasticSearch</a>
+      </li><li>
+        <a href='/tags/extension/' style='font-size:1em'>Extension</a>
+      </li><li>
+        <a href='/tags/externaldns/' style='font-size:1em'>ExternalDNS</a>
+      </li><li>
+        <a href='/tags/fail2ban/' style='font-size:1em'>Fail2ban</a>
+      </li><li>
+        <a href='/tags/fastapi/' style='font-size:1em'>FastAPI</a>
+      </li><li>
+        <a href='/tags/fluentd/' style='font-size:1.04em'>Fluentd</a>
+      </li><li>
+        <a href='/tags/flux/' style='font-size:1em'>Flux</a>
+      </li><li>
+        <a href='/tags/football/' style='font-size:1em'>Football</a>
+      </li><li>
+        <a href='/tags/gatsbyjs/' style='font-size:1.08em'>GatsbyJS</a>
+      </li><li>
+        <a href='/tags/gcp/' style='font-size:1.04em'>GCP</a>
+      </li><li>
+        <a href='/tags/geography/' style='font-size:1em'>Geography</a>
+      </li><li>
+        <a href='/tags/git/' style='font-size:1.04em'>Git</a>
+      </li><li>
+        <a href='/tags/github/' style='font-size:1em'>Github</a>
+      </li><li>
+        <a href='/tags/githubactions/' style='font-size:1em'>GithubActions</a>
+      </li><li>
+        <a href='/tags/gitlab/' style='font-size:1.16em'>Gitlab</a>
+      </li><li>
+        <a href='/tags/gke/' style='font-size:1.08em'>GKE</a>
+      </li><li>
+        <a href='/tags/google/' style='font-size:1em'>Google</a>
+      </li><li>
+        <a href='/tags/googleappscripts/' style='font-size:1em'>GoogleAppScripts</a>
+      </li><li>
+        <a href='/tags/grafana/' style='font-size:1.08em'>Grafana</a>
+      </li><li>
+        <a href='/tags/helm/' style='font-size:1.12em'>Helm</a>
+      </li><li>
+        <a href='/tags/homeassistant/' style='font-size:1.44em'>HomeAssistant</a>
+      </li><li>
+        <a href='/tags/hugo/' style='font-size:1em'>Hugo</a>
+      </li><li>
+        <a href='/tags/iam/' style='font-size:1em'>IAM</a>
+      </li><li>
+        <a href='/tags/identitycenter/' style='font-size:1em'>IdentityCenter</a>
+      </li><li>
+        <a href='/tags/influxdb/' style='font-size:1em'>InfluxDB</a>
+      </li><li>
+        <a href='/tags/iot/' style='font-size:1em'>IoT</a>
+      </li><li>
+        <a href='/tags/iptables/' style='font-size:1.04em'>Iptables</a>
+      </li><li>
+        <a href='/tags/javascript/' style='font-size:1em'>Javascript</a>
+      </li><li>
+        <a href='/tags/jquery/' style='font-size:1em'>Jquery</a>
+      </li><li>
+        <a href='/tags/kafka/' style='font-size:1em'>Kafka</a>
+      </li><li>
+        <a href='/tags/keel/' style='font-size:1em'>Keel</a>
+      </li><li>
+        <a href='/tags/keycloak/' style='font-size:1em'>Keycloak</a>
+      </li><li>
+        <a href='/tags/kibana/' style='font-size:1.04em'>Kibana</a>
+      </li><li>
+        <a href='/tags/kubectl/' style='font-size:1em'>kubectl</a>
+      </li><li>
+        <a href='/tags/kubernetes/' style='font-size:1.8em'>Kubernetes</a>
+      </li><li>
+        <a href='/tags/lambda/' style='font-size:1.16em'>Lambda</a>
+      </li><li>
+        <a href='/tags/languagestudio/' style='font-size:1em'>LanguageStudio</a>
+      </li><li>
+        <a href='/tags/letsecrypt/' style='font-size:1em'>Letsecrypt</a>
+      </li><li>
+        <a href='/tags/letsencrypt/' style='font-size:1.04em'>Letsencrypt</a>
+      </li><li>
+        <a href='/tags/llm/' style='font-size:1.08em'>LLM</a>
+      </li><li>
+        <a href='/tags/locust/' style='font-size:1em'>Locust</a>
+      </li><li>
+        <a href='/tags/logging/' style='font-size:1em'>Logging</a>
+      </li><li>
+        <a href='/tags/loki/' style='font-size:1.04em'>Loki</a>
+      </li><li>
+        <a href='/tags/machinelearning/' style='font-size:1.08em'>MachineLearning</a>
+      </li><li>
+        <a href='/tags/microsoft/' style='font-size:1em'>Microsoft</a>
+      </li><li>
+        <a href='/tags/namecheap/' style='font-size:1em'>Namecheap</a>
+      </li><li>
+        <a href='/tags/nextcloud/' style='font-size:1em'>NextCloud</a>
+      </li><li>
+        <a href='/tags/nginx/' style='font-size:1.12em'>Nginx</a>
+      </li><li>
+        <a href='/tags/oauth2proxy/' style='font-size:1em'>Oauth2Proxy</a>
+      </li><li>
+        <a href='/tags/openai/' style='font-size:1em'>OpenAI</a>
+      </li><li>
+        <a href='/tags/openldap/' style='font-size:1em'>OpenLDAP</a>
+      </li><li>
+        <a href='/tags/openssl/' style='font-size:1em'>OpenSSL</a>
+      </li><li>
+        <a href='/tags/openwebui/' style='font-size:1em'>OpenwebUI</a>
+      </li><li>
+        <a href='/tags/oraclecloud/' style='font-size:1.04em'>OracleCloud</a>
+      </li><li>
+        <a href='/tags/packer/' style='font-size:1em'>Packer</a>
+      </li><li>
+        <a href='/tags/postgresql/' style='font-size:1.04em'>Postgresql</a>
+      </li><li>
+        <a href='/tags/prometheus/' style='font-size:1em'>Prometheus</a>
+      </li><li>
+        <a href='/tags/promtail/' style='font-size:1.04em'>Promtail</a>
+      </li><li>
+        <a href='/tags/proxy/' style='font-size:1em'>Proxy</a>
+      </li><li>
+        <a href='/tags/python/' style='font-size:1.2em'>Python</a>
+      </li><li>
+        <a href='/tags/qualys/' style='font-size:1em'>Qualys</a>
+      </li><li>
+        <a href='/tags/rag/' style='font-size:1em'>RAG</a>
+      </li><li>
+        <a href='/tags/raspberrypi/' style='font-size:1.16em'>RaspberryPi</a>
+      </li><li>
+        <a href='/tags/reactjs/' style='font-size:1em'>ReactJS</a>
+      </li><li>
+        <a href='/tags/sagemaker/' style='font-size:1em'>SageMaker</a>
+      </li><li>
+        <a href='/tags/sam/' style='font-size:1em'>SAM</a>
+      </li><li>
+        <a href='/tags/selenium/' style='font-size:1em'>Selenium</a>
+      </li><li>
+        <a href='/tags/serverless/' style='font-size:1.04em'>Serverless</a>
+      </li><li>
+        <a href='/tags/sonarqube/' style='font-size:1em'>Sonarqube</a>
+      </li><li>
+        <a href='/tags/speechservice/' style='font-size:1em'>SpeechService</a>
+      </li><li>
+        <a href='/tags/ssh-tunnel/' style='font-size:1em'>SSH-Tunnel</a>
+      </li><li>
+        <a href='/tags/sso/' style='font-size:1em'>SSO</a>
+      </li><li>
+        <a href='/tags/stable-diffusion/' style='font-size:1.04em'>Stable-Diffusion</a>
+      </li><li>
+        <a href='/tags/streamlit/' style='font-size:1em'>Streamlit</a>
+      </li><li>
+        <a href='/tags/swag/' style='font-size:1.04em'>Swag</a>
+      </li><li>
+        <a href='/tags/synapse/' style='font-size:1.04em'>Synapse</a>
+      </li><li>
+        <a href='/tags/telegram/' style='font-size:1.04em'>Telegram</a>
+      </li><li>
+        <a href='/tags/test/' style='font-size:1em'>Test</a>
+      </li><li>
+        <a href='/tags/timecomplexity/' style='font-size:1em'>TimeComplexity</a>
+      </li><li>
+        <a href='/tags/traefik/' style='font-size:1em'>Traefik</a>
+      </li><li>
+        <a href='/tags/tunnel/' style='font-size:1em'>Tunnel</a>
+      </li><li>
+        <a href='/tags/ubuntu/' style='font-size:1.12em'>Ubuntu</a>
+      </li><li>
+        <a href='/tags/virtualbox/' style='font-size:1em'>VirtualBox</a>
+      </li><li>
+        <a href='/tags/vnet/' style='font-size:1em'>Vnet</a>
+      </li><li>
+        <a href='/tags/vouchproxy/' style='font-size:1em'>VouchProxy</a>
+      </li><li>
+        <a href='/tags/vpc/' style='font-size:1em'>VPC</a>
+      </li><li>
+        <a href='/tags/windows/' style='font-size:1.08em'>Windows</a>
+      </li><li>
+        <a href='/tags/wsl/' style='font-size:1em'>WSL</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='/posts/'>Posts</a>
+      </li><li class='item'>
+        <a href='/about/'>About</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/bk/'>Bks</a></li><li><span>K8S 12: GitOps - Using Flux with private Gitlab server and GCR for Continuous Deployment (CD) on GKE Cluster</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Hoang</p><p class='desc site-desc'>Learn something new everyday 😋</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>K8S 12: GitOps - Using Flux with private Gitlab server and GCR for Continuous Deployment (CD) on GKE Cluster</h1>
+      
+<p class='desc'>Lần mò về GitOps thì thấy đây là 1 khái niệm rất hay và thú vị. </p>
+
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2020-05-22T22:55:35&#43;07:00'>2020, May 22</time>
+</span>
+
+  <span class='byline'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M21,21V20c0-2.76-4-5-9-5s-9,2.24-9,5v1" />
+<path d="M16,6.37A4,4,0,1,1,12.63,3,4,4,0,0,1,16,6.37Z" />
+</svg>
+<span class='screen-reader-text'> by </span><a href='/authors/hoangmnsd'>hoangmnsd</a></span>
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+7 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+<details class='container entry-toc'>
+  <summary class='title'>
+    <span>Table of Contents</span>
+  </summary>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#giới-thiệu">Giới thiệu</a></li>
+    <li><a href="#yêu-cầu">Yêu cầu</a></li>
+    <li><a href="#cách-làm">Cách làm</a>
+      <ul>
+        <li><a href="#1-setting-gitops-repository">1. Setting GitOps Repository</a></li>
+        <li><a href="#2-tạo-1-app-sample-hello-world-app-để-test">2. Tạo 1 App sample <code>Hello World App</code> để test</a></li>
+        <li><a href="#2-install-flux">2. Install Flux</a></li>
+        <li><a href="#3-test">3. Test</a>
+          <ul>
+            <li><a href="#31-flux-tự-động-scan-gitops-repository-để-update-application">3.1. Flux tự động scan GitOps Repository để update application</a></li>
+            <li><a href="#32-flux-tự-động-scan-registry-để-update-application">3.2. Flux tự động scan Registry để update application</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#credit">CREDIT</a></li>
+  </ul>
+</nav>
+</details>
+
+
+  <div class='container entry-content'>
+  <h1 id="giới-thiệu">Giới thiệu</h1>
+<p>Lần mò về GitOps thì thấy đây là 1 khái niệm rất hay và thú vị<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/flux-cd-overview.jpg" alt=""><br>
+Như các bạn thấy trên hình, Flux hoạt động như 1 operator sẽ đi scan 1 Git repository và 1 (hoặc nhiều) Docker registries.<br>
+Mỗi khi bạn commit 1 file yaml lên Git repository đó, Flux sẽ tự động deploy file đó vào k8s (Đây chính là GitOps). Nếu bạn thay đổi nội dung file yaml đó và commit tiếp, Flux cũng sẽ update resources tương ứng. Hoặc khi bạn push 1 images mới lên Container Registry, Flux cũng scan Registry và sẽ update app của bạn sử dụng images mới.</p>
+<p>Như vậy, việc centralize mọi thứ trong 1 Git repository giúp bạn dễ dàng audit những thay đổi thông qua các commit của Git. Các kubernetes resources cũng dễ dàng đọc hiểu và chỉnh sửa.</p>
+<p>Bài này mình sẽ làm 1 demo về việc sử dụng Weave Flux để setup CD (Continuous Deployment) với Gitlab Server riêng và Private Registry riêng của Google (GCR). Mọi thứ làm trên GCP, GKE (cũng của Google thôi)</p>
+<p>Các câu lệnh ở đây đều làm trên CloudShell của GCP nhé</p>
+<h1 id="yêu-cầu">Yêu cầu</h1>
+<p>Đã làm theo bài sau (<strong>Nếu bạn đã có Gitlab server riêng thì có thể bỏ qua</strong>):<br>
+<a href="../../posts/k8s-x-setup-gitlab-on-gke-cluster/">K8S 10</a></p>
+<p>Sau khi làm theo link trên thì chúng ta có 1 Gitlab server riêng ở domain như sau:<br>
+<a href="https://gitlab.your-subdomain.your-domain.net/">https://gitlab.your-subdomain.your-domain.net/</a><br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-server-my-domain.jpg" alt=""></p>
+<p>Chuẩn bị biến môi trường, những biến này sẽ sử dụng để tạo 1 số file ở các phần sau:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export PROJECT_ID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-project-id&#34;</span>
+
+<span style="color:#75715e"># Ở đây sẽ là subdomain để route traffic của app Hello World vào nhé, </span>
+<span style="color:#75715e"># nếu ko có cái này cũng ko sao, khi test chúng ta sẽ sử dụng chức năng Web Preview của CloudShell cũng được</span>
+export SUBDOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-subdomain.your-domain.net&#34;</span>
+</code></pre></div><h1 id="cách-làm">Cách làm</h1>
+<h2 id="1-setting-gitops-repository">1. Setting GitOps Repository</h2>
+<p>Giờ sẽ setting 1 chút trên Gitlab server của bạn:<br>
+Tạo user <code>flux</code> với role Admin<br>
+Login vào user <code>flux</code> <br>
+Tạo personal access token của user <code>flux</code> (<a href="https://gitlab.your-subdomain.your-domain.net/profile/personal_access_tokens">https://gitlab.your-subdomain.your-domain.net/profile/personal_access_tokens</a>)
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-personal-access-token.jpg" alt=""></p>
+<p>Token có dạng <code>3KzPQxrkoc6amdQKxAhw</code>, <strong>hãy giữ bí mật token này để lát sử dụng sau</strong></p>
+<p>Trên CloudShell tạo biến môi trường lưu token vào:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export PERSONAL_ACCESS_TOKEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;3KzPQxrkoc6amdQKxAhw&#34;</span>
+</code></pre></div><p>Trên Gitlab tạo project để user <code>flux</code> sử dụng làm GitOps repository<br>
+Tên project thì tùy ý: đây mình sẽ đặt <code>flux-get-started</code><br>
+Link project sẽ kiểu kiểu như này <a href="https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started">https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started</a></p>
+<p>Từ CloudShell clone project vừa tạo về:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd ~
+git clone https://gitlab.your-subdomain.your-domain.net/flux/flux-get-started <span style="color:#f92672">&amp;&amp;</span> cd flux-get-started
+</code></pre></div><h2 id="2-tạo-1-app-sample-hello-world-app-để-test">2. Tạo 1 App sample <code>Hello World App</code> để test</h2>
+<p>Viết 1 app đơn giản chạy bằng Go (command sau sẽ tạo ra file <code>main.go</code>)</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./main.go <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">package main
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">import (
+</span><span style="color:#e6db74"> &#34;fmt&#34;
+</span><span style="color:#e6db74"> &#34;log&#34;
+</span><span style="color:#e6db74"> &#34;net/http&#34;
+</span><span style="color:#e6db74">)
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">var version = 1
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">func handler(w http.ResponseWriter, r *http.Request) {
+</span><span style="color:#e6db74"> fmt.Fprintln(w, &#34;Hello 世界... from v %s&#34;, version)
+</span><span style="color:#e6db74">}
+</span><span style="color:#e6db74">func main() {
+</span><span style="color:#e6db74"> http.HandleFunc(&#34;/&#34;, handler)
+</span><span style="color:#e6db74"> log.Fatal(http.ListenAndServe(&#34;:8888&#34;, nil))
+</span><span style="color:#e6db74">}
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>Tạo Dockerfile và build images riêng của bạn</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./Dockerfile <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">FROM golang:1.11-alpine AS build
+</span><span style="color:#e6db74">WORKDIR /
+</span><span style="color:#e6db74">COPY main.go go.* /
+</span><span style="color:#e6db74">RUN CGO_ENABLED=0 go build -o /bin/demo
+</span><span style="color:#e6db74">FROM scratch 
+</span><span style="color:#e6db74">COPY --from=build /bin/demo /bin/demo
+</span><span style="color:#e6db74">ENTRYPOINT [&#34;/bin/demo&#34;] 
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>Build image từ Dockerfile trên</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker image build -t helloapp:latest .
+</code></pre></div><p>Confirm rằng images đã được tạo ra</p>
+<pre><code>docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
+helloapp            latest              c06c85757d4e        About a minute ago   6.51MB
+&lt;none&gt;              &lt;none&gt;              9c7ddef38ecb        About a minute ago   325MB
+golang              1.11-alpine         e116d2efa2ab        9 months ago         312MB
+</code></pre><p>Đánh tag cho images đó</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker tag helloapp:latest gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:latest
+</code></pre></div><p>Push images có tag <code>latest</code> đó lên GCR của bạn</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker push gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:latest
+</code></pre></div><p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gcr-images-private.jpg" alt=""></p>
+<p>file <code>hello-app.yaml</code> bao gồm k8s Service và Deployment resources</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./hello-app.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: v1
+</span><span style="color:#e6db74">kind: Service
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: hello
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  ports:
+</span><span style="color:#e6db74">  - port: 80
+</span><span style="color:#e6db74">    targetPort: 8888
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    app: hello
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">---
+</span><span style="color:#e6db74">apiVersion: apps/v1
+</span><span style="color:#e6db74">kind: Deployment
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: hello
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    matchLabels:
+</span><span style="color:#e6db74">      app: hello
+</span><span style="color:#e6db74">  replicas: 1
+</span><span style="color:#e6db74">  template:
+</span><span style="color:#e6db74">    metadata:
+</span><span style="color:#e6db74">      labels:
+</span><span style="color:#e6db74">        app: hello
+</span><span style="color:#e6db74">    spec:
+</span><span style="color:#e6db74">      containers:
+</span><span style="color:#e6db74">      - name: hello
+</span><span style="color:#e6db74">        image: gcr.io/${PROJECT_ID}/helloapp:latest
+</span><span style="color:#e6db74">        ports:
+</span><span style="color:#e6db74">        - containerPort: 8888
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>file <code>hello-ingress.yaml</code> chứa Ingress giúp route traffic từ 1 subdomain cụ thể vào service của Hello App<br>
+Nếu các bạn ko muốn tạo file này cũng ko sao, khi test app chúng ta sẽ sử dụng chức năng Web Preview của CloudShell</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./hello-ingress.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: extensions/v1beta1
+</span><span style="color:#e6db74">kind: Ingress
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: hello-ingress
+</span><span style="color:#e6db74">  annotations:
+</span><span style="color:#e6db74">    kubernetes.io/ingress.class: &#34;nginx&#34;
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  rules:
+</span><span style="color:#e6db74">  - host: ${SUBDOMAIN}
+</span><span style="color:#e6db74">    http:
+</span><span style="color:#e6db74">      paths:
+</span><span style="color:#e6db74">      - path: /
+</span><span style="color:#e6db74">        backend:
+</span><span style="color:#e6db74">          serviceName: hello
+</span><span style="color:#e6db74">          servicePort: 80
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>Từ CloudShell bạn hãy push 2 file <code>hello-app.yaml</code> và <code>hello-ingress.yaml</code> lên project <code>flux-get-started</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd ~/flux-get-started
+git add hello-app.yaml hello-ingress.yaml
+git commit <span style="color:#e6db74">&#34;Commit yaml files&#34;</span>
+git push origin master
+</code></pre></div><p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/flux-get-started-repo.jpg" alt=""></p>
+<h2 id="2-install-flux">2. Install Flux</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e"># Add the Flux repo:</span>
+helm repo add fluxcd https://charts.fluxcd.io
+<span style="color:#75715e"># Trong Cluster tạo namespace `flux`: </span>
+kubectl create namespace flux
+<span style="color:#75715e"># Tạo Secret trong k8s Cluster bằng personal access token đã tạo ở step 1: </span>
+kubectl create secret generic flux-git-auth --namespace flux --from-literal<span style="color:#f92672">=</span>GIT_AUTHUSER<span style="color:#f92672">=</span>flux --from-literal<span style="color:#f92672">=</span>GIT_AUTHKEY<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>PERSONAL_ACCESS_TOKEN<span style="color:#e6db74">}</span>
+</code></pre></div><p>Install flux, chú ý sửa link đến Gitlab Server của bạn:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm upgrade -i flux fluxcd/flux <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--set git.url<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;https://$(GIT_AUTHUSER):$(GIT_AUTHKEY)@gitlab.your-subdomain.your-domain.net/flux/flux-get-started.git&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--set env.secretName<span style="color:#f92672">=</span>flux-git-auth <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--namespace flux
+</code></pre></div><h2 id="3-test">3. Test</h2>
+<p>Sau khi install flux thành công, bạn sẽ nhận ra là có 1 pod và 1 svc và 1 ingress được tạo ra, đó chính là các resource để trên GitOps repository của bạn</p>
+<pre><code>k get pods,svc -A
+NAMESPACE       NAME                                                    READY   STATUS      RESTARTS   AGE
+default         hello-54d49c4bb5-hm9z6                                  1/1     Running     0          36s
+flux            flux-7b88d998fd-zclth                                   1/1     Running     0          60s
+flux            flux-memcached-64f7865494-xq46b                         1/1     Running     0          60s
+
+NAMESPACE       NAME                                      TYPE           CLUSTER-IP      EXTERNAL-IP    PORT(S)                                   AGE                                 140m
+default         hello                                     ClusterIP      10.68.71.230    &lt;none&gt;         80/TCP                                    79s
+default         kubernetes                                ClusterIP      10.68.0.1       &lt;none&gt;         443/TCP                                   151m
+flux            flux                                      ClusterIP      10.68.188.216   &lt;none&gt;         3030/TCP                                  103s
+flux            flux-memcached                            ClusterIP      10.68.74.32     &lt;none&gt;         11211/TCP                                 103s
+</code></pre><p>Giờ truy cập vào website <code>your-subdomain.your-domain.net</code> sẽ thấy app của bạn đã được apply tự động<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd.jpg" alt=""></p>
+<p>Hoặc cũng có thể bạn dùng chức năng Web Preview của ClouShell để view web app:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl port-forward pod/hello-54d49c4bb5-hm9z6 8888:8888 
+</code></pre></div><p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/using-keel-k8s-v1.jpg" alt=""></p>
+<h3 id="31-flux-tự-động-scan-gitops-repository-để-update-application">3.1. Flux tự động scan GitOps Repository để update application</h3>
+<p>Giờ hãy thử thay đổi file yaml để xem Flux có tự động phản ánh những thay đổi đó vào Kubernetes cho bạn ko</p>
+<p>Trước tiên hãy sửa <code>version = 2</code> trong file <code>main.go</code>, rồi build lại 1 Docker images với tag <code>:0.2.0</code> và push lên GCR</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">nano main.go
+<span style="color:#75715e"># change `version = 2`</span>
+
+<span style="color:#75715e"># Build lại Docker images và đánh tag 0.2.0</span>
+docker image build -t helloapp:0.2.0 .
+
+<span style="color:#75715e"># tag cho images trên GCR là 0.2.0</span>
+docker tag helloapp:0.2.0 gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.0
+
+<span style="color:#75715e"># Push images mới với tag :0.2.0 lên GCR</span>
+docker push gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.0
+</code></pre></div><p>Sau đó bạn sẽ sửa image trong file <code>hello-app.yaml</code> thành dùng image tag <code>:0.2.0</code>:</p>
+<pre><code>OLD
+~~~
+image: gcr.io/YOUR_PROJECT_ID/helloapp:latest
+~~~
+NEW
+~~~
+image: gcr.io/YOUR_PROJECT_ID/helloapp:0.2.0
+~~~
+</code></pre><p>rồi commit và push thay đổi trên lên GitOps repository của bạn:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add hello-app.yaml
+git commit -m <span style="color:#e6db74">&#34;change to using image :0.2.0&#34;</span>
+git push origin master
+</code></pre></div><p>Vài phút sau bạn sẽ thấy 1 pod mới của hello app được tạo lên, pod cũ bị xóa đi</p>
+<pre><code>k get pods -A
+NAMESPACE       NAME                                                    READY   STATUS      RESTARTS   AGE
+default         hello-5856bc89cd-rdrdd                                  1/1     Running     0          37s
+</code></pre><p>Vào check app trên giao diện:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd-tag-2.jpg" alt=""></p>
+<p>⇒ Như vậy nghĩa là Flux đã tự động apply file yaml mới cho chúng ta rồi!</p>
+<h3 id="32-flux-tự-động-scan-registry-để-update-application">3.2. Flux tự động scan Registry để update application</h3>
+<p>Trước hết để làm điều này thì cần phải add annotation vào Deployment đã</p>
+<p>Sửa file <code>hello-app.yaml</code> add thêm dòng sau vào</p>
+<pre><code>  annotations:
+    flux.weave.works/automated: &quot;true&quot;
+    flux.weave.works/tag.chart-image: semver:~0.2
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./hello-app.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">apiVersion: v1
+</span><span style="color:#e6db74">kind: Service
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: hello
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  ports:
+</span><span style="color:#e6db74">  - port: 80
+</span><span style="color:#e6db74">    targetPort: 8888
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    app: hello
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">---
+</span><span style="color:#e6db74">apiVersion: apps/v1
+</span><span style="color:#e6db74">kind: Deployment
+</span><span style="color:#e6db74">metadata:
+</span><span style="color:#e6db74">  name: hello
+</span><span style="color:#e6db74">  annotations:
+</span><span style="color:#e6db74">    flux.weave.works/automated: &#34;true&#34;
+</span><span style="color:#e6db74">    flux.weave.works/tag.chart-image: semver:~0.2
+</span><span style="color:#e6db74">spec:
+</span><span style="color:#e6db74">  selector:
+</span><span style="color:#e6db74">    matchLabels:
+</span><span style="color:#e6db74">      app: hello
+</span><span style="color:#e6db74">  replicas: 1
+</span><span style="color:#e6db74">  template:
+</span><span style="color:#e6db74">    metadata:
+</span><span style="color:#e6db74">      labels:
+</span><span style="color:#e6db74">        app: hello
+</span><span style="color:#e6db74">    spec:
+</span><span style="color:#e6db74">      containers:
+</span><span style="color:#e6db74">      - name: hello
+</span><span style="color:#e6db74">        image: gcr.io/${PROJECT_ID}/helloapp:0.2.0
+</span><span style="color:#e6db74">        ports:
+</span><span style="color:#e6db74">        - containerPort: 8888
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><p>rồi commit và push thay đổi trên lên GitOps repository của bạn:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">git add hello-app.yaml
+git commit -m <span style="color:#e6db74">&#34;add annotation using semver&#34;</span>
+git push origin master
+</code></pre></div><p>Giờ bạn thấy app của bạn chưa có gì thay đổi, vẫn là app version cũ nhé
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd-tag-2.jpg" alt=""></p>
+<p>Giả sử vì 1 lý do gì đó, bạn cần upgrade version của app lên <code>0.2.2</code>,<br>
+sửa <code>version = 2.2</code> trong file <code>main.go</code>, rồi build lại 1 Docker images với tag <code>:0.2.2</code> và push lên GCR</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">nano main.go
+<span style="color:#75715e"># change version to `2.2`</span>
+
+<span style="color:#75715e"># Build lại Docker images và đánh tag 0.2.2</span>
+docker image build -t helloapp:0.2.2 .
+
+<span style="color:#75715e"># tag cho images trên GCR là 0.2.2</span>
+docker tag helloapp:0.2.2 gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.2
+
+<span style="color:#75715e"># Push images mới với tag :0.2.2 lên GCR</span>
+docker push gcr.io/<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>/helloapp:0.2.2
+</code></pre></div><p>Gần như ngay lập tức, bạn sẽ thấy 1 pod mới của Hello App được tạo lên, pod cũ bị xóa đi, webapp cũng thay đổi giao diện tương ứng<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/hello-app-flux-cd-tag-2.2.jpg" alt=""></p>
+<p>Đấy chính là nhờ các annotation trong file <code>hello-app.yaml</code>, nó giúp Flux tự động apply thay đổi.<br>
+Mỗi khi có image mới với tag bắt đầu bằng <code>0.2.*</code> thì app sẽ được update tự động</p>
+<p>Rất thú vị và dễ hiểu phải ko, hãy thử áp dụng Flux xem sao nhé</p>
+<p>Done! 🎉🎉</p>
+<h1 id="credit">CREDIT</h1>
+<p><a href="https://medium.com/@m.k.joerg/gitops-weave-flux-in-detail-77ce36945646">https://medium.com/@m.k.joerg/gitops-weave-flux-in-detail-77ce36945646</a><br>
+<a href="https://docs.fluxcd.io/en/1.19.0/tutorials/get-started-helm/">https://docs.fluxcd.io/en/1.19.0/tutorials/get-started-helm/</a><br>
+<a href="https://github.com/fluxcd/flux/blob/master/chart/flux/values.yaml">https://github.com/fluxcd/flux/blob/master/chart/flux/values.yaml</a><br>
+<a href="https://www.weave.works/blog/managing-helm-releases-the-gitops-way">https://www.weave.works/blog/managing-helm-releases-the-gitops-way</a><br>
+<a href="https://github.com/fluxcd/flux/blob/master/docs/guides/use-private-git-host.md">https://github.com/fluxcd/flux/blob/master/docs/guides/use-private-git-host.md</a><br>
+<a href="https://github.com/fluxcd/flux/issues/1358">https://github.com/fluxcd/flux/issues/1358</a></p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'>
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/bk/k8s-xi-using-keel-on-gke-cluster-for-continuous-deployment/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>K8S 11: Using Keel on GKE Cluster for Continuous Deployment (CD)</a>
+    </div><div class='next-entry sep-before'>
+      <a href='/bk/k8s-xiii-using-gitlab-ci-push-docker-image-to-gcr-on-gke/'>
+        <span class='screen-reader-text'>Next post: </span>K8S 13: Using Gitlab CI on GKE Cluster - Push Docker Image to GCR for Continuous Integration (CI)<span aria-hidden='true'>Next <svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="4" y1="12" x2="20" y2="12" />
+<polyline points="14 6 20 12 14 18" />
+</svg>
+</span>
+      </a>
+    </div></div>
+</nav>
+
+
+
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/hoangmnsd' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='mailto:hoangmnsd@gmail.com' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Contact via Email</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+<polyline points="22,6 12,13 2,6" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2019-2025 hoangmsnd </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+
