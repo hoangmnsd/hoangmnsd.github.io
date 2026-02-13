@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='If you delete the database pod all data is lost. We&#39;ll fix this by using a database that lives externally to our cluster.'>
+<meta name='theme-color' content='#ffcd00'>
+
+<meta property='og:title' content='K8S 6: Using Postgresql Run Outside Cluster (in Another Host Ec2) • hoangmnsd'>
+<meta property='og:description' content='If you delete the database pod all data is lost. We&#39;ll fix this by using a database that lives externally to our cluster.'>
+<meta property='og:url' content='https://hoangmnsd.github.io/posts/k8s-vi-using-postgres-run-outside-cluster-in-another-host-ec2/'>
+<meta property='og:site_name' content='Hoang'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/7a4fb984a45dfe1129362728655c0b75?s=256'><meta property='article:section' content='posts'><meta property='article:tag' content='Postgresql'><meta property='article:tag' content='Kubernetes'><meta property='article:published_time' content='2019-11-21T10:39:03&#43;09:00'/><meta property='article:modified_time' content='2019-11-21T10:39:03&#43;09:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.85.0" />
+
+  <title>K8S 6: Using Postgresql Run Outside Cluster (in Another Host Ec2) • hoangmnsd</title>
+  <link rel='canonical' href='https://hoangmnsd.github.io/posts/k8s-vi-using-postgres-run-outside-cluster-in-another-host-ec2/'>
+  
+  
+  <link rel='icon' href='/favicon.ico'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#ffcd00;}
+</style>
+
+  
+
+</head>
+<body class='page type-posts has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/logo.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Hoang
+      </a>
+    </h2>
+    <div class='desc'>
+    Learn something new everyday 😋
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-sidebar_menu sep-after'><nav id='sidebar-menu' class='menu sidebar-menu' aria-label='Sidebar Menu'>
+    <div class='container'>
+      <ul><li class='item'>
+  <a href='/'>Home</a></li><li class='item'>
+  <a href='/posts/'>Posts</a></li></ul>
+    </div>
+  </nav>
+
+</section><section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/aci/' style='font-size:1.0333333333333334em'>ACI</a>
+      </li><li>
+        <a href='/tags/agent/' style='font-size:1em'>Agent</a>
+      </li><li>
+        <a href='/tags/ai/' style='font-size:1.1333333333333333em'>AI</a>
+      </li><li>
+        <a href='/tags/aisearch/' style='font-size:1em'>AISearch</a>
+      </li><li>
+        <a href='/tags/ajax/' style='font-size:1em'>Ajax</a>
+      </li><li>
+        <a href='/tags/aks/' style='font-size:1.1em'>AKS</a>
+      </li><li>
+        <a href='/tags/alexa/' style='font-size:1em'>Alexa</a>
+      </li><li>
+        <a href='/tags/algorithm/' style='font-size:1em'>Algorithm</a>
+      </li><li>
+        <a href='/tags/ansible/' style='font-size:1.1em'>Ansible</a>
+      </li><li>
+        <a href='/tags/apigateway/' style='font-size:1.0333333333333334em'>APIGateway</a>
+      </li><li>
+        <a href='/tags/apim/' style='font-size:1em'>APIM</a>
+      </li><li>
+        <a href='/tags/argocd/' style='font-size:1em'>Argocd</a>
+      </li><li>
+        <a href='/tags/astronomy/' style='font-size:1em'>Astronomy</a>
+      </li><li>
+        <a href='/tags/aws/' style='font-size:1.6333333333333333em'>AWS</a>
+      </li><li>
+        <a href='/tags/azure/' style='font-size:2em'>Azure</a>
+      </li><li>
+        <a href='/tags/azureappservice/' style='font-size:1em'>AzureAppService</a>
+      </li><li>
+        <a href='/tags/azurebot/' style='font-size:1em'>AzureBot</a>
+      </li><li>
+        <a href='/tags/azurefunction/' style='font-size:1em'>AzureFunction</a>
+      </li><li>
+        <a href='/tags/blog/' style='font-size:1.0666666666666667em'>Blog</a>
+      </li><li>
+        <a href='/tags/bmac/' style='font-size:1em'>BMAC</a>
+      </li><li>
+        <a href='/tags/budget/' style='font-size:1em'>Budget</a>
+      </li><li>
+        <a href='/tags/cassandra/' style='font-size:1em'>Cassandra</a>
+      </li><li>
+        <a href='/tags/certmanager/' style='font-size:1.0333333333333334em'>CertManager</a>
+      </li><li>
+        <a href='/tags/chatgpt/' style='font-size:1em'>ChatGPT</a>
+      </li><li>
+        <a href='/tags/ci/cd/' style='font-size:1.1em'>CI/CD</a>
+      </li><li>
+        <a href='/tags/circleci/' style='font-size:1em'>CircleCI</a>
+      </li><li>
+        <a href='/tags/clickhouse/' style='font-size:1em'>ClickHouse</a>
+      </li><li>
+        <a href='/tags/cloudflare/' style='font-size:1em'>Cloudflare</a>
+      </li><li>
+        <a href='/tags/cnab/' style='font-size:1em'>CNAB</a>
+      </li><li>
+        <a href='/tags/cognito/' style='font-size:1.0333333333333334em'>Cognito</a>
+      </li><li>
+        <a href='/tags/contentsafetystudio/' style='font-size:1em'>ContentSafetyStudio</a>
+      </li><li>
+        <a href='/tags/databricks/' style='font-size:1em'>Databricks</a>
+      </li><li>
+        <a href='/tags/datafactory/' style='font-size:1em'>DataFactory</a>
+      </li><li>
+        <a href='/tags/ddos/' style='font-size:1em'>DDOS</a>
+      </li><li>
+        <a href='/tags/design-pattern/' style='font-size:1em'>Design-Pattern</a>
+      </li><li>
+        <a href='/tags/discord/slack/' style='font-size:1em'>Discord/Slack</a>
+      </li><li>
+        <a href='/tags/dns/' style='font-size:1em'>DNS</a>
+      </li><li>
+        <a href='/tags/docker/' style='font-size:1.2em'>Docker</a>
+      </li><li>
+        <a href='/tags/docker-compose/' style='font-size:1.0666666666666667em'>Docker-compose</a>
+      </li><li>
+        <a href='/tags/efk/' style='font-size:1.0333333333333334em'>EFK</a>
+      </li><li>
+        <a href='/tags/eks/' style='font-size:1em'>EKS</a>
+      </li><li>
+        <a href='/tags/eksctl/' style='font-size:1.0333333333333334em'>eksctl</a>
+      </li><li>
+        <a href='/tags/elasticsearch/' style='font-size:1.0666666666666667em'>ElasticSearch</a>
+      </li><li>
+        <a href='/tags/extension/' style='font-size:1em'>Extension</a>
+      </li><li>
+        <a href='/tags/externaldns/' style='font-size:1em'>ExternalDNS</a>
+      </li><li>
+        <a href='/tags/facebook/' style='font-size:1em'>Facebook</a>
+      </li><li>
+        <a href='/tags/fail2ban/' style='font-size:1em'>Fail2ban</a>
+      </li><li>
+        <a href='/tags/fastapi/' style='font-size:1em'>FastAPI</a>
+      </li><li>
+        <a href='/tags/fluentd/' style='font-size:1.0333333333333334em'>Fluentd</a>
+      </li><li>
+        <a href='/tags/flux/' style='font-size:1em'>Flux</a>
+      </li><li>
+        <a href='/tags/football/' style='font-size:1em'>Football</a>
+      </li><li>
+        <a href='/tags/gatsbyjs/' style='font-size:1.0666666666666667em'>GatsbyJS</a>
+      </li><li>
+        <a href='/tags/gcp/' style='font-size:1.0333333333333334em'>GCP</a>
+      </li><li>
+        <a href='/tags/geography/' style='font-size:1em'>Geography</a>
+      </li><li>
+        <a href='/tags/git/' style='font-size:1.0333333333333334em'>Git</a>
+      </li><li>
+        <a href='/tags/github/' style='font-size:1em'>Github</a>
+      </li><li>
+        <a href='/tags/githubactions/' style='font-size:1em'>GithubActions</a>
+      </li><li>
+        <a href='/tags/gitlab/' style='font-size:1.1333333333333333em'>Gitlab</a>
+      </li><li>
+        <a href='/tags/gke/' style='font-size:1.0666666666666667em'>GKE</a>
+      </li><li>
+        <a href='/tags/google/' style='font-size:1em'>Google</a>
+      </li><li>
+        <a href='/tags/googleappscripts/' style='font-size:1em'>GoogleAppScripts</a>
+      </li><li>
+        <a href='/tags/grafana/' style='font-size:1.1333333333333333em'>Grafana</a>
+      </li><li>
+        <a href='/tags/helm/' style='font-size:1.1em'>Helm</a>
+      </li><li>
+        <a href='/tags/homeassistant/' style='font-size:1.3666666666666667em'>HomeAssistant</a>
+      </li><li>
+        <a href='/tags/hugo/' style='font-size:1em'>Hugo</a>
+      </li><li>
+        <a href='/tags/iam/' style='font-size:1em'>IAM</a>
+      </li><li>
+        <a href='/tags/identitycenter/' style='font-size:1em'>IdentityCenter</a>
+      </li><li>
+        <a href='/tags/influxdb/' style='font-size:1em'>InfluxDB</a>
+      </li><li>
+        <a href='/tags/iot/' style='font-size:1em'>IoT</a>
+      </li><li>
+        <a href='/tags/iptables/' style='font-size:1.0333333333333334em'>Iptables</a>
+      </li><li>
+        <a href='/tags/javascript/' style='font-size:1em'>Javascript</a>
+      </li><li>
+        <a href='/tags/jquery/' style='font-size:1em'>Jquery</a>
+      </li><li>
+        <a href='/tags/kafka/' style='font-size:1em'>Kafka</a>
+      </li><li>
+        <a href='/tags/keel/' style='font-size:1em'>Keel</a>
+      </li><li>
+        <a href='/tags/keycloak/' style='font-size:1em'>Keycloak</a>
+      </li><li>
+        <a href='/tags/kibana/' style='font-size:1.0333333333333334em'>Kibana</a>
+      </li><li>
+        <a href='/tags/kubectl/' style='font-size:1em'>kubectl</a>
+      </li><li>
+        <a href='/tags/kubernetes/' style='font-size:1.6666666666666665em'>Kubernetes</a>
+      </li><li>
+        <a href='/tags/lambda/' style='font-size:1.1333333333333333em'>Lambda</a>
+      </li><li>
+        <a href='/tags/langfuse/' style='font-size:1em'>Langfuse</a>
+      </li><li>
+        <a href='/tags/languagestudio/' style='font-size:1em'>LanguageStudio</a>
+      </li><li>
+        <a href='/tags/letsecrypt/' style='font-size:1em'>Letsecrypt</a>
+      </li><li>
+        <a href='/tags/letsencrypt/' style='font-size:1.0333333333333334em'>Letsencrypt</a>
+      </li><li>
+        <a href='/tags/llm/' style='font-size:1.0666666666666667em'>LLM</a>
+      </li><li>
+        <a href='/tags/locust/' style='font-size:1em'>Locust</a>
+      </li><li>
+        <a href='/tags/loganalytics/' style='font-size:1em'>LogAnalytics</a>
+      </li><li>
+        <a href='/tags/logging/' style='font-size:1em'>Logging</a>
+      </li><li>
+        <a href='/tags/logicapps/' style='font-size:1em'>LogicApps</a>
+      </li><li>
+        <a href='/tags/loki/' style='font-size:1.0666666666666667em'>Loki</a>
+      </li><li>
+        <a href='/tags/machinelearning/' style='font-size:1.0666666666666667em'>MachineLearning</a>
+      </li><li>
+        <a href='/tags/mcp/' style='font-size:1.0333333333333334em'>MCP</a>
+      </li><li>
+        <a href='/tags/microsoft/' style='font-size:1.0333333333333334em'>Microsoft</a>
+      </li><li>
+        <a href='/tags/namecheap/' style='font-size:1em'>Namecheap</a>
+      </li><li>
+        <a href='/tags/nextcloud/' style='font-size:1em'>NextCloud</a>
+      </li><li>
+        <a href='/tags/nginx/' style='font-size:1.1em'>Nginx</a>
+      </li><li>
+        <a href='/tags/oauth2proxy/' style='font-size:1em'>Oauth2Proxy</a>
+      </li><li>
+        <a href='/tags/openai/' style='font-size:1.0333333333333334em'>OpenAI</a>
+      </li><li>
+        <a href='/tags/openldap/' style='font-size:1em'>OpenLDAP</a>
+      </li><li>
+        <a href='/tags/openssl/' style='font-size:1em'>OpenSSL</a>
+      </li><li>
+        <a href='/tags/opentelemetry/' style='font-size:1em'>OpenTelemetry</a>
+      </li><li>
+        <a href='/tags/openwebui/' style='font-size:1em'>OpenwebUI</a>
+      </li><li>
+        <a href='/tags/oraclecloud/' style='font-size:1.0333333333333334em'>OracleCloud</a>
+      </li><li>
+        <a href='/tags/packer/' style='font-size:1em'>Packer</a>
+      </li><li>
+        <a href='/tags/postgresql/' style='font-size:1.0333333333333334em'>Postgresql</a>
+      </li><li>
+        <a href='/tags/prometheus/' style='font-size:1.0333333333333334em'>Prometheus</a>
+      </li><li>
+        <a href='/tags/promtail/' style='font-size:1.0333333333333334em'>Promtail</a>
+      </li><li>
+        <a href='/tags/proxy/' style='font-size:1em'>Proxy</a>
+      </li><li>
+        <a href='/tags/python/' style='font-size:1.2333333333333334em'>Python</a>
+      </li><li>
+        <a href='/tags/qualys/' style='font-size:1em'>Qualys</a>
+      </li><li>
+        <a href='/tags/rabbitmq/' style='font-size:1em'>RabbitMQ</a>
+      </li><li>
+        <a href='/tags/rag/' style='font-size:1.0333333333333334em'>RAG</a>
+      </li><li>
+        <a href='/tags/raspberrypi/' style='font-size:1.1333333333333333em'>RaspberryPi</a>
+      </li><li>
+        <a href='/tags/reactjs/' style='font-size:1em'>ReactJS</a>
+      </li><li>
+        <a href='/tags/redis/' style='font-size:1em'>Redis</a>
+      </li><li>
+        <a href='/tags/remotion/' style='font-size:1em'>Remotion</a>
+      </li><li>
+        <a href='/tags/sagemaker/' style='font-size:1em'>SageMaker</a>
+      </li><li>
+        <a href='/tags/sam/' style='font-size:1em'>SAM</a>
+      </li><li>
+        <a href='/tags/selenium/' style='font-size:1em'>Selenium</a>
+      </li><li>
+        <a href='/tags/serverless/' style='font-size:1.0666666666666667em'>Serverless</a>
+      </li><li>
+        <a href='/tags/sonarqube/' style='font-size:1em'>Sonarqube</a>
+      </li><li>
+        <a href='/tags/speechservice/' style='font-size:1em'>SpeechService</a>
+      </li><li>
+        <a href='/tags/ssh-tunnel/' style='font-size:1em'>SSH-Tunnel</a>
+      </li><li>
+        <a href='/tags/ssl/' style='font-size:1em'>SSL</a>
+      </li><li>
+        <a href='/tags/sso/' style='font-size:1em'>SSO</a>
+      </li><li>
+        <a href='/tags/stable-diffusion/' style='font-size:1.0333333333333334em'>Stable-Diffusion</a>
+      </li><li>
+        <a href='/tags/streamlit/' style='font-size:1em'>Streamlit</a>
+      </li><li>
+        <a href='/tags/swag/' style='font-size:1.0333333333333334em'>Swag</a>
+      </li><li>
+        <a href='/tags/synapse/' style='font-size:1.0333333333333334em'>Synapse</a>
+      </li><li>
+        <a href='/tags/telegram/' style='font-size:1.0333333333333334em'>Telegram</a>
+      </li><li>
+        <a href='/tags/tempo/' style='font-size:1em'>Tempo</a>
+      </li><li>
+        <a href='/tags/test/' style='font-size:1em'>Test</a>
+      </li><li>
+        <a href='/tags/timecomplexity/' style='font-size:1em'>TimeComplexity</a>
+      </li><li>
+        <a href='/tags/tracing/' style='font-size:1em'>Tracing</a>
+      </li><li>
+        <a href='/tags/traefik/' style='font-size:1em'>Traefik</a>
+      </li><li>
+        <a href='/tags/tunnel/' style='font-size:1em'>Tunnel</a>
+      </li><li>
+        <a href='/tags/ubuntu/' style='font-size:1.1em'>Ubuntu</a>
+      </li><li>
+        <a href='/tags/virtualbox/' style='font-size:1em'>VirtualBox</a>
+      </li><li>
+        <a href='/tags/vnet/' style='font-size:1em'>Vnet</a>
+      </li><li>
+        <a href='/tags/vouchproxy/' style='font-size:1em'>VouchProxy</a>
+      </li><li>
+        <a href='/tags/vpc/' style='font-size:1em'>VPC</a>
+      </li><li>
+        <a href='/tags/windows/' style='font-size:1.0666666666666667em'>Windows</a>
+      </li><li>
+        <a href='/tags/wsl/' style='font-size:1em'>WSL</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='/posts/'>Posts</a>
+      </li><li class='item'>
+        <a href='/about/'>About</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/posts/'>Posts</a></li><li><span>K8S 6: Using Postgresql Run Outside Cluster (in Another Host Ec2)</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Hoang</p><p class='desc site-desc'>Learn something new everyday 😋</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>K8S 6: Using Postgresql Run Outside Cluster (in Another Host Ec2)</h1>
+      
+<p class='desc'>If you delete the database pod all data is lost. We&#39;ll fix this by using a database that lives externally to our cluster.</p>
+
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2019-11-21T10:39:03&#43;09:00'>2019, Nov 21</time>
+</span>
+
+  <span class='byline'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M21,21V20c0-2.76-4-5-9-5s-9,2.24-9,5v1" />
+<path d="M16,6.37A4,4,0,1,1,12.63,3,4,4,0,0,1,16,6.37Z" />
+</svg>
+<span class='screen-reader-text'> by </span><a href='/authors/hoangmnsd'>hoangmnsd</a></span>
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+5 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+<details class='container entry-toc'>
+  <summary class='title'>
+    <span>Table of Contents</span>
+  </summary>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#yêu-cầu">Yêu cầu</a>
+      <ul>
+        <li><a href="#tạo-cluster">Tạo cluster</a></li>
+        <li><a href="#clone-project">Clone project</a></li>
+      </ul>
+    </li>
+    <li><a href="#cách-làm">Cách làm</a>
+      <ul>
+        <li><a href="#khái-quát">Khái quát</a></li>
+        <li><a href="#cụ-thể">Cụ thể</a></li>
+      </ul>
+    </li>
+    <li><a href="#credit">CREDIT</a></li>
+  </ul>
+</nav>
+</details>
+
+
+  <div class='container entry-content'>
+  <blockquote>
+<p>If you delete the database pod all data is lost. We&rsquo;ll fix this by using a database that lives externally to our cluster.</p>
+</blockquote>
+<h1 id="yêu-cầu">Yêu cầu</h1>
+<p>Workplace: Amazon EC2 Linux</p>
+<p>Đã tạo môi trường, cluster của riêng bạn, có thể dùng <code>eksctl</code> tạo từ file <code>cluster.yaml</code> sau</p>
+<pre><code>apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: base-project
+  region: us-east-1
+
+availabilityZones: [&quot;us-east-1a&quot;, &quot;us-east-1d&quot;]
+
+nodeGroups:
+  - name: nodegrp-1
+    instanceType: t2.medium
+    desiredCapacity: 1
+    ssh: # import public key from file
+      publicKeyPath: /home/ec2-user/.ssh/id_rsa.pub
+</code></pre><p><strong>Chú ý</strong>:<br>
+Sử dụng <code>ssh-keygen</code> để generate ra bộ key (id_rsa.pub, id_rsa) dùng để SSH vào Node</p>
+<h2 id="tạo-cluster">Tạo cluster</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">eksctl create cluster -f cluster.yaml
+</code></pre></div><h2 id="clone-project">Clone project</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd ~
+git clone https://github.com/hoangmnsd/kubernetes-series
+cd kubernetes-series
+ll
+</code></pre></div><p>Bài này sẽ dựa trên 2 folder <code>spring-maven-postgres-docker-k8s-helm</code> và <code>spring-maven-postgres-docker-k8s</code></p>
+<p>Cuối cùng sẽ lưu lại sản phẩm trong folder <code>spring-maven-postgres-docker-k8s-helm-externaldb</code></p>
+<h1 id="cách-làm">Cách làm</h1>
+<h2 id="khái-quát">Khái quát</h2>
+<blockquote>
+<p>trước tiên mục tiêu mình sẽ để PostgreSQL DB chạy trên con workplace EC2 bằng docker. Rồi trên cluster sẽ chỉ chạy app Spring boot thôi, và app đó sẽ chọc vào PostgreSQL DB mình đã tạo</p>
+</blockquote>
+<h2 id="cụ-thể">Cụ thể</h2>
+<p>Chuẩn bị biến môi trường</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export AWS_DEFAULT_REGION<span style="color:#f92672">=</span>us-east-1
+export DOCKER_USERNAME<span style="color:#f92672">=</span>AAAAAA
+export DOCKER_PASSWORD<span style="color:#f92672">=</span>BBBBBB
+export DOCKER_USER_ID<span style="color:#f92672">=</span>CCCCCC
+docker login -u<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$DOCKER_USERNAME<span style="color:#e6db74">&#34;</span> -p<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$DOCKER_PASSWORD<span style="color:#e6db74">&#34;</span>
+</code></pre></div><p>Giờ sẽ chạy con postgreSQL DB<br>
+Trong trường hợp chưa có image thì cần build docker image trước:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd spring-maven-postgres-docker-k8s/docker/postgres
+docker build -f Dockerfile -t $DOCKER_USERNAME/docker_postgres .
+</code></pre></div><p>Vì cái image Postgres cần truyền vào các biến môi trường env nên mình chạy lệnh sau:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker run --env POSTGRES_USER<span style="color:#f92672">=</span>dbuser --env POSTGRES_PASSWORD<span style="color:#f92672">=</span>password --env POSTGRES_DB<span style="color:#f92672">=</span>store  -d -p 5432:5432 hoangmnsd/docker_postgres
+</code></pre></div><p>Sau khi chạy xong muốn check việc tạo db đã ok chưa thì ssh vào container đó</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker ps
+docker exec -it &lt;CONTAINER_NAME&gt; bash
+su postgres
+psql -p <span style="color:#ae81ff">5432</span> store -U dbuser
+<span style="color:#75715e"># show all database</span>
+<span style="color:#ae81ff">\l</span>ist
+<span style="color:#75715e"># show all table</span>
+<span style="color:#ae81ff">\d</span>
+</code></pre></div><p>Nếu thấy database &ldquo;store&rdquo; và table &ldquo;product&rdquo; có nghĩa là đã run db thành công</p>
+<pre><code>root@7b00518cc6c3:/# su postgres
+postgres@7b00518cc6c3:/$ psql -p 5432 store -U dbuser
+psql (12.0 (Debian 12.0-2.pgdg100+1))
+Type &quot;help&quot; for help.
+
+store=# \l
+                              List of databases
+   Name    | Owner  | Encoding |  Collate   |   Ctype    | Access privileges
+-----------+--------+----------+------------+------------+-------------------
+ postgres  | dbuser | UTF8     | en_US.utf8 | en_US.utf8 |
+ store     | dbuser | UTF8     | en_US.utf8 | en_US.utf8 | =Tc/dbuser       +
+           |        |          |            |            | dbuser=CTc/dbuser
+ template0 | dbuser | UTF8     | en_US.utf8 | en_US.utf8 | =c/dbuser        +
+           |        |          |            |            | dbuser=CTc/dbuser
+ template1 | dbuser | UTF8     | en_US.utf8 | en_US.utf8 | =c/dbuser        +
+           |        |          |            |            | dbuser=CTc/dbuser
+(4 rows)
+
+store=# \d
+                List of relations
+ Schema |        Name        |   Type   | Owner
+--------+--------------------+----------+--------
+ public | hibernate_sequence | sequence | dbuser
+ public | product            | table    | dbuser
+(2 rows)
+</code></pre><p>Giờ nên test connection giữa Node và Host (Workplace EC2) xem đã connect dc tới DB hay chưa</p>
+<p>SSH vào Node</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">ssh -i ~/.ssh/id_rsa ec2-user@&lt;EC2-NODE-PUBLIC-IP&gt;
+</code></pre></div><p>Bởi vì Node là Amazon linux 2, nên cần install psql client bằng command sau:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">sudo amazon-linux-extras install postgresql10 -y
+</code></pre></div><p>Sau đó dùng <code>psql</code> để connect vào DB đang chạy trên Workplace xem được ko</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e"># psql -h &lt;EC2-PUBLIC-IP&gt; -p 5432 &lt;DB_NAME&gt;  &lt;DB_USER&gt;</span>
+psql -h 34.238.123.20 -p <span style="color:#ae81ff">5432</span> store dbuser
+</code></pre></div><p>nhập password la` &ldquo;password&rdquo; (cái này mình define trong biến môi trường khi truyền vào và run docker image postgres)</p>
+<p>Nếu connect thành công thử list db và list table xem</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#ae81ff">\l</span>ist
+<span style="color:#ae81ff">\d</span>
+</code></pre></div><p>Nếu thấy database &ldquo;store&rdquo; và table &ldquo;product&rdquo; có nghĩa là đã connect db thành công</p>
+<p>Nếu ko thấy nghĩa là connect ko thành công thì nên check Security Group xem Workplace đã mở port 5432 cho con Node connect vào chưa</p>
+<p><img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/run-postgres-outside-cluster.jpg" alt=""></p>
+<p>Giờ cần sửa project Spring và Helm chart để khi deploy lên cluster nó có thể connect vào DB đang ở 1 máy EC2 khác (chính là máy workplace của mình)</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">nano spring-maven-postgres-docker-k8s/src/main/resources/application.yml
+</code></pre></div><p>sửa URL của PostgreSQL DB như sau:</p>
+<pre><code>#below is config for Docker compose
+#ENV_DATASOURCE_URL: jdbc:postgresql://postgres/store
+#below is config for postgresql in local windows
+#ENV_DATASOURCE_URL: jdbc:postgresql://localhost:5432/store
+#below is config for k8s, using service_name:5432 to connect db
+#ENV_DATASOURCE_URL: jdbc:postgresql://docker-postgres:5432/store
+#below is config for k8s, using a external db running in another machine
+ENV_DATASOURCE_URL: jdbc:postgresql://34.238.123.20:5432/store #đây là EC2-PUBLIC-IP của con máy mà mình đang run Postgres DB
+</code></pre><p>sau đó build là file jar và đóng docker image mới</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd spring-maven-postgres-docker-k8s
+mvn clean package
+docker build -f Dockerfile -t $DOCKER_USERNAME/docker_spring-boot-containers .
+</code></pre></div><p>cần push lên Docker Hub để sau này helm chart pull về</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">docker push $DOCKER_USERNAME/docker_spring-boot-containers
+</code></pre></div><p>Tiếp là sửa helm chart, đầu tiên sửa file Service của Postgres</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">nano spring-maven-postgres-docker-k8s-helm/templates/docker_postgres-service-external.yaml
+</code></pre></div><pre><code>apiVersion: v1
+kind: Service
+metadata:
+  name: docker-postgres
+  labels:
+    app: docker-postgres
+spec:
+  type: ExternalName
+  externalName: {{ .Values.postgresService.externalName }}
+  selector:
+    app: docker-postgres
+</code></pre><p>bởi vì ko tạo pod cho Postgresql mà sẽ dùng bên ngoài nên cần xóa file <code>docker_postgres-deployment.yaml</code>, bạn sẽ thấy file đó ko còn trong folder <code>spring-maven-postgres-docker-k8s-helm-externaldb</code> nữa</p>
+<p>cần sửa file <code>values.yaml</code> nữa</p>
+<pre><code>postgresService:
+  type: ClusterIP
+  port: 5432
+  targetPort: 5432
+  externalName: 34.238.123.20 #đây là IP của con máy mà mình đang run Postgres DB
+</code></pre><p>vậy là chuẩn bị xong giờ có thể install helm chart</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cd spring-maven-postgres-docker-k8s-helm
+helm install -n spring-postgres .
+</code></pre></div><pre><code>$ kubectl get pods,svc -A
+NAMESPACE     NAME                                                 READY   STATUS    RESTARTS   AGE
+default       pod/docker-spring-boot-containers-54566ddbc8-8dpkf   1/1     Running   0          39s
+kube-system   pod/aws-node-jpx87                                   1/1     Running   0          27m
+kube-system   pod/coredns-8455f84f99-7wzm8                         1/1     Running   0          32m
+kube-system   pod/coredns-8455f84f99-dpxld                         1/1     Running   0          32m
+kube-system   pod/kube-proxy-r9tsx                                 1/1     Running   0          27m
+kube-system   pod/tiller-deploy-586965d498-58gn9                   1/1     Running   0          50s
+
+NAMESPACE     NAME                                    TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)           AGE
+default       service/docker-postgres                 ExternalName   &lt;none&gt;          34.238.123.20   &lt;none&gt;            39s
+default       service/docker-spring-boot-containers   NodePort       10.100.248.57   &lt;none&gt;          12345:32594/TCP   39s
+default       service/kubernetes                      ClusterIP      10.100.0.1      &lt;none&gt;          443/TCP           32m
+kube-system   service/kube-dns                        ClusterIP      10.100.0.10     &lt;none&gt;          53/UDP,53/TCP     32m
+kube-system   service/tiller-deploy                   ClusterIP      10.100.5.254    &lt;none&gt;          44134/TCP         50s
+</code></pre><p>Check logs của pod nếu ko có lỗi kết nối DB là thành công</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl logs pod/docker-spring-boot-containers-54566ddbc8-8dpkf
+</code></pre></div><p>vì ở trên Spring pod đang dùng kiểu NodePort nên cần forward port để mọi nơi có thể dùng:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl port-forward -n default service/docker-spring-boot-containers 32594:12345 --address 0.0.0.0
+</code></pre></div><p>Sau đó có thể insert DB bằng cách dùng POSTMAN send POST request đến <code>http://&lt;EC2-PUBLIC-IP&gt;:32594/v1/product</code> với body:</p>
+<pre><code>{&quot;name&quot;:&quot;product001&quot;}
+</code></pre><p>Bây giờ khi xóa cluster tạo lại thì DB vẫn còn đó, bởi vì nó đc giữ ở 1 con EC2 khác</p>
+<p>Tuy nhiên trên workplace nếu mình stop docker thì DB sẽ mất, nên cần mount volume dể lưu DB ra bên ngoài docker</p>
+<p>việc này thuộc về kĩ thuật dùng docker</p>
+<p>tất cả những thay đổi vừa xong được lưu trong folder <code>spring-maven-postgres-docker-k8s-helm-externaldb</code></p>
+<p><a href="https://github.com/hoangmnsd/kubernetes-series/tree/master/spring-maven-postgres-docker-k8s-helm-externaldb">https://github.com/hoangmnsd/kubernetes-series/tree/master/spring-maven-postgres-docker-k8s-helm-externaldb</a></p>
+<h1 id="credit">CREDIT</h1>
+<p><a href="https://github.com/red-gate/ks/blob/master/ks8-2/ks8-2.md">https://github.com/red-gate/ks/blob/master/ks8-2/ks8-2.md</a>
+<a href="https://stackoverflow.com/questions/49573258/installing-postgresql-client-v10-on-aws-amazon-linux-ec2-ami">https://stackoverflow.com/questions/49573258/installing-postgresql-client-v10-on-aws-amazon-linux-ec2-ami</a>
+<a href="https://stackoverflow.com/questions/37694987/connecting-to-postgresql-in-a-docker-container-from-outside">https://stackoverflow.com/questions/37694987/connecting-to-postgresql-in-a-docker-container-from-outside</a>
+<a href="https://severalnines.com/database-blog/using-kubernetes-deploy-postgresql">https://severalnines.com/database-blog/using-kubernetes-deploy-postgresql</a>
+<a href="https://stackoverflow.com/questions/26040493/how-to-show-data-in-a-table-by-using-psql-command-line-interface">https://stackoverflow.com/questions/26040493/how-to-show-data-in-a-table-by-using-psql-command-line-interface</a></p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='categories'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M22,19a2,2,0,0,1-2,2H4a2,2,0,0,1-2-2V5A2,2,0,0,1,4,3H9l2,3h9a2,2,0,0,1,2,2Z" />
+</svg>
+<span class='screen-reader-text'>Categories: </span><a class='category' href='/categories/tech-tutorials/'>Tech-Tutorials</a></div>
+<div class='tags'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z" />
+<line x1="7" y1="7" x2="7" y2="7" />
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/postgresql/'>Postgresql</a>, <a class='tag' href='/tags/kubernetes/'>Kubernetes</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/posts/k8s-v-using-helm-chart-w-kubectl/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>K8S 5: Using Helm Chart With Kubectl</a>
+    </div><div class='next-entry sep-before'>
+      <a href='/posts/k8s-vii-setup-efk-stack-on-eks-gcp/'>
+        <span class='screen-reader-text'>Next post: </span>K8S 7: Setup EFK Stack on EKS/GCP cluster (ElasticSearch, Fluentd, Kibana)<span aria-hidden='true'>Next <svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="4" y1="12" x2="20" y2="12" />
+<polyline points="14 6 20 12 14 18" />
+</svg>
+</span>
+      </a>
+    </div></div>
+</nav>
+
+
+
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/hoangmnsd' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='mailto:hoangmnsd@gmail.com' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Contact via Email</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+<polyline points="22,6 12,13 2,6" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2019-2026 hoangmsnd </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+
