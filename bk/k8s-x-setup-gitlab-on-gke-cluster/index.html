@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Tạo Gitlab với yêu cầu là: disable MinIO, dùng GCS. Disable cert-manager, dùng cert-manager mình tự tạo riêng. Các config về resource của gitlab ở mức minimal. Gitlab sẽ vào qua link `gitlab.your-subdomain.your-domain.net` và có HTTPS'>
+<meta name='theme-color' content='#ffcd00'>
+
+<meta property='og:title' content='K8S 10: Setup Gitlab Self Hosted on GKE Cluster • hoangmnsd'>
+<meta property='og:description' content='Tạo Gitlab với yêu cầu là: disable MinIO, dùng GCS. Disable cert-manager, dùng cert-manager mình tự tạo riêng. Các config về resource của gitlab ở mức minimal. Gitlab sẽ vào qua link `gitlab.your-subdomain.your-domain.net` và có HTTPS'>
+<meta property='og:url' content='https://hoangmnsd.github.io/bk/k8s-x-setup-gitlab-on-gke-cluster/'>
+<meta property='og:site_name' content='Hoang'>
+<meta property='og:type' content='article'><meta property='og:image' content='https://www.gravatar.com/avatar/7a4fb984a45dfe1129362728655c0b75?s=256'><meta property='article:section' content='bk'><meta property='article:published_time' content='2020-02-20T12:28:58&#43;09:00'/><meta property='article:modified_time' content='2020-02-20T12:28:58&#43;09:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.85.0" />
+
+  <title>K8S 10: Setup Gitlab Self Hosted on GKE Cluster • hoangmnsd</title>
+  <link rel='canonical' href='https://hoangmnsd.github.io/bk/k8s-x-setup-gitlab-on-gke-cluster/'>
+  
+  
+  <link rel='icon' href='/favicon.ico'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#ffcd00;}
+</style>
+
+  
+
+</head>
+<body class='page type-bk has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/logo.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Hoang
+      </a>
+    </h2>
+    <div class='desc'>
+    Learn something new everyday 😋
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-sidebar_menu sep-after'><nav id='sidebar-menu' class='menu sidebar-menu' aria-label='Sidebar Menu'>
+    <div class='container'>
+      <ul><li class='item'>
+  <a href='/'>Home</a></li><li class='item'>
+  <a href='/posts/'>Posts</a></li></ul>
+    </div>
+  </nav>
+
+</section><section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/aci/' style='font-size:1.0333333333333334em'>ACI</a>
+      </li><li>
+        <a href='/tags/agent/' style='font-size:1em'>Agent</a>
+      </li><li>
+        <a href='/tags/ai/' style='font-size:1.1333333333333333em'>AI</a>
+      </li><li>
+        <a href='/tags/aisearch/' style='font-size:1em'>AISearch</a>
+      </li><li>
+        <a href='/tags/ajax/' style='font-size:1em'>Ajax</a>
+      </li><li>
+        <a href='/tags/aks/' style='font-size:1.1em'>AKS</a>
+      </li><li>
+        <a href='/tags/alexa/' style='font-size:1em'>Alexa</a>
+      </li><li>
+        <a href='/tags/algorithm/' style='font-size:1em'>Algorithm</a>
+      </li><li>
+        <a href='/tags/ansible/' style='font-size:1.1em'>Ansible</a>
+      </li><li>
+        <a href='/tags/apigateway/' style='font-size:1.0333333333333334em'>APIGateway</a>
+      </li><li>
+        <a href='/tags/apim/' style='font-size:1em'>APIM</a>
+      </li><li>
+        <a href='/tags/argocd/' style='font-size:1em'>Argocd</a>
+      </li><li>
+        <a href='/tags/astronomy/' style='font-size:1em'>Astronomy</a>
+      </li><li>
+        <a href='/tags/aws/' style='font-size:1.6333333333333333em'>AWS</a>
+      </li><li>
+        <a href='/tags/azure/' style='font-size:2em'>Azure</a>
+      </li><li>
+        <a href='/tags/azureappservice/' style='font-size:1em'>AzureAppService</a>
+      </li><li>
+        <a href='/tags/azurebot/' style='font-size:1em'>AzureBot</a>
+      </li><li>
+        <a href='/tags/azurefunction/' style='font-size:1em'>AzureFunction</a>
+      </li><li>
+        <a href='/tags/blog/' style='font-size:1.0666666666666667em'>Blog</a>
+      </li><li>
+        <a href='/tags/bmac/' style='font-size:1em'>BMAC</a>
+      </li><li>
+        <a href='/tags/budget/' style='font-size:1em'>Budget</a>
+      </li><li>
+        <a href='/tags/cassandra/' style='font-size:1em'>Cassandra</a>
+      </li><li>
+        <a href='/tags/certmanager/' style='font-size:1.0333333333333334em'>CertManager</a>
+      </li><li>
+        <a href='/tags/chatgpt/' style='font-size:1em'>ChatGPT</a>
+      </li><li>
+        <a href='/tags/ci/cd/' style='font-size:1.1em'>CI/CD</a>
+      </li><li>
+        <a href='/tags/circleci/' style='font-size:1em'>CircleCI</a>
+      </li><li>
+        <a href='/tags/clickhouse/' style='font-size:1em'>ClickHouse</a>
+      </li><li>
+        <a href='/tags/cloudflare/' style='font-size:1em'>Cloudflare</a>
+      </li><li>
+        <a href='/tags/cnab/' style='font-size:1em'>CNAB</a>
+      </li><li>
+        <a href='/tags/cognito/' style='font-size:1.0333333333333334em'>Cognito</a>
+      </li><li>
+        <a href='/tags/contentsafetystudio/' style='font-size:1em'>ContentSafetyStudio</a>
+      </li><li>
+        <a href='/tags/databricks/' style='font-size:1em'>Databricks</a>
+      </li><li>
+        <a href='/tags/datafactory/' style='font-size:1em'>DataFactory</a>
+      </li><li>
+        <a href='/tags/ddos/' style='font-size:1em'>DDOS</a>
+      </li><li>
+        <a href='/tags/design-pattern/' style='font-size:1em'>Design-Pattern</a>
+      </li><li>
+        <a href='/tags/discord/slack/' style='font-size:1em'>Discord/Slack</a>
+      </li><li>
+        <a href='/tags/dns/' style='font-size:1em'>DNS</a>
+      </li><li>
+        <a href='/tags/docker/' style='font-size:1.2em'>Docker</a>
+      </li><li>
+        <a href='/tags/docker-compose/' style='font-size:1.0666666666666667em'>Docker-compose</a>
+      </li><li>
+        <a href='/tags/efk/' style='font-size:1.0333333333333334em'>EFK</a>
+      </li><li>
+        <a href='/tags/eks/' style='font-size:1em'>EKS</a>
+      </li><li>
+        <a href='/tags/eksctl/' style='font-size:1.0333333333333334em'>eksctl</a>
+      </li><li>
+        <a href='/tags/elasticsearch/' style='font-size:1.0666666666666667em'>ElasticSearch</a>
+      </li><li>
+        <a href='/tags/extension/' style='font-size:1em'>Extension</a>
+      </li><li>
+        <a href='/tags/externaldns/' style='font-size:1em'>ExternalDNS</a>
+      </li><li>
+        <a href='/tags/facebook/' style='font-size:1em'>Facebook</a>
+      </li><li>
+        <a href='/tags/fail2ban/' style='font-size:1em'>Fail2ban</a>
+      </li><li>
+        <a href='/tags/fastapi/' style='font-size:1em'>FastAPI</a>
+      </li><li>
+        <a href='/tags/fluentd/' style='font-size:1.0333333333333334em'>Fluentd</a>
+      </li><li>
+        <a href='/tags/flux/' style='font-size:1em'>Flux</a>
+      </li><li>
+        <a href='/tags/football/' style='font-size:1em'>Football</a>
+      </li><li>
+        <a href='/tags/gatsbyjs/' style='font-size:1.0666666666666667em'>GatsbyJS</a>
+      </li><li>
+        <a href='/tags/gcp/' style='font-size:1.0333333333333334em'>GCP</a>
+      </li><li>
+        <a href='/tags/geography/' style='font-size:1em'>Geography</a>
+      </li><li>
+        <a href='/tags/git/' style='font-size:1.0333333333333334em'>Git</a>
+      </li><li>
+        <a href='/tags/github/' style='font-size:1em'>Github</a>
+      </li><li>
+        <a href='/tags/githubactions/' style='font-size:1em'>GithubActions</a>
+      </li><li>
+        <a href='/tags/gitlab/' style='font-size:1.1333333333333333em'>Gitlab</a>
+      </li><li>
+        <a href='/tags/gke/' style='font-size:1.0666666666666667em'>GKE</a>
+      </li><li>
+        <a href='/tags/google/' style='font-size:1em'>Google</a>
+      </li><li>
+        <a href='/tags/googleappscripts/' style='font-size:1em'>GoogleAppScripts</a>
+      </li><li>
+        <a href='/tags/grafana/' style='font-size:1.1333333333333333em'>Grafana</a>
+      </li><li>
+        <a href='/tags/helm/' style='font-size:1.1em'>Helm</a>
+      </li><li>
+        <a href='/tags/homeassistant/' style='font-size:1.3666666666666667em'>HomeAssistant</a>
+      </li><li>
+        <a href='/tags/hugo/' style='font-size:1em'>Hugo</a>
+      </li><li>
+        <a href='/tags/iam/' style='font-size:1em'>IAM</a>
+      </li><li>
+        <a href='/tags/identitycenter/' style='font-size:1em'>IdentityCenter</a>
+      </li><li>
+        <a href='/tags/influxdb/' style='font-size:1em'>InfluxDB</a>
+      </li><li>
+        <a href='/tags/iot/' style='font-size:1em'>IoT</a>
+      </li><li>
+        <a href='/tags/iptables/' style='font-size:1.0333333333333334em'>Iptables</a>
+      </li><li>
+        <a href='/tags/javascript/' style='font-size:1em'>Javascript</a>
+      </li><li>
+        <a href='/tags/jquery/' style='font-size:1em'>Jquery</a>
+      </li><li>
+        <a href='/tags/kafka/' style='font-size:1em'>Kafka</a>
+      </li><li>
+        <a href='/tags/keel/' style='font-size:1em'>Keel</a>
+      </li><li>
+        <a href='/tags/keycloak/' style='font-size:1em'>Keycloak</a>
+      </li><li>
+        <a href='/tags/kibana/' style='font-size:1.0333333333333334em'>Kibana</a>
+      </li><li>
+        <a href='/tags/kubectl/' style='font-size:1em'>kubectl</a>
+      </li><li>
+        <a href='/tags/kubernetes/' style='font-size:1.6666666666666665em'>Kubernetes</a>
+      </li><li>
+        <a href='/tags/lambda/' style='font-size:1.1333333333333333em'>Lambda</a>
+      </li><li>
+        <a href='/tags/langfuse/' style='font-size:1em'>Langfuse</a>
+      </li><li>
+        <a href='/tags/languagestudio/' style='font-size:1em'>LanguageStudio</a>
+      </li><li>
+        <a href='/tags/letsecrypt/' style='font-size:1em'>Letsecrypt</a>
+      </li><li>
+        <a href='/tags/letsencrypt/' style='font-size:1.0333333333333334em'>Letsencrypt</a>
+      </li><li>
+        <a href='/tags/llm/' style='font-size:1.0666666666666667em'>LLM</a>
+      </li><li>
+        <a href='/tags/locust/' style='font-size:1em'>Locust</a>
+      </li><li>
+        <a href='/tags/loganalytics/' style='font-size:1em'>LogAnalytics</a>
+      </li><li>
+        <a href='/tags/logging/' style='font-size:1em'>Logging</a>
+      </li><li>
+        <a href='/tags/logicapps/' style='font-size:1em'>LogicApps</a>
+      </li><li>
+        <a href='/tags/loki/' style='font-size:1.0666666666666667em'>Loki</a>
+      </li><li>
+        <a href='/tags/machinelearning/' style='font-size:1.0666666666666667em'>MachineLearning</a>
+      </li><li>
+        <a href='/tags/mcp/' style='font-size:1.0333333333333334em'>MCP</a>
+      </li><li>
+        <a href='/tags/microsoft/' style='font-size:1.0333333333333334em'>Microsoft</a>
+      </li><li>
+        <a href='/tags/namecheap/' style='font-size:1em'>Namecheap</a>
+      </li><li>
+        <a href='/tags/nextcloud/' style='font-size:1em'>NextCloud</a>
+      </li><li>
+        <a href='/tags/nginx/' style='font-size:1.1em'>Nginx</a>
+      </li><li>
+        <a href='/tags/oauth2proxy/' style='font-size:1em'>Oauth2Proxy</a>
+      </li><li>
+        <a href='/tags/openai/' style='font-size:1.0333333333333334em'>OpenAI</a>
+      </li><li>
+        <a href='/tags/openldap/' style='font-size:1em'>OpenLDAP</a>
+      </li><li>
+        <a href='/tags/openssl/' style='font-size:1em'>OpenSSL</a>
+      </li><li>
+        <a href='/tags/opentelemetry/' style='font-size:1em'>OpenTelemetry</a>
+      </li><li>
+        <a href='/tags/openwebui/' style='font-size:1em'>OpenwebUI</a>
+      </li><li>
+        <a href='/tags/oraclecloud/' style='font-size:1.0333333333333334em'>OracleCloud</a>
+      </li><li>
+        <a href='/tags/packer/' style='font-size:1em'>Packer</a>
+      </li><li>
+        <a href='/tags/postgresql/' style='font-size:1.0333333333333334em'>Postgresql</a>
+      </li><li>
+        <a href='/tags/prometheus/' style='font-size:1.0333333333333334em'>Prometheus</a>
+      </li><li>
+        <a href='/tags/promtail/' style='font-size:1.0333333333333334em'>Promtail</a>
+      </li><li>
+        <a href='/tags/proxy/' style='font-size:1em'>Proxy</a>
+      </li><li>
+        <a href='/tags/python/' style='font-size:1.2333333333333334em'>Python</a>
+      </li><li>
+        <a href='/tags/qualys/' style='font-size:1em'>Qualys</a>
+      </li><li>
+        <a href='/tags/rabbitmq/' style='font-size:1em'>RabbitMQ</a>
+      </li><li>
+        <a href='/tags/rag/' style='font-size:1.0333333333333334em'>RAG</a>
+      </li><li>
+        <a href='/tags/raspberrypi/' style='font-size:1.1333333333333333em'>RaspberryPi</a>
+      </li><li>
+        <a href='/tags/reactjs/' style='font-size:1em'>ReactJS</a>
+      </li><li>
+        <a href='/tags/redis/' style='font-size:1em'>Redis</a>
+      </li><li>
+        <a href='/tags/remotion/' style='font-size:1em'>Remotion</a>
+      </li><li>
+        <a href='/tags/sagemaker/' style='font-size:1em'>SageMaker</a>
+      </li><li>
+        <a href='/tags/sam/' style='font-size:1em'>SAM</a>
+      </li><li>
+        <a href='/tags/selenium/' style='font-size:1em'>Selenium</a>
+      </li><li>
+        <a href='/tags/serverless/' style='font-size:1.0666666666666667em'>Serverless</a>
+      </li><li>
+        <a href='/tags/sonarqube/' style='font-size:1em'>Sonarqube</a>
+      </li><li>
+        <a href='/tags/speechservice/' style='font-size:1em'>SpeechService</a>
+      </li><li>
+        <a href='/tags/ssh-tunnel/' style='font-size:1em'>SSH-Tunnel</a>
+      </li><li>
+        <a href='/tags/ssl/' style='font-size:1em'>SSL</a>
+      </li><li>
+        <a href='/tags/sso/' style='font-size:1em'>SSO</a>
+      </li><li>
+        <a href='/tags/stable-diffusion/' style='font-size:1.0333333333333334em'>Stable-Diffusion</a>
+      </li><li>
+        <a href='/tags/streamlit/' style='font-size:1em'>Streamlit</a>
+      </li><li>
+        <a href='/tags/swag/' style='font-size:1.0333333333333334em'>Swag</a>
+      </li><li>
+        <a href='/tags/synapse/' style='font-size:1.0333333333333334em'>Synapse</a>
+      </li><li>
+        <a href='/tags/telegram/' style='font-size:1.0333333333333334em'>Telegram</a>
+      </li><li>
+        <a href='/tags/tempo/' style='font-size:1em'>Tempo</a>
+      </li><li>
+        <a href='/tags/test/' style='font-size:1em'>Test</a>
+      </li><li>
+        <a href='/tags/timecomplexity/' style='font-size:1em'>TimeComplexity</a>
+      </li><li>
+        <a href='/tags/tracing/' style='font-size:1em'>Tracing</a>
+      </li><li>
+        <a href='/tags/traefik/' style='font-size:1em'>Traefik</a>
+      </li><li>
+        <a href='/tags/tunnel/' style='font-size:1em'>Tunnel</a>
+      </li><li>
+        <a href='/tags/ubuntu/' style='font-size:1.1em'>Ubuntu</a>
+      </li><li>
+        <a href='/tags/virtualbox/' style='font-size:1em'>VirtualBox</a>
+      </li><li>
+        <a href='/tags/vnet/' style='font-size:1em'>Vnet</a>
+      </li><li>
+        <a href='/tags/vouchproxy/' style='font-size:1em'>VouchProxy</a>
+      </li><li>
+        <a href='/tags/vpc/' style='font-size:1em'>VPC</a>
+      </li><li>
+        <a href='/tags/windows/' style='font-size:1.0666666666666667em'>Windows</a>
+      </li><li>
+        <a href='/tags/wsl/' style='font-size:1em'>WSL</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='/posts/'>Posts</a>
+      </li><li class='item'>
+        <a href='/about/'>About</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/bk/'>Bks</a></li><li><span>K8S 10: Setup Gitlab Self Hosted on GKE Cluster</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Hoang</p><p class='desc site-desc'>Learn something new everyday 😋</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>K8S 10: Setup Gitlab Self Hosted on GKE Cluster</h1>
+      
+<p class='desc'>Tạo Gitlab với yêu cầu là: disable MinIO, dùng GCS. Disable cert-manager, dùng cert-manager mình tự tạo riêng. Các config về resource của gitlab ở mức minimal. Gitlab sẽ vào qua link `gitlab.your-subdomain.your-domain.net` và có HTTPS</p>
+
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2020-02-20T12:28:58&#43;09:00'>2020, Feb 20</time>
+</span>
+
+  <span class='byline'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M21,21V20c0-2.76-4-5-9-5s-9,2.24-9,5v1" />
+<path d="M16,6.37A4,4,0,1,1,12.63,3,4,4,0,0,1,16,6.37Z" />
+</svg>
+<span class='screen-reader-text'> by </span><a href='/authors/hoangmnsd'>hoangmnsd</a></span>
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+5 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+<details class='container entry-toc'>
+  <summary class='title'>
+    <span>Table of Contents</span>
+  </summary>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#yêu-cầu">Yêu Cầu</a></li>
+    <li><a href="#cách-làm">Cách Làm</a>
+      <ul>
+        <li><a href="#1-setup-environment-variables">1. Setup environment variables</a></li>
+        <li><a href="#2-tạo-namespace-gitlab-và-add-helm-repo">2. Tạo namespace <code>gitlab</code> và add helm repo</a></li>
+        <li><a href="#3-dùng-kubed-để-synchronize-tls-secret-giữa-các-namespaces">3. Dùng Kubed để synchronize TLS secret giữa các namespaces</a></li>
+        <li><a href="#4-gcp---tạo-service-account">4. GCP - Tạo Service Account</a></li>
+        <li><a href="#5-gcp---tạo-service-account-key">5. GCP - Tạo Service Account Key</a></li>
+        <li><a href="#6-gcp---binding-role-storage-admin-vào-service-account">6. GCP - Binding role Storage Admin vào Service Account</a></li>
+        <li><a href="#7-gcp---create-gcs-buckets">7. GCP - Create GCS Buckets</a></li>
+        <li><a href="#8-create-a-secret-to-hold-your-cloud-storage-credentials">8. Create a Secret to hold your Cloud Storage credentials</a></li>
+        <li><a href="#9-tạo-file-railsyaml">9. Tạo file <code>rails.yaml</code></a></li>
+        <li><a href="#10-tạo-secret-từ-file-railsyaml">10. Tạo secret từ file <code>rails.yaml</code></a></li>
+        <li><a href="#11-optional-xóa-key-đi-cho-secure">11. (Optional) Xóa key đi cho secure</a></li>
+        <li><a href="#12-tạo-gitlab-helm-values-file">12. Tạo Gitlab helm values file</a></li>
+        <li><a href="#13-install-gitlab-helm-chart">13. Install Gitlab helm chart</a></li>
+        <li><a href="#14-clean-up">14. Clean up</a></li>
+      </ul>
+    </li>
+    <li><a href="#credit">CREDIT</a></li>
+  </ul>
+</nav>
+</details>
+
+
+  <div class='container entry-content'>
+  <p>Tạo Gitlab với yêu cầu là:</p>
+<ul>
+<li>disable MinIO, dùng GCS,</li>
+<li>disable cert-manager, dùng cert-manager mình tự tạo riêng,</li>
+<li>các config về resource của gitlab ở mức minimal,</li>
+<li>gitlab sẽ vào qua link <code>gitlab.your-subdomain.your-domain.net</code> và có HTTPS</li>
+</ul>
+<h1 id="yêu-cầu">Yêu Cầu</h1>
+<ul>
+<li>Đã tạo GKE Cluster có ít nhất là 3 vCPU</li>
+<li>Đã install Helm 2</li>
+<li>Đã làm theo bài này để setup cert-manager:<br>
+<a href="../../posts/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/">K8S 9: Setup External DNS + Cert Manager + Nginx Ingress Controller Wilcard</a></li>
+</ul>
+<h1 id="cách-làm">Cách Làm</h1>
+<h2 id="1-setup-environment-variables">1. Setup environment variables</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">export PROJECT_ID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;YOUR_PROJECT_ID&#34;</span>
+export CLUSTER_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;YOUR_CLUSTER_NAME&#34;</span>
+export SUBDOMAIN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;your-subdomain.your-domain.net&#34;</span>
+gcloud config set project <span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>
+gcloud config set compute/region asia-northeast1
+gcloud config set compute/zone asia-northeast1-a
+</code></pre></div><h2 id="2-tạo-namespace-gitlab-và-add-helm-repo">2. Tạo namespace <code>gitlab</code> và add helm repo</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create namespace gitlab
+helm repo add gitlab https://charts.gitlab.io/
+helm repo update
+</code></pre></div><h2 id="3-dùng-kubed-để-synchronize-tls-secret-giữa-các-namespaces">3. Dùng Kubed để synchronize TLS secret giữa các namespaces</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm repo add appscode https://charts.appscode.com/stable/
+helm repo update
+helm install -n kubed appscode/kubed --version 0.12.0 --namespace kube-system --wait --set config.clusterName<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CLUSTER_NAME<span style="color:#e6db74">}</span>
+</code></pre></div><p>Giả sử nhờ bài trước mà mình đã issue được 1 TLS Secret thành công tên là <code>echo-tls-secret-prod</code> ở namespace <code>default</code>,</p>
+<pre><code>k get secret -A
+default           default-token-7hsrc                              kubernetes.io/service-account-token   3      3h11m
+default           echo-tls-secret-prod                             kubernetes.io/tls                     3      157m
+default           echo-tls-secret-staging                          kubernetes.io/tls                     3      164m
+gitlab            default-token-t728z                              kubernetes.io/service-account-token   3      99s
+</code></pre><p>giờ mình cần sync secret đó sang namespace <code>gitlab</code> khác thì cần làm như sau:<br>
+annotate secret mà mình muốn sync giữa các namespaces</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e"># Đánh label `app=kubed` cho namespace gitlab</span>
+kubectl label namespace gitlab app<span style="color:#f92672">=</span>kubed
+<span style="color:#75715e"># Annotate để secret mình muốn sẽ sync sang các namespace có label `app=kubed` </span>
+kubectl annotate secret echo-tls-secret-prod -n default kubed.appscode.com/sync<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;app=kubed&#34;</span>
+</code></pre></div><p>check: (Bạn sẽ thấy namespace <code>gitlab</code> cũng có secret <code>echo-tls-secret-prod</code>)</p>
+<pre><code>k get secret -A
+default           default-token-7hsrc                              kubernetes.io/service-account-token   3      3h15m
+default           echo-tls-secret-prod                             kubernetes.io/tls                     3      161m
+default           echo-tls-secret-staging                          kubernetes.io/tls                     3      168m
+gitlab            default-token-t728z                              kubernetes.io/service-account-token   3      5m43s
+gitlab            echo-tls-secret-prod                             kubernetes.io/tls                     3      6s
+</code></pre><h2 id="4-gcp---tạo-service-account">4. GCP - Tạo Service Account</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud iam service-accounts create gitlab-gcs <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --display-name <span style="color:#e6db74">&#34;Gitlab Cloud Storage&#34;</span>
+</code></pre></div><h2 id="5-gcp---tạo-service-account-key">5. GCP - Tạo Service Account Key</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud iam service-accounts keys create --iam-account <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  gitlab-gcs@<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>.iam.gserviceaccount.com /tmp/gitlab-gcs-key.json
+</code></pre></div><h2 id="6-gcp---binding-role-storage-admin-vào-service-account">6. GCP - Binding role Storage Admin vào Service Account</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gcloud projects add-iam-policy-binding --role roles/storage.admin <span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --member<span style="color:#f92672">=</span>serviceAccount:gitlab-gcs@<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>.iam.gserviceaccount.com
+</code></pre></div><h2 id="7-gcp---create-gcs-buckets">7. GCP - Create GCS Buckets</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gsutil mb -c standard gs://<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>-gitlab-uploads
+gsutil mb -c standard gs://<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>-gitlab-artifacts
+gsutil mb -c standard gs://<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>-gitlab-lfs
+gsutil mb -c standard gs://<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>-gitlab-packages
+gsutil mb -c standard gs://<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>-gitlab-registry
+gsutil mb -c standard gs://<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>-gitlab-runner-cache
+gsutil mb -c nearline gs://<span style="color:#e6db74">${</span>PROJECT_ID<span style="color:#e6db74">}</span>-gitlab-backups
+</code></pre></div><h2 id="8-create-a-secret-to-hold-your-cloud-storage-credentials">8. Create a Secret to hold your Cloud Storage credentials</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create secret generic google-application-credentials <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --from-file<span style="color:#f92672">=</span>gcs-application-credentials-file<span style="color:#f92672">=</span>/tmp/gitlab-gcs-key.json <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --namespace gitlab
+</code></pre></div><h2 id="9-tạo-file-railsyaml">9. Tạo file <code>rails.yaml</code></h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; /tmp/rails.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74">provider: Google
+</span><span style="color:#e6db74">google_project: ${PROJECT_ID}
+</span><span style="color:#e6db74">google_client_email: gitlab-gcs@${PROJECT_ID}.iam.gserviceaccount.com
+</span><span style="color:#e6db74">google_json_key_string: &#39;$(cat /tmp/gitlab-gcs-key.json)&#39;
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><h2 id="10-tạo-secret-từ-file-railsyaml">10. Tạo secret từ file <code>rails.yaml</code></h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl create secret generic gitlab-rails-storage --from-file<span style="color:#f92672">=</span>connection<span style="color:#f92672">=</span>/tmp/rails.yaml --namespace gitlab
+</code></pre></div><h2 id="11-optional-xóa-key-đi-cho-secure">11. (Optional) Xóa key đi cho secure</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">rm -rf /tmp/gitlab-gcs-key.json
+rm -rf /tmp/rails.yaml
+</code></pre></div><h2 id="12-tạo-gitlab-helm-values-file">12. Tạo Gitlab helm values file</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">cat &gt; ./gitlab-values.yaml <span style="color:#e6db74">&lt;&lt;EOF
+</span><span style="color:#e6db74"># Values for gitlab/gitlab chart on GKE
+</span><span style="color:#e6db74">global:
+</span><span style="color:#e6db74">  edition: ce
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  ## doc/charts/globals.md#configure-ingress-settings
+</span><span style="color:#e6db74">  ingress:
+</span><span style="color:#e6db74">    configureCertmanager: false
+</span><span style="color:#e6db74">    tls:
+</span><span style="color:#e6db74">      enabled: true
+</span><span style="color:#e6db74">      secretName: echo-tls-secret-prod
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  hosts:
+</span><span style="color:#e6db74">    domain: ${SUBDOMAIN}
+</span><span style="color:#e6db74">    https: false
+</span><span style="color:#e6db74">    gitlab:
+</span><span style="color:#e6db74">      https: false
+</span><span style="color:#e6db74">    registry:
+</span><span style="color:#e6db74">      https: false
+</span><span style="color:#e6db74">    minio:
+</span><span style="color:#e6db74">      https: false
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  ## doc/charts/globals.md#configure-minio-settings
+</span><span style="color:#e6db74">  minio:
+</span><span style="color:#e6db74">    enabled: false
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  registry:
+</span><span style="color:#e6db74">    bucket: ${PROJECT_ID}-gitlab-registry
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">  ## doc/charts/globals.md#configure-appconfig-settings
+</span><span style="color:#e6db74">  ## Rails based portions of this chart share many settings
+</span><span style="color:#e6db74">  appConfig:
+</span><span style="color:#e6db74">    ## doc/charts/globals.md#general-application-settings
+</span><span style="color:#e6db74">    enableUsagePing: false
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">    defaultTheme: 2
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">    defaultProjectsFeatures:
+</span><span style="color:#e6db74">      issues: true
+</span><span style="color:#e6db74">      mergeRequests: true
+</span><span style="color:#e6db74">      wiki: true
+</span><span style="color:#e6db74">      snippets: true
+</span><span style="color:#e6db74">      builds: true
+</span><span style="color:#e6db74">      containerRegistry: true
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">    ## doc/charts/globals.md#lfs-artifacts-uploads-packages
+</span><span style="color:#e6db74">    backups:
+</span><span style="color:#e6db74">      bucket: ${PROJECT_ID}-gitlab-backups
+</span><span style="color:#e6db74">    lfs:
+</span><span style="color:#e6db74">      bucket: ${PROJECT_ID}-gitlab-lfs
+</span><span style="color:#e6db74">      connection:
+</span><span style="color:#e6db74">        secret: gitlab-rails-storage
+</span><span style="color:#e6db74">        key: connection
+</span><span style="color:#e6db74">    artifacts:
+</span><span style="color:#e6db74">      bucket: ${PROJECT_ID}-gitlab-artifacts
+</span><span style="color:#e6db74">      connection:
+</span><span style="color:#e6db74">        secret: gitlab-rails-storage
+</span><span style="color:#e6db74">        key: connection
+</span><span style="color:#e6db74">    uploads:
+</span><span style="color:#e6db74">      bucket: ${PROJECT_ID}-gitlab-uploads
+</span><span style="color:#e6db74">      connection:
+</span><span style="color:#e6db74">        secret: gitlab-rails-storage
+</span><span style="color:#e6db74">        key: connection
+</span><span style="color:#e6db74">    packages:
+</span><span style="color:#e6db74">      bucket: ${PROJECT_ID}-gitlab-packages
+</span><span style="color:#e6db74">      connection:
+</span><span style="color:#e6db74">        secret: gitlab-rails-storage
+</span><span style="color:#e6db74">        key: connection
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">gitlab:  
+</span><span style="color:#e6db74">  webservice:
+</span><span style="color:#e6db74">    minReplicas: 1
+</span><span style="color:#e6db74">    resources:
+</span><span style="color:#e6db74">      limits:
+</span><span style="color:#e6db74">       memory: 1.5G
+</span><span style="color:#e6db74">      requests:
+</span><span style="color:#e6db74">        cpu: 100m
+</span><span style="color:#e6db74">        memory: 900M
+</span><span style="color:#e6db74">    workhorse:
+</span><span style="color:#e6db74">      resources:
+</span><span style="color:#e6db74">        limits:
+</span><span style="color:#e6db74">          memory: 100M
+</span><span style="color:#e6db74">        requests:
+</span><span style="color:#e6db74">          cpu: 10m
+</span><span style="color:#e6db74">          memory: 10M
+</span><span style="color:#e6db74">  task-runner:
+</span><span style="color:#e6db74">    backups:
+</span><span style="color:#e6db74">      objectStorage:
+</span><span style="color:#e6db74">        backend: gcs
+</span><span style="color:#e6db74">        config:
+</span><span style="color:#e6db74">          secret: &#34;google-application-credentials&#34;
+</span><span style="color:#e6db74">          key: gcs-application-credentials-file
+</span><span style="color:#e6db74">          gcpProject: ${PROJECT_ID}
+</span><span style="color:#e6db74">  sidekiq:
+</span><span style="color:#e6db74">    minReplicas: 1
+</span><span style="color:#e6db74">    resources:
+</span><span style="color:#e6db74">      limits:
+</span><span style="color:#e6db74">        memory: 1.5G
+</span><span style="color:#e6db74">      requests:
+</span><span style="color:#e6db74">        cpu: 50m
+</span><span style="color:#e6db74">        memory: 625M
+</span><span style="color:#e6db74">  gitlab-shell:
+</span><span style="color:#e6db74">    minReplicas: 1
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">nginx-ingress:
+</span><span style="color:#e6db74">  controller:
+</span><span style="color:#e6db74">    replicaCount: 1
+</span><span style="color:#e6db74">    minAvailable: 0
+</span><span style="color:#e6db74">    resources:
+</span><span style="color:#e6db74">      requests:
+</span><span style="color:#e6db74">        cpu: 50m
+</span><span style="color:#e6db74">        memory: 100Mi
+</span><span style="color:#e6db74">  defaultBackend:
+</span><span style="color:#e6db74">    replicaCount: 1
+</span><span style="color:#e6db74">    minAvailable: 0
+</span><span style="color:#e6db74">    resources:
+</span><span style="color:#e6db74">      requests:
+</span><span style="color:#e6db74">        cpu: 5m
+</span><span style="color:#e6db74">        memory: 5Mi
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">redis:
+</span><span style="color:#e6db74">  resources:
+</span><span style="color:#e6db74">    requests:
+</span><span style="color:#e6db74">      cpu: 10m
+</span><span style="color:#e6db74">      memory: 64Mi
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">certmanager:
+</span><span style="color:#e6db74">  install: false
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">prometheus:
+</span><span style="color:#e6db74">  install: false
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">registry:
+</span><span style="color:#e6db74">  enabled: true
+</span><span style="color:#e6db74">  certificate:
+</span><span style="color:#e6db74">    secret: gitlab-rails-storage
+</span><span style="color:#e6db74">    key: connection
+</span><span style="color:#e6db74">  ingress:
+</span><span style="color:#e6db74">    tls:
+</span><span style="color:#e6db74">      enabled: true
+</span><span style="color:#e6db74">      secretName: echo-tls-secret-prod
+</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">gitlab-runner:
+</span><span style="color:#e6db74">  install: false
+</span><span style="color:#e6db74">  rbac:
+</span><span style="color:#e6db74">    create: true
+</span><span style="color:#e6db74">  runners:
+</span><span style="color:#e6db74">    locked: false
+</span><span style="color:#e6db74">    cache:
+</span><span style="color:#e6db74">      cacheType: gcs
+</span><span style="color:#e6db74">      gcsBucketname: ${PROJECT_ID}-gitlab-runner-cache
+</span><span style="color:#e6db74">      secretName: gitlab-rails-storage
+</span><span style="color:#e6db74">      cacheShared: true
+</span><span style="color:#e6db74">EOF</span>
+</code></pre></div><h2 id="13-install-gitlab-helm-chart">13. Install Gitlab helm chart</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">helm upgrade --install gitlab gitlab/gitlab <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --namespace gitlab <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --values gitlab-values.yaml
+</code></pre></div><p>Check gitlab trên link <code>gitlab.your-subdomain.your-domain.net</code> được như sau là OK:<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/gitlab-tls-secure.jpg" alt=""></p>
+<p>Đăng  nhập vào gitlab bằng user &ldquo;root&rdquo;, pass lấy từ command sau:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">kubectl get secret gitlab-gitlab-initial-root-password -ojsonpath<span style="color:#f92672">={</span>.data.password<span style="color:#f92672">}</span> -n gitlab | base64 --decode ; echo
+</code></pre></div><p>Check xem có thể Backup và Restore Gitlab bình thường ko là OK:</p>
+<pre><code>kubectl exec gitlab-task-runner-7d686c6474-w8mnt -it backup-utility -n gitlab
+WARNING: This version of GitLab depends on gitlab-shell 11.0.0, but you're running Unknown. Please update gitlab-shell.
+2020-02-21 09:26:19 +0000 -- Dumping database ... 
+Dumping PostgreSQL database gitlabhq_production ... [DONE]
+2020-02-21 09:26:22 +0000 -- done
+WARNING: This version of GitLab depends on gitlab-shell 11.0.0, but you're running Unknown. Please update gitlab-shell.
+2020-02-21 09:26:32 +0000 -- Dumping repositories ...
+2020-02-21 09:26:32 +0000 -- done
+Dumping registry ...
+empty
+Dumping uploads ...
+empty
+Dumping artifacts ...
+empty
+Dumping lfs ...
+empty
+Dumping packages ...
+empty
+WARNING: This version of GitLab depends on gitlab-shell 11.0.0, but you're running Unknown. Please update gitlab-shell.
+Packing up backup tar
+Copying file:///srv/gitlab/tmp/backup_tars/1582277165_2020_02_21_12.7.6_gitlab_backup.tar [Content-Type=application/x-tar]...
+/ [1 files][150.0 KiB/150.0 KiB]
+Operation completed over 1 objects/150.0 KiB.
+[DONE] Backup can be found at gs://xxx-gitlab-backups/1582277165_2020_02_21_12.7.6_gitlab_backup.tar
+</code></pre><p>Nếu backup bị lỗi đỏ hoặc có lỗi kiểu <code>Bucket not found: registry. Skipping backup of registry</code> thì có nghĩa là registry bucket không nhìn thấy, cần check lại file values nhé</p>
+<p>DONE! 🎉🎉🎉</p>
+<h2 id="14-clean-up">14. Clean up</h2>
+<ul>
+<li>Nên chắc chắn rằng bạn đã xóa Cluster, VPC</li>
+<li>Vào Service Cloud DNS, xóa các record được sinh ra bởi ExternalDNS<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cleanup-cloud-dns-k8s-ix.jpg" alt=""></li>
+<li>Vào IAM - Service Account xóa service account <code>gitlab</code> mà bạn đã tạo<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cleanup-iam-sa-k8s-ix.jpg" alt=""></li>
+<li>Vào Compute Engine - Disk xóa các disk được tạo bởi Cluster<br>
+<img src="https://raw.githubusercontent.com/hoangmnsd/images-bucket/master/static/images/cleanup-disk-k8s-x.jpg" alt=""></li>
+<li>Vào Storage, xóa các bucket <code>*-gitlab-*</code> bạn đã tạo ra</li>
+</ul>
+<h1 id="credit">CREDIT</h1>
+<p><a href="https://docs.gitlab.com/charts/">https://docs.gitlab.com/charts/</a>
+<a href="https://docs.gitlab.com/charts/charts/globals.html#connection">https://docs.gitlab.com/charts/charts/globals.html#connection</a>
+<a href="https://ruzickap.github.io/k8s-harbor/part-03/#install-nginx-ingress">https://ruzickap.github.io/k8s-harbor/part-03/#install-nginx-ingress</a>
+<a href="https://gitlab.com/gitlab-org/charts/gitlab/issues/1464">https://gitlab.com/gitlab-org/charts/gitlab/issues/1464</a>
+<a href="https://docs.gitlab.com/charts/backup-restore/backup.html">https://docs.gitlab.com/charts/backup-restore/backup.html</a></p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'>
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/bk/k8s-ix-setup-extdns-certmanager-nginxingress-wilcard/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>K8S 9: Setup External DNS &#43; Cert Manager &#43; Nginx Ingress Controller Wilcard</a>
+    </div><div class='next-entry sep-before'>
+      <a href='/bk/encrypt-apply-staticman-v3-for-hugo-blog-github-cmt-feature/'>
+        <span class='screen-reader-text'>Next post: </span>Apply Staticman v3/v2 for Hugo blog Github to enable comment feature<span aria-hidden='true'>Next <svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="4" y1="12" x2="20" y2="12" />
+<polyline points="14 6 20 12 14 18" />
+</svg>
+</span>
+      </a>
+    </div></div>
+</nav>
+
+
+
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/hoangmnsd' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='mailto:hoangmnsd@gmail.com' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Contact via Email</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+<polyline points="22,6 12,13 2,6" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2019-2026 hoangmsnd </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+
